@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Making Reliable Distributed Systems in the Presence of Software Errors</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/reliable-distributed-systems-armstrong-2003/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">The Agent Runtime</p>
+        <h1>Reliable Distributed Systems</h1>
+        <p class="hero-lede">Armstrong's thesis argues that reliable systems can be built from faulty software by isolating concurrent processes, letting failed workers crash, and delegating recovery to explicit supervision hierarchies.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>6</strong><span>Claims</span></div>
+          <div class="metric"><strong>6</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2003 · Doctoral dissertation, Royal Institute of Technology</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>1</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/reliable-distributed-systems-armstrong-2003/">Open deck</a>
+        <a class="button" href="https://worrydream.com/refs/Armstrong_2003_-_Making_reliable_distributed_systems_in_the_presence_of_software_errors.pdf">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>Modern agents are long-running programs made of model calls, tools, memory updates, and side effects. Armstrong gives the older systems vocabulary for making that shape survivable: isolation boundaries, restart specifications, supervisors, degraded service, and protocol-level fault detection.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Large telecom systems had to run continuously despite shipping with software defects.</li><li>Traditional defensive programming mixed business logic and error recovery in the same code path.</li><li>Distributed programs needed to tolerate process, message, software, and hardware failures without stopping the entire system.</li><li>Reliability requirements were operational, not cosmetic: phone switches were expected to provide acceptable service over years of continuous operation.</li></ul>
+      <p><strong>Key gap:</strong> The thesis asks how to program systems that behave reasonably even when the components implementing them contain software errors.</p>
+
+      <h2>Method</h2>
+      <p>Organize the system as isolated tasks with explicit goals; when a task cannot achieve its goal, abort that task and delegate recovery to a supervisor that knows how to restart the right process or subtree.</p>
+      <ul><li>Partition the application into isolated processes that communicate by message passing.</li><li>Define the goals and acceptable degraded modes of the system as a task hierarchy.</li><li>Write workers so that unrecoverable local errors crash instead of tangling business logic with generic recovery.</li><li>Attach workers and lower supervisors to supervision trees with start/stop/restart specifications.</li><li>Use OR supervision for independent workers and AND supervision for dependent process groups.</li><li>Escalate failure upward when a subtree restarts too often or cannot reestablish a good state.</li><li>Use reusable OTP behaviours so runtime mechanics are not reimplemented in every application module.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>The thesis treats software errors as expected in large deployed systems and designs for acceptable behavior despite them.</p>
+  <p><strong>Scope:</strong> Abstract and Chapter 1.</p>
+  <ul><li><strong>E-errors-assumed</strong>: Armstrong states that large programs will probably contain errors when put into service and asks how to build systems that behave reasonably despite those errors.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>Fault isolation is the central runtime requirement: errors in one task must not propagate arbitrarily to unrelated tasks.</p>
+  <p><strong>Scope:</strong> Chapter 2, Philosophy.</p>
+  <ul><li><strong>E-fault-isolation</strong>: The thesis identifies fault isolation as the essential problem: isolate code for each goal so errors can be detected and prevented from propagating to other simultaneous goals.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>The let-it-crash rule separates application work from generic recovery by letting workers fail and supervisors repair the system.</p>
+  <p><strong>Scope:</strong> Chapter 4, Let it crash.</p>
+  <ul><li><strong>E-let-it-crash</strong>: The thesis explicitly says workers should crash on errors they cannot handle, while separate supervisor processes are responsible for correction and recovery.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>Supervisors encode restart policy in a hierarchy and can restart one child, a dependent group, or fail upward when restart limits are exceeded.</p>
+  <p><strong>Scope:</strong> Chapter 5 and Chapter 6.</p>
+  <ul><li><strong>E-supervision</strong>: Supervisors monitor workers or other supervisors, keep start/stop/restart specifications, restart failed children under OR supervision, restart groups under AND supervision, and can fail upward after exceeding restart frequency limits.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>OTP behaviours package generic runtime structure so application modules do not each implement servers, event handlers, finite-state machines, and supervisors from scratch.</p>
+  <p><strong>Scope:</strong> Chapter 6.</p>
+  <ul><li><strong>E-otp-behaviours</strong>: The thesis presents primitive behaviours such as client-server, event handling, and FSM behaviours, then uses supervisor behaviours to compose them into supervision hierarchies.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>The AXD301 case study reports a large deployed OTP system with a supervision tree of 141 nodes and 191 behaviour instances.</p>
+  <p><strong>Scope:</strong> Chapter 8.</p>
+  <ul><li><strong>E-axd301</strong>: In the AXD301 analysis, the thesis reports a supervision tree with 141 nodes and 191 OTP behaviour instances, including gen_server, gen_event, supervisor, gen_fsm, and application behaviours.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>A serious agent runtime needs a supervision tree, even if it calls it a workflow, retry policy, task graph, or orchestration plan.</li><li>Letting an agent step fail is only safe when the runtime knows what state to discard, what state to replay, and which side effects are already committed.</li><li>Agent workers should be small failure domains: model call, tool call, parser, verifier, memory update, and finalizer are different restart units.</li><li>Generic recovery belongs in the runtime layer; task-specific reasoning belongs in the worker.</li><li>Restart budgets matter. Infinite retry loops are not supervision; they are unbounded failure amplification.</li><li>Capability-style process names in Armstrong's model rhyme with modern tool permissions: if a worker cannot name or reach a resource, it cannot affect it.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The thesis predates cloud workflow engines, containers, LLMs, and modern exactly-once execution patterns.</li><li>Crash-only recovery can duplicate external side effects unless the runtime records and deduplicates them.</li><li>Erlang process isolation is stronger and more uniform than many agent frameworks' in-process task abstractions.</li><li>The telecom case studies prove practical viability in that domain, not universal superiority for every distributed architecture.</li><li>Supervision handles failure recovery; it does not by itself solve prompt injection, authorization, or semantic task correctness.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/reliable-distributed-systems-armstrong-2003.json.</span>
+  </footer>
+</body>
+</html>

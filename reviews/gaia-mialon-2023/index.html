@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · GAIA: A Benchmark for General AI Assistants</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/gaia-mialon-2023/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Evaluation and Benchmarks</p>
+        <h1>GAIA</h1>
+        <p class="hero-lede">GAIA evaluates general AI assistants with concise, factoid real-world questions that are easy for humans but require AI systems to browse, reason, handle multimodal evidence, and use tools accurately.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>6</strong><span>Claims</span></div>
+          <div class="metric"><strong>6</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2023 · arXiv 2023</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>3</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/gaia-mialon-2023/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2311.12983">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>For agents, GAIA is a clean benchmark of compound assistant behavior: the answer is usually short, but reaching it requires correct tool use, web navigation, evidence synthesis, and exact formatting.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Many LLM benchmarks were becoming saturated or were vulnerable to data contamination.</li><li>Some benchmarks target tasks that are difficult for humans, even though current AI systems can already outperform non-experts on professional exams.</li><li>Open-ended generation evaluation can require expensive human or model-based judging.</li><li>General assistants need evaluation on real-world multi-step tasks with unambiguous answers.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks how to evaluate general assistant robustness on practical tasks whose solutions are easy to verify but hard for AI systems to execute reliably.</p>
+
+      <h2>Method</h2>
+      <p>Craft questions that require real-world tool use and multi-step evidence gathering, make final answers short and unique, collect human baselines, and publish a split with held-out answers for leaderboard evaluation.</p>
+      <ul><li>Design questions that are simple for humans but require tool-use, browsing, reasoning, or multimodal handling for AI.</li><li>Ensure answers are concise, factual, unique, and unlikely to appear directly in training data.</li><li>Group tasks into levels of increasing difficulty.</li><li>Collect human respondent performance.</li><li>Evaluate GPT-4 with plugins and other assistants on the same questions.</li><li>Release 166 annotated developer questions.</li><li>Withhold answers to 300 questions for leaderboard evaluation.</li><li>Use exact/factual answer matching rather than free-form open-ended judging.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>GAIA contains 466 carefully crafted questions targeting general AI assistant abilities.</p>
+  <p><strong>Scope:</strong> Abstract and Introduction.</p>
+  <ul><li><strong>E-question-count</strong>: The paper states GAIA comprises 466 carefully crafted questions and answers.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>GAIA questions require abilities such as reasoning, multimodal handling, web browsing, and tool-use proficiency.</p>
+  <p><strong>Scope:</strong> Abstract and Introduction.</p>
+  <ul><li><strong>E-required-abilities</strong>: The paper says GAIA tasks require reasoning, multimodality, web browsing, and tool-use proficiency, with examples involving NIH pages, Wikipedia calculations, and NASA/APOD image evidence.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>GAIA uses concise, unambiguous factual answers to support simple automatic evaluation.</p>
+  <p><strong>Scope:</strong> Introduction.</p>
+  <ul><li><strong>E-factoid-answers</strong>: GAIA questions are designed to have unique, factual, concise, unambiguous answers so evaluation is simple and robust.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>Human respondents score 92% on GAIA, while GPT-4 equipped with plugins scores 15% in the paper's headline comparison.</p>
+  <p><strong>Scope:</strong> Abstract.</p>
+  <ul><li><strong>E-human-gpt4</strong>: The paper reports 92% human performance versus 15% for GPT-4 equipped with plugins.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>GPT-4 with tools does not exceed 30% on the easiest tasks and scores 0% on the hardest tasks in the paper's discussion.</p>
+  <p><strong>Scope:</strong> Introduction.</p>
+  <ul><li><strong>E-level-performance</strong>: The paper says GPT-4 with tools does not exceed 30% on the easiest GAIA tasks and scores 0% on the hardest tasks.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>The authors release 166 annotated developer questions and hold out 300 answers for a leaderboard.</p>
+  <p><strong>Scope:</strong> Abstract and Introduction.</p>
+  <ul><li><strong>E-release-split</strong>: The authors release 166 annotated developer questions and keep 300 answers hidden for a leaderboard.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>GAIA is a clean assistant benchmark because the final answer is short but the path is operationally complex.</li><li>Tool-use evaluation should ask whether the tool was needed and used correctly, not merely whether the model can name a tool.</li><li>Concise factoid answers make grading cheaper and less judge-dependent than free-form reports.</li><li>The human-vs-AI gap is useful because these are not expert-only tasks; they measure robustness on ordinary information work.</li><li>Agents need provenance capture for GAIA-like tasks: web pages, calculations, images, and intermediate facts should be auditable.</li><li>GAIA's held-out split is a reminder that benchmark operations matter: answer secrecy and contamination control are part of the benchmark.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The benchmark is small and curated.</li><li>Paper-era GPT-4/plugin results are historical, not current SOTA.</li><li>Exact answer matching can be brittle if normalization rules are underspecified.</li><li>Some tasks depend on web state that can drift unless evidence is fixed or reproduced.</li><li>GAIA evaluates final factoid answers more than full side-effecting task completion.</li><li>Leaderboard integrity depends on keeping held-out answers from leaking.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/gaia-mialon-2023.json.</span>
+  </footer>
+</body>
+</html>

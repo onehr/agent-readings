@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Identifying the Risks of LM Agents with an LM-Emulated Sandbox</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/toolemu-ruan-2023/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Security, Safety, and Trust</p>
+        <h1>ToolEmu</h1>
+        <p class="hero-lede">ToolEmu uses a language model to emulate tool execution and sandbox states so agent risks can be tested before real tools are wired up.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>7</strong><span>Claims</span></div>
+          <div class="metric"><strong>7</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2023 · ICLR 2024</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>3</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/toolemu-ruan-2023/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2309.15817">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>For agent infrastructure, ToolEmu is a practical testing layer between prompt-only evaluation and real-world side effects. It does not replace real sandboxes, but it helps find dangerous trajectories early.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Tool-using agents can leak data, transfer money, delete files, or trigger physical-world effects.</li><li>Testing these risks manually requires tool implementations, sandbox setup, scenario design, and human trajectory inspection.</li><li>Many high-stakes or future tools are difficult to instantiate safely in real environments.</li><li>Long-tail ambiguous instructions are especially hard to cover with hand-built test cases.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks how to test diverse, high-stakes agent-tool scenarios at scale without implementing every tool and sandbox.</p>
+
+      <h2>Method</h2>
+      <p>Replace expensive real tool sandboxes with an LM-emulated environment, run agents against curated risky scenarios, and use LM-based evaluators plus human validation to measure realistic failures.</p>
+      <ul><li>Formalize tool-using LM agents as systems that act in a partially observable environment.</li><li>Use an LM emulator to generate tool observations from tool specifications and agent inputs.</li><li>Add an adversarial emulator to instantiate challenging sandbox states for red-teaming.</li><li>Build LM-based safety and helpfulness evaluators for scalable trajectory scoring.</li><li>Validate the emulator and evaluators against human annotations.</li><li>Curate a benchmark of 36 high-stakes toolkits and 144 test cases across 9 risk types.</li><li>Evaluate current LM agents and prompt variants for safety-helpfulness tradeoffs.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>ToolEmu uses an LM to emulate tool executions and sandbox states from tool specifications and tool inputs.</p>
+  <p><strong>Scope:</strong> Abstract and Sections 1-3.</p>
+  <ul><li><strong>E-emulated-sandbox</strong>: ToolEmu emulates tool execution and sandbox states with an LM using only tool specifications and tool inputs, avoiding manual implementation for many scenarios.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>The framework pairs the emulator with LM-based safety and helpfulness evaluators to score complete agent trajectories.</p>
+  <p><strong>Scope:</strong> Sections 1 and 3.2.</p>
+  <ul><li><strong>E-evaluators</strong>: The framework includes an LM-based safety evaluator for risky actions/severity and a helpfulness evaluator for task completion.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>The initial benchmark covers 36 high-stakes toolkits, 144 test cases, and 9 risk types.</p>
+  <p><strong>Scope:</strong> Section 3.3.</p>
+  <ul><li><strong>E-benchmark</strong>: The benchmark contains 36 high-stakes toolkits, 144 test cases, and 9 risk categories including privacy breach, financial loss, data loss/corruption, safety hazards, and computer security compromise.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>Human validation found most sampled emulations realistic enough for risk testing, and 68.8% of failures identified by ToolEmu were judged valid real-world agent failures.</p>
+  <p><strong>Scope:</strong> Abstract, Section 1, and Table 3.</p>
+  <ul><li><strong>E-human-validation</strong>: The paper reports that over 80% of sampled tool execution trajectories were judged realistic by humans and that 68.8% of failures identified by the emulator/evaluator were validated as genuine risky failures with realistic trajectories.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>In the benchmark, GPT-4 and Claude-2 were the strongest base agents, but still failed in 39.4% and 44.3% of test cases respectively.</p>
+  <p><strong>Scope:</strong> Table 4 and Section 5.</p>
+  <ul><li><strong>E-base-agent-results</strong>: Among base agents, GPT-4 and Claude-2 had the strongest safety/helpfulness scores, while still exhibiting failures in 39.4% and 44.3% of ToolEmu test cases.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>Adding explicit safety requirements to GPT-4 improved both safety and helpfulness, but the best prompted agent still failed in 23.9% of test cases.</p>
+  <p><strong>Scope:</strong> Table 4 and Section 5.</p>
+  <ul><li><strong>E-safety-prompt</strong>: A GPT-4 agent prompted with safety requirements improved over the base agent and was the safest evaluated agent, but still failed in 23.9% of test cases.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · inference</h3>
+  <p>ToolEmu suggests a useful safety workflow: use cheap LM-emulated red-teaming to discover candidate failures, then reproduce high-severity findings in real sandboxes before shipping.</p>
+  <p><strong>Scope:</strong> Application to agent infrastructure.</p>
+  <ul><li><strong>E-agent-workflow</strong>: Because ToolEmu finds candidate failures cheaply but validates only probabilistically, a production process should triage LM-emulated findings into real sandbox reproduction and policy/runtime fixes.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Agent safety evaluation needs trajectory-level testing, not only single-turn model safety scores.</li><li>LM-emulated sandboxes are useful for early risk discovery when real tools are expensive, unsafe, or not yet implemented.</li><li>Do not confuse emulation with containment. A production agent still needs real sandboxing, scoped capabilities, audit logs, and policy enforcement.</li><li>Safety prompting can reduce failures, but the paper's best prompted agent still failed on nearly one quarter of ToolEmu cases.</li><li>Helpfulness should be measured alongside safety so the agent is not rewarded for refusing everything.</li><li>High-severity ToolEmu findings should become regression tests in real tool sandboxes once the tool exists.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The emulator and evaluators are LMs, so they can hallucinate tool behavior or misjudge trajectory risk.</li><li>The benchmark focuses on ambiguous or underspecified user instructions, not all agent threat models.</li><li>Reported model failure rates are historical and tied to the evaluated model versions, prompts, and ToolEmu benchmark.</li><li>ToolEmu is best interpreted as scalable red-team infrastructure, not as a formal safety guarantee.</li><li>Human validation supports the method but also reveals nontrivial false positives or non-realistic failures.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/toolemu-ruan-2023.json.</span>
+  </footer>
+</body>
+</html>

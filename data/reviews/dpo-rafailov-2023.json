@@ -1,0 +1,300 @@
+{
+  "schema_version": 1,
+  "slug": "dpo-rafailov-2023",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "Direct Preference Optimization: Your Language Model is Secretly a Reward Model",
+    "authors": [
+      "Rafael Rafailov",
+      "Archit Sharma",
+      "Eric Mitchell",
+      "Stefano Ermon",
+      "Christopher D. Manning",
+      "Chelsea Finn"
+    ],
+    "year": 2023,
+    "venue": "NeurIPS 2023",
+    "url": "https://arxiv.org/abs/2305.18290",
+    "project_url": "https://github.com/eric-mitchell/direct-preference-optimization",
+    "arxiv_id": "2305.18290",
+    "read_sources": [
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2305.18290",
+        "note": "Used for arXiv metadata, abstract, author list, and revision history."
+      },
+      {
+        "kind": "proceedings",
+        "url": "https://papers.neurips.cc/paper_files/paper/2023/hash/a85b405ed65c6477a4fe8302b5e06ce7-Abstract-Conference.html",
+        "note": "Used to confirm NeurIPS 2023 publication metadata and official abstract."
+      },
+      {
+        "kind": "paper_pdf",
+        "url": "https://papers.neurips.cc/paper_files/paper/2023/file/a85b405ed65c6477a4fe8302b5e06ce7-Paper-Conference.pdf",
+        "note": "Read for RLHF preliminaries, DPO derivation, experiments, human validation, and limitations."
+      },
+      {
+        "kind": "project_repo",
+        "url": "https://github.com/eric-mitchell/direct-preference-optimization",
+        "note": "Used to confirm the reference implementation, SFT-plus-DPO pipeline, and configurable loss parameters."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "DPO turns preference optimization into a direct classification-style policy loss, removing the explicit reward-model and PPO loop from standard RLHF.",
+    "thesis": "The paper's core move is a change of variables: under a KL-constrained RLHF objective, the optimal policy implicitly defines the reward, so preference learning can update the policy directly.",
+    "why_it_matters": "DPO lowered the operational barrier for post-training: teams can use pairwise preference data with a standard supervised fine-tuning loop instead of maintaining separate reward-model training, online sampling, PPO stability machinery, and extensive RL tuning."
+  },
+  "problem": {
+    "prior_state": [
+      "RLHF typically required supervised fine-tuning, reward-model training, and reinforcement-learning optimization.",
+      "PPO-based RLHF is expensive and unstable because it samples from the policy during training and must control reward over-optimization and KL drift.",
+      "Preference labels are easier to collect than expert demonstrations, but the standard pipeline made them operationally heavy.",
+      "Agent and assistant builders needed a simpler way to steer models toward preferred behavior without running a full RL stack."
+    ],
+    "key_gap": "The paper asks whether the same KL-regularized RLHF objective can be optimized directly from preference pairs without fitting a separate reward model or running reinforcement learning.",
+    "assumptions": [
+      "Preferences can be modeled with a Bradley-Terry or related ranking model.",
+      "A reference policy is available, typically the SFT model.",
+      "The preference pairs are in distribution for the policy being optimized.",
+      "The beta/KL tradeoff can be chosen well enough to balance preference learning and drift."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "preference-pair",
+      "name": "Preference pair",
+      "definition": "A prompt with a preferred completion and a dispreferred completion."
+    },
+    {
+      "id": "reference-policy",
+      "name": "Reference policy",
+      "definition": "The baseline policy, usually the SFT model, that DPO regularizes against through log-probability ratios."
+    },
+    {
+      "id": "implicit-reward",
+      "name": "Implicit reward",
+      "definition": "The reward represented by the policy/reference log-probability ratio under the DPO reparameterization."
+    },
+    {
+      "id": "dpo-loss",
+      "name": "DPO loss",
+      "definition": "A binary cross-entropy objective that increases the relative log probability of preferred completions over dispreferred completions while accounting for the reference policy."
+    },
+    {
+      "id": "beta",
+      "name": "Beta",
+      "definition": "The temperature/KL-control parameter that sets how strongly DPO can move away from the reference policy."
+    }
+  ],
+  "method": {
+    "core_idea": "Start from the KL-constrained RLHF objective, express the latent reward as a function of the optimized policy and reference policy, substitute that expression into a Bradley-Terry preference likelihood, and train the policy directly on preferred/dispreferred pairs.",
+    "action_grammar": [
+      "x: prompt or context.",
+      "yw: preferred completion.",
+      "yl: dispreferred completion.",
+      "pi_ref: fixed reference policy, usually SFT.",
+      "pi_theta: policy being optimized.",
+      "log-ratio margin: difference between policy/reference log ratios for yw and yl.",
+      "beta: KL-control scale for the margin.",
+      "loss: negative log sigmoid of the beta-scaled margin."
+    ],
+    "steps": [
+      "Train or choose a supervised reference policy.",
+      "Collect or load preference pairs on the target distribution.",
+      "Compute log probabilities of preferred and dispreferred completions under both current and reference policies.",
+      "Construct the DPO preference margin from policy/reference log-ratio differences.",
+      "Minimize binary cross-entropy so preferred completions become relatively more likely than dispreferred completions.",
+      "Tune beta and sampling temperature modestly, rather than running a reward-model plus PPO loop.",
+      "Evaluate preference win rates on summarization, dialogue, and distribution-shift tasks."
+    ],
+    "pseudocode": "for x, y_win, y_lose in preference_pairs:\n    pi_margin = logp(policy, y_win, x) - logp(policy, y_lose, x)\n    ref_margin = logp(reference, y_win, x) - logp(reference, y_lose, x)\n    loss = -log_sigmoid(beta * (pi_margin - ref_margin))\n    update(policy, loss)\n\nreturn policy"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "theory",
+      "status": "paper-supported",
+      "statement": "DPO derives a direct policy objective by reparameterizing the reward in terms of the optimal policy and the reference policy.",
+      "scope": "Section 4.",
+      "evidence_refs": ["E-derivation"],
+      "caveats": ["The derivation depends on the preference-model assumptions and the KL-regularized objective."]
+    },
+    {
+      "id": "C2",
+      "type": "method",
+      "status": "paper-supported",
+      "statement": "DPO avoids explicit reward-model fitting, online policy sampling during fine-tuning, and PPO-style actor-critic optimization.",
+      "scope": "Abstract, Figure 1, and Section 4.",
+      "evidence_refs": ["E-pipeline-simplification"],
+      "caveats": ["It still requires preference data, a reference policy, and model log-probabilities for both chosen and rejected completions."]
+    },
+    {
+      "id": "C3",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "In controlled sentiment generation, DPO achieves a better reward/KL frontier than PPO, including PPO with ground-truth reward access.",
+      "scope": "Section 6.1 and Figure 2.",
+      "evidence_refs": ["E-sentiment"],
+      "caveats": ["This is a controlled setting with a known sentiment classifier reward."]
+    },
+    {
+      "id": "C4",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "On TL;DR summarization, DPO reaches about a 61% GPT-4 win rate against reference summaries, exceeding PPO's about 57% best reported win rate.",
+      "scope": "Section 6.2 and Figure 2.",
+      "evidence_refs": ["E-summarization"],
+      "caveats": ["The main automatic evaluator is GPT-4, with a human validation study used to justify it."]
+    },
+    {
+      "id": "C5",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "On Anthropic Helpful-Harmless single-turn dialogue, DPO is the only computationally efficient method reported to improve over the preferred completions in the test set.",
+      "scope": "Section 6.2 and Figure 3.",
+      "evidence_refs": ["E-dialogue"],
+      "caveats": ["The paper treats best-of-128 as a rough proxy for PPO-level performance in this setup because the available PPO model underperformed."]
+    },
+    {
+      "id": "C6",
+      "type": "evaluation",
+      "status": "paper-supported",
+      "statement": "The paper validates GPT-4 as an evaluator with a human study, but acknowledges automated win rates depend on evaluator prompting.",
+      "scope": "Section 6.4 and Discussion.",
+      "evidence_refs": ["E-gpt4-eval"],
+      "caveats": ["Evaluator choice and prompt design are part of the measured result, not neutral infrastructure."]
+    },
+    {
+      "id": "C7",
+      "type": "limitation",
+      "status": "paper-supported",
+      "statement": "The paper leaves scaling, out-of-distribution generalization, self-labeling, and reward over-optimization under DPO as open questions.",
+      "scope": "Discussion.",
+      "evidence_refs": ["E-limitations"],
+      "caveats": ["The published experiments cover models up to 6B parameters, not frontier-scale deployment."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-derivation",
+      "kind": "theory",
+      "source": "paper",
+      "locator": "Section 4, Equations 4-7",
+      "result": "The paper shows that the optimal policy for the KL-constrained reward objective can be written as the reference policy times an exponentiated reward, then rearranges this to express reward as beta times the log policy/reference ratio plus a partition term that cancels in pairwise preferences.",
+      "metric": "reward-policy reparameterization",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-pipeline-simplification",
+      "kind": "method",
+      "source": "paper",
+      "locator": "Abstract, Figure 1, Section 4",
+      "result": "DPO optimizes a policy directly with a binary cross-entropy objective over preference pairs, eliminating explicit reward-model training, policy sampling during fine-tuning, and significant RL hyperparameter tuning.",
+      "metric": "pipeline simplification",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-sentiment",
+      "kind": "controlled_result",
+      "source": "paper",
+      "locator": "Section 6.1, Figure 2",
+      "result": "In controlled sentiment generation, DPO produces the strongest expected reward versus KL frontier and strictly dominates PPO, including a PPO-GT baseline with ground-truth rewards.",
+      "metric": "reward/KL frontier",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-summarization",
+      "kind": "benchmark_result",
+      "source": "paper",
+      "locator": "Section 6.2, Figure 2",
+      "result": "On Reddit TL;DR summarization, DPO reports about a 61% win rate against reference summaries at temperature 0.0, while PPO reaches about 57% at its best temperature; DPO is also more robust across sampling temperatures.",
+      "metric": "GPT-4 preference win rate",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-dialogue",
+      "kind": "benchmark_result",
+      "source": "paper",
+      "locator": "Section 6.2, Figure 3",
+      "result": "On Anthropic HH one-step dialogue, DPO is reported as the only computationally efficient method that improves over the preferred completions in the test set and performs similarly or better than best-of-128.",
+      "metric": "dialogue preference win rate",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-gpt4-eval",
+      "kind": "evaluation",
+      "source": "paper",
+      "locator": "Section 6.4, Table 2",
+      "result": "The human study reports GPT-4-human agreement in the 70-86% range across tested comparisons, generally similar to inter-human agreement, but the paper notes GPT-4 prompt choice affects win rates.",
+      "metric": "judge agreement",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-limitations",
+      "kind": "limitation",
+      "source": "paper",
+      "locator": "Discussion",
+      "result": "The paper identifies open questions around DPO out-of-distribution generalization, use of self-labeling and unlabeled prompts, reward over-optimization, scaling beyond 6B parameter models, and automated-evaluator prompting.",
+      "metric": "open questions",
+      "claim_refs": ["C7"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "DPO makes preference training operationally boring in the best way: it turns post-training into a supervised loop over preference pairs.",
+    "The reference model is part of the contract. DPO is not just 'prefer A over B'; it is 'prefer A over B relative to what the reference model already does.'",
+    "Preference-data quality still dominates. Removing PPO does not remove the need for representative prompts, good comparisons, and clear evaluator criteria.",
+    "The beta knob is a runtime policy knob in training form: it controls how far the agent model may move from known behavior.",
+    "For agent builders, DPO is a bridge from human preference labels to model behavior, while RLVR later replaces human labels with executable checks where possible.",
+    "Automated judges are infrastructure dependencies. The paper's GPT-4 evaluation validation is useful, but judge prompts and judge drift need versioning."
+  ],
+  "caveats": [
+    "DPO simplifies RLHF but does not make preference optimization free of assumptions.",
+    "The method still needs pairwise preference data from the task distribution.",
+    "The experiments use models up to 6B parameters, so frontier-scale behavior is an extrapolation from this paper.",
+    "GPT-4 judge prompts materially affect reported win rates.",
+    "DPO can still face reward/preference over-optimization and distribution-shift issues.",
+    "DPO does not by itself solve safety, tool-use reliability, or verifiable correctness for agents."
+  ],
+  "related_work": [
+    {
+      "title": "InstructGPT",
+      "relation": "simplifies",
+      "note": "InstructGPT is the canonical SFT plus reward model plus PPO RLHF pipeline that DPO aims to simplify.",
+      "url": "https://arxiv.org/abs/2203.02155"
+    },
+    {
+      "title": "WebGPT",
+      "relation": "connects",
+      "note": "WebGPT shows preference optimization over browser-assisted answers; DPO simplifies later preference optimization machinery.",
+      "url": "https://arxiv.org/abs/2112.09332"
+    },
+    {
+      "title": "Tulu 3",
+      "relation": "precedes",
+      "note": "Tulu 3 uses modern post-training recipes where direct preference optimization variants coexist with verifiable reward methods.",
+      "url": "https://arxiv.org/abs/2411.15124"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A compact PoC could optimize a tiny language model or classifier on synthetic preference pairs with the DPO log-ratio loss and compare it to preferred-only fine-tuning."
+  },
+  "slide_plan": {
+    "title": "Direct Preference Optimization",
+    "subtitle": "Preference training without the PPO loop",
+    "sections": [
+      "summary",
+      "problem",
+      "rlhf_baseline",
+      "dpo_derivation",
+      "loss",
+      "summarization_results",
+      "dialogue_results",
+      "evaluation",
+      "agent_training_takeaways",
+      "caveats",
+      "references"
+    ]
+  }
+}

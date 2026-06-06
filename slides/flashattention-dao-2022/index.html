@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · FlashAttention</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/highlight/monokai.css" />
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <section data-markdown
+               data-separator="^\n---\n$"
+               data-separator-vertical="^\n--\n$"
+               data-separator-notes="^Note:">
+        <textarea data-template>
+<!-- .slide: class="title-slide apple-title" -->
+
+<div class="slide-frame slide-frame--center">
+  <p class="deck-kicker">agent-readings / Inference and Serving Infrastructure</p>
+  <h1>FlashAttention</h1>
+  <p class="deck-subtitle">Exact attention with less memory traffic</p>
+
+  <div class="deck-meta-strip">
+    <div class="deck-meta-pill"><strong>2022</strong><span>NeurIPS 2022; arXiv 2022</span></div>
+    <div class="deck-meta-pill"><strong>7</strong><span>claims</span></div>
+    <div class="deck-meta-pill"><strong>7</strong><span>evidence refs</span></div>
+    <div class="deck-meta-pill"><strong>paper-read</strong><span>status</span></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="statement-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">The one sentence</p>
+  <h2>FlashAttention makes exact attention fast by tiling the computation so the quadratic attention matrix is never materialized in slow GPU HBM.</h2>
+  <p class="deck-note">For agents, every serving-layer gain compounds across long contexts and many calls; FlashAttention is the kernel-level reason longer prompts and cheaper serving became practical.</p>
+</div>
+
+---
+
+<!-- .slide: class="problem-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Before this paper</p>
+  <h2>The friction was structural.</h2>
+  <div class="apple-card-grid apple-card-grid--three">
+    <div class="apple-card"><p>Self-attention has quadratic time and memory complexity in sequence length.</p></div>
+<div class="apple-card"><p>Approximate attention methods reduce theoretical compute but often fail to improve wall-clock time or reduce quality.</p></div>
+<div class="apple-card"><p>Standard attention materializes the N by N attention matrix and moves it through GPU HBM, making memory traffic a bottleneck.</p></div>
+  </div>
+  <div class="deck-callout">
+    <span>Key gap</span>
+    <p>The paper asks how to compute exact attention with fewer HBM reads/writes by explicitly designing for the GPU memory hierarchy.</p>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="idea-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Core idea</p>
+  <h2>Load blocks of Q, K, and V into SRAM, compute attention tile by tile with online softmax, write only final outputs and small normalization state to HBM, and...</h2>
+  <p class="deck-note">Load blocks of Q, K, and V into SRAM, compute attention tile by tile with online softmax, write only final outputs and small normalization state to HBM, and recompute tiles during backward rather than storing the whole attention matrix.</p>
+  <div class="idea-loop" aria-label="Agent loop">
+    <div><strong>Model</strong><span>reason</span></div>
+    <div><strong>Runtime</strong><span>act</span></div>
+    <div><strong>World</strong><span>observe</span></div>
+  </div>
+  <div class="step-strip">
+    <div class="step-item">
+  <span>01</span>
+  <p>Partition Q, K, and V into blocks sized for GPU SRAM.</p>
+</div>
+<div class="step-item">
+  <span>02</span>
+  <p>Loop over K/V blocks and Q blocks, loading only the active tiles into SRAM.</p>
+</div>
+<div class="step-item">
+  <span>03</span>
+  <p>Compute local attention scores for the tile.</p>
+</div>
+<div class="step-item">
+  <span>04</span>
+  <p>Update online softmax statistics and accumulated outputs without storing the full N by N score matrix.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="grammar-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Action grammar</p>
+  <h2>The agent is an interface contract.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>Q block: tile of query vectors loaded into SRAM.</p></div>
+<div class="apple-card"><p>K/V block: tile of key/value vectors loaded into SRAM.</p></div>
+<div class="apple-card"><p>score tile: local QK^T product computed in SRAM.</p></div>
+<div class="apple-card"><p>normalization state: running max and denominator needed for stable softmax across tiles.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="code-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Executable shape</p>
+  <h2>The mechanism should fit on one screen.</h2>
+
+```python
+for kv_block in blocks(K, V):
+    K_sram, V_sram = load_to_sram(kv_block)
+    for q_block in blocks(Q):
+        Q_sram = load_to_sram(q_block)
+        scores = Q_sram @ K_sram.T
+        m_new, l_new, acc_new = online_softmax_update(scores, V_sram, state[q_block])
+        state[q_block] = (m_new, l_new, acc_new)
+
+for q_block in blocks(Q):
+    write_hbm(output[q_block], normalize(state[q_block]))
+
+# Backward recomputes score tiles instead of loading a saved N x N attention matrix.
+```
+</div>
+
+---
+
+<!-- .slide: class="proof-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Evidence</p>
+  <h2>The proof objects.</h2>
+  <div class="proof-grid">
+    <div class="proof-card">
+  <span>E-approximate-attention-gap</span>
+  <p>The paper argues approximate attention methods focus on FLOP reduction and often do not achieve wall-clock speedup because they ignore IO and memory-access overheads.</p>
+</div>
+<div class="proof-card">
+  <span>E-tiling</span>
+  <p>FlashAttention uses tiling to load Q, K, and V blocks into SRAM and avoid reading/writing the large attention matrix to HBM.</p>
+</div>
+<div class="proof-card">
+  <span>E-io-complexity</span>
+  <p>The paper analyzes IO complexity, states FlashAttention requires fewer HBM accesses than standard attention, and proves optimality for a range of SRAM sizes.</p>
+</div>
+<div class="proof-card">
+  <span>E-attention-kernel-speed</span>
+  <p>The paper reports that not materializing the N by N attention matrix gives a 7.6x speedup on GPT-2 attention computation and up to 9x fewer HBM accesses in typical settings.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="claim-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Claim map</p>
+  <h2>What the review actually supports.</h2>
+  <div class="claim-grid">
+    <div class="claim-card">
+  <span>C1 · paper-supported</span>
+  <p>Approximate attention methods often reduce compute complexity but fail to deliver wall-clock speedups because they ignore memory-access overhead.</p>
+  <small>E-approximate-attention-gap</small>
+</div>
+<div class="claim-card">
+  <span>C2 · paper-supported</span>
+  <p>FlashAttention is an exact attention algorithm that uses tiling to reduce reads and writes between GPU HBM and on-chip SRAM.</p>
+  <small>E-tiling</small>
+</div>
+<div class="claim-card">
+  <span>C3 · paper-supported</span>
+  <p>The paper analyzes FlashAttention's IO complexity and proves it is IO-optimal for a range of SRAM sizes.</p>
+  <small>E-io-complexity</small>
+</div>
+<div class="claim-card">
+  <span>C4 · paper-supported</span>
+  <p>FlashAttention reports major attention-kernel speedups by avoiding materialization of the N by N attention matrix in HBM.</p>
+  <small>E-attention-kernel-speed</small>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="takeaway-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Agent infrastructure</p>
+  <h2>What changes if you build systems.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>Serving improvements start at the kernel. Agent workflows become cheaper when the primitive attention operation stops wasting HBM bandwidth.</p></div>
+<div class="apple-card"><p>FLOPs are not the whole cost model. For long-context agents, memory traffic and KV residency often dominate.</p></div>
+<div class="apple-card"><p>FlashAttention is exact, so it can improve throughput/latency without changing model semantics the way approximate attention might.</p></div>
+<div class="apple-card"><p>Longer context is an infrastructure feature. It changes what agents can carry in prompt state, tool traces, and retrieval context.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="caveat-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Caveats</p>
+  <h2>What this does not prove.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>The paper is primarily about training and attention kernels, though the kernel later became central to inference stacks.</p></div>
+<div class="apple-card"><p>Kernel speedups are hardware- and implementation-dependent.</p></div>
+<div class="apple-card"><p>Block-sparse FlashAttention is approximate and should not be conflated with exact FlashAttention.</p></div>
+<div class="apple-card"><p>Exact attention still has quadratic work in sequence length; FlashAttention reduces memory traffic and footprint, not the mathematical attention...</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="closing-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Run it</p>
+  <h2>No PoC yet.</h2>
+  <p class="deck-note">No PoC yet - contributions welcome. A small PoC could compare a toy attention implementation that materializes the attention matrix against a tiled streaming version and count memory traffic.</p>
+  <div class="reference-list">
+    <ul><li>Paper: <a href="https://arxiv.org/abs/2205.14135">FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness</a></li><li>Project/code: <a href="https://github.com/Dao-AILab/flash-attention">https://github.com/Dao-AILab/flash-attention</a></li><li>same_io_theme: <a href="https://arxiv.org/abs/2309.06180">PagedAttention</a></li><li>stack_layer: <a href="https://arxiv.org/abs/2312.07104">SGLang</a></li><li>demand_driver: <a href="https://arxiv.org/abs/2305.10601">Tree of Thoughts</a></li></ul>
+  </div>
+</div>
+
+Note: This deck is synthesized from `data/reviews/flashattention-dao-2022.json`. Update the review record, then run `bun run build`.
+
+        </textarea>
+      </section>
+    </div>
+  </div>
+  <script type="module" src="../../assets/deck.js"></script>
+</body>
+</html>

@@ -1,0 +1,280 @@
+{
+  "schema_version": 1,
+  "slug": "gaia-mialon-2023",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "GAIA: A Benchmark for General AI Assistants",
+    "authors": [
+      "Gregoire Mialon",
+      "Clementine Fourrier",
+      "Craig Swift",
+      "Thomas Wolf",
+      "Yann LeCun",
+      "Thomas Scialom"
+    ],
+    "year": 2023,
+    "venue": "arXiv 2023",
+    "url": "https://arxiv.org/abs/2311.12983",
+    "project_url": "https://huggingface.co/gaia-benchmark",
+    "arxiv_id": "2311.12983",
+    "read_sources": [
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2311.12983",
+        "note": "Used for arXiv metadata, author list, abstract, benchmark size, public leaderboard framing, and human/GPT-4 headline scores."
+      },
+      {
+        "kind": "paper_pdf",
+        "url": "https://arxiv.org/pdf/2311.12983",
+        "note": "Read for benchmark philosophy, question examples, levels, design goals, dataset split, tool-use/multimodal requirements, evaluation, and limitations."
+      },
+      {
+        "kind": "benchmark_page",
+        "url": "https://huggingface.co/gaia-benchmark",
+        "note": "Used to confirm benchmark hosting context."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "GAIA evaluates general AI assistants with concise, factoid real-world questions that are easy for humans but require AI systems to browse, reason, handle multimodal evidence, and use tools accurately.",
+    "thesis": "The benchmark rejects the idea that harder-for-humans exams are the best path to AGI evaluation; instead, it targets simple human tasks whose answer is easy to check but whose execution path is complex for current assistants.",
+    "why_it_matters": "For agents, GAIA is a clean benchmark of compound assistant behavior: the answer is usually short, but reaching it requires correct tool use, web navigation, evidence synthesis, and exact formatting."
+  },
+  "problem": {
+    "prior_state": [
+      "Many LLM benchmarks were becoming saturated or were vulnerable to data contamination.",
+      "Some benchmarks target tasks that are difficult for humans, even though current AI systems can already outperform non-experts on professional exams.",
+      "Open-ended generation evaluation can require expensive human or model-based judging.",
+      "General assistants need evaluation on real-world multi-step tasks with unambiguous answers."
+    ],
+    "key_gap": "The paper asks how to evaluate general assistant robustness on practical tasks whose solutions are easy to verify but hard for AI systems to execute reliably.",
+    "assumptions": [
+      "Concise factual answers allow simple automatic grading.",
+      "Questions should be conceptually simple for non-expert humans.",
+      "Most questions should require real tool use, browsing, multimodality, or multi-step reasoning rather than memorized text.",
+      "Withholding some answers can support a leaderboard while reducing leakage."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "general-ai-assistant",
+      "name": "General AI assistant",
+      "definition": "An AI system expected to handle broad real-world user questions through reasoning, tools, browsing, and multimodal processing."
+    },
+    {
+      "id": "factoid-answer",
+      "name": "Factoid answer",
+      "definition": "A concise, unambiguous answer that can be automatically checked."
+    },
+    {
+      "id": "conceptually-simple-task",
+      "name": "Conceptually simple task",
+      "definition": "A task that average humans can understand and solve robustly, even if it requires several steps."
+    },
+    {
+      "id": "level",
+      "name": "Difficulty level",
+      "definition": "A grouping of GAIA questions by required complexity, from easier Level 1 tasks to harder Level 3 tasks."
+    },
+    {
+      "id": "held-out-answers",
+      "name": "Held-out answers",
+      "definition": "Answers withheld from public release to support leaderboard evaluation."
+    },
+    {
+      "id": "reasoning-trace",
+      "name": "Reasoning trace",
+      "definition": "The sequence of steps or evidence used to derive the final answer, useful for interpretability and contamination checks."
+    }
+  ],
+  "method": {
+    "core_idea": "Craft questions that require real-world tool use and multi-step evidence gathering, make final answers short and unique, collect human baselines, and publish a split with held-out answers for leaderboard evaluation.",
+    "action_grammar": [
+      "question: real-world prompt with one concise factual answer.",
+      "evidence: optional image, document, web page, or clue used to answer.",
+      "tools: browser, search, code, calculator, multimodal parser, or other assistant capability.",
+      "answer string: final concise response checked against ground truth.",
+      "level: task difficulty bucket.",
+      "developer set: public annotated questions.",
+      "leaderboard split: questions with hidden answers."
+    ],
+    "steps": [
+      "Design questions that are simple for humans but require tool-use, browsing, reasoning, or multimodal handling for AI.",
+      "Ensure answers are concise, factual, unique, and unlikely to appear directly in training data.",
+      "Group tasks into levels of increasing difficulty.",
+      "Collect human respondent performance.",
+      "Evaluate GPT-4 with plugins and other assistants on the same questions.",
+      "Release 166 annotated developer questions.",
+      "Withhold answers to 300 questions for leaderboard evaluation.",
+      "Use exact/factual answer matching rather than free-form open-ended judging."
+    ],
+    "pseudocode": "for question in gaia:\n    evidence = question.attachments_or_web_context\n    agent_trace = agent.solve(question.prompt, tools=[browser, code, calculator, vision])\n    answer = normalize(agent_trace.final_answer)\n    success = exact_or_rule_match(answer, question.ground_truth)\n    record(success, level=question.level)"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "benchmark",
+      "status": "paper-supported",
+      "statement": "GAIA contains 466 carefully crafted questions targeting general AI assistant abilities.",
+      "scope": "Abstract and Introduction.",
+      "evidence_refs": ["E-question-count"],
+      "caveats": ["The benchmark is deliberately small and curated rather than a large scraped dataset."]
+    },
+    {
+      "id": "C2",
+      "type": "benchmark_design",
+      "status": "paper-supported",
+      "statement": "GAIA questions require abilities such as reasoning, multimodal handling, web browsing, and tool-use proficiency.",
+      "scope": "Abstract and Introduction.",
+      "evidence_refs": ["E-required-abilities"],
+      "caveats": ["Not every question requires every ability."]
+    },
+    {
+      "id": "C3",
+      "type": "evaluation",
+      "status": "paper-supported",
+      "statement": "GAIA uses concise, unambiguous factual answers to support simple automatic evaluation.",
+      "scope": "Introduction.",
+      "evidence_refs": ["E-factoid-answers"],
+      "caveats": ["Some normalization and answer-format rules still matter."]
+    },
+    {
+      "id": "C4",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "Human respondents score 92% on GAIA, while GPT-4 equipped with plugins scores 15% in the paper's headline comparison.",
+      "scope": "Abstract.",
+      "evidence_refs": ["E-human-gpt4"],
+      "caveats": ["This is paper-era GPT-4-with-plugins performance and not current leaderboard SOTA."]
+    },
+    {
+      "id": "C5",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "GPT-4 with tools does not exceed 30% on the easiest tasks and scores 0% on the hardest tasks in the paper's discussion.",
+      "scope": "Introduction.",
+      "evidence_refs": ["E-level-performance"],
+      "caveats": ["Exact setup and tool access affect assistant performance."]
+    },
+    {
+      "id": "C6",
+      "type": "release",
+      "status": "paper-supported",
+      "statement": "The authors release 166 annotated developer questions and hold out 300 answers for a leaderboard.",
+      "scope": "Abstract and Introduction.",
+      "evidence_refs": ["E-release-split"],
+      "caveats": ["Leaderboard integrity depends on answer secrecy and contamination management."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-question-count",
+      "kind": "benchmark",
+      "source": "paper",
+      "locator": "Abstract and Introduction",
+      "result": "The paper states GAIA comprises 466 carefully crafted questions and answers.",
+      "metric": "question count",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-required-abilities",
+      "kind": "benchmark_design",
+      "source": "paper",
+      "locator": "Abstract and Figure 1",
+      "result": "The paper says GAIA tasks require reasoning, multimodality, web browsing, and tool-use proficiency, with examples involving NIH pages, Wikipedia calculations, and NASA/APOD image evidence.",
+      "metric": "required assistant abilities",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-factoid-answers",
+      "kind": "evaluation",
+      "source": "paper",
+      "locator": "Introduction",
+      "result": "GAIA questions are designed to have unique, factual, concise, unambiguous answers so evaluation is simple and robust.",
+      "metric": "answer format and automatic evaluation",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-human-gpt4",
+      "kind": "benchmark_result",
+      "source": "paper",
+      "locator": "Abstract",
+      "result": "The paper reports 92% human performance versus 15% for GPT-4 equipped with plugins.",
+      "metric": "success rate",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-level-performance",
+      "kind": "benchmark_result",
+      "source": "paper",
+      "locator": "Introduction",
+      "result": "The paper says GPT-4 with tools does not exceed 30% on the easiest GAIA tasks and scores 0% on the hardest tasks.",
+      "metric": "success by difficulty level",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-release-split",
+      "kind": "release",
+      "source": "paper",
+      "locator": "Abstract and Introduction",
+      "result": "The authors release 166 annotated developer questions and keep 300 answers hidden for a leaderboard.",
+      "metric": "developer/leaderboard split",
+      "claim_refs": ["C6"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "GAIA is a clean assistant benchmark because the final answer is short but the path is operationally complex.",
+    "Tool-use evaluation should ask whether the tool was needed and used correctly, not merely whether the model can name a tool.",
+    "Concise factoid answers make grading cheaper and less judge-dependent than free-form reports.",
+    "The human-vs-AI gap is useful because these are not expert-only tasks; they measure robustness on ordinary information work.",
+    "Agents need provenance capture for GAIA-like tasks: web pages, calculations, images, and intermediate facts should be auditable.",
+    "GAIA's held-out split is a reminder that benchmark operations matter: answer secrecy and contamination control are part of the benchmark."
+  ],
+  "caveats": [
+    "The benchmark is small and curated.",
+    "Paper-era GPT-4/plugin results are historical, not current SOTA.",
+    "Exact answer matching can be brittle if normalization rules are underspecified.",
+    "Some tasks depend on web state that can drift unless evidence is fixed or reproduced.",
+    "GAIA evaluates final factoid answers more than full side-effecting task completion.",
+    "Leaderboard integrity depends on keeping held-out answers from leaking."
+  ],
+  "related_work": [
+    {
+      "title": "WebArena",
+      "relation": "complements",
+      "note": "WebArena evaluates actions in mutable web environments; GAIA evaluates compound information-seeking/tool-use questions with concise answers.",
+      "url": "https://arxiv.org/abs/2307.13854"
+    },
+    {
+      "title": "Toolformer",
+      "relation": "tool_use",
+      "note": "Toolformer studies learning when to call tools; GAIA asks whether assistants can use tools to solve real questions.",
+      "url": "https://arxiv.org/abs/2302.04761"
+    },
+    {
+      "title": "AgentBench",
+      "relation": "broader_harness",
+      "note": "AgentBench evaluates agents across multiple environments; GAIA focuses on general-assistant question answering.",
+      "url": "https://arxiv.org/abs/2308.03688"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A tiny PoC could define three GAIA-style questions with fixed evidence and exact answer matching."
+  },
+  "slide_plan": {
+    "title": "GAIA",
+    "subtitle": "Simple answers, hard tool paths",
+    "sections": [
+      "summary",
+      "benchmark_philosophy",
+      "task_design",
+      "required_abilities",
+      "evaluation",
+      "human_vs_gpt4",
+      "agent_eval_takeaways",
+      "caveats",
+      "references"
+    ]
+  }
+}

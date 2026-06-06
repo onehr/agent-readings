@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Building Effective Agents</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/highlight/monokai.css" />
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <section data-markdown
+               data-separator="^\n---\n$"
+               data-separator-vertical="^\n--\n$"
+               data-separator-notes="^Note:">
+        <textarea data-template>
+<!-- .slide: class="title-slide apple-title" -->
+
+<div class="slide-frame slide-frame--center">
+  <p class="deck-kicker">agent-readings / Start Here</p>
+  <h1>Building Effective Agents</h1>
+  <p class="deck-subtitle">Use the simplest control pattern that earns its complexity</p>
+
+  <div class="deck-meta-strip">
+    <div class="deck-meta-pill"><strong>2024</strong><span>Anthropic Engineering</span></div>
+    <div class="deck-meta-pill"><strong>6</strong><span>claims</span></div>
+    <div class="deck-meta-pill"><strong>6</strong><span>evidence refs</span></div>
+    <div class="deck-meta-pill"><strong>source-read</strong><span>status</span></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="statement-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">The one sentence</p>
+  <h2>Anthropic argues that effective agentic systems usually start with simple LLM calls and only add workflows or autonomous agents when the task's uncertainty justifies the latency, cost, and control tradeoffs.</h2>
+  <p class="deck-note">The article gives a practical runtime taxonomy: augmented LLM, fixed workflow, and autonomous agent are different control surfaces with different debugging, cost, and trust requirements.</p>
+</div>
+
+---
+
+<!-- .slide: class="problem-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Before this paper</p>
+  <h2>The friction was structural.</h2>
+  <div class="apple-card-grid apple-card-grid--three">
+    <div class="apple-card"><p>Teams often use the word agent for both fixed workflows and open-ended autonomous systems.</p></div>
+<div class="apple-card"><p>Frameworks can make agentic systems quick to start but can obscure prompts, responses, and tool behavior.</p></div>
+<div class="apple-card"><p>Complex multi-step systems can add latency, cost, and compounding errors when a simpler LLM call would suffice.</p></div>
+  </div>
+  <div class="deck-callout">
+    <span>Key gap</span>
+    <p>The article addresses the missing practitioner taxonomy for deciding when to use a direct LLM call, a predefined workflow, or a model-directed agent.</p>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="idea-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Core idea</p>
+  <h2>Use the simplest control pattern that satisfies the task.</h2>
+  <p class="deck-note">Use the simplest control pattern that satisfies the task. Start with a direct augmented LLM call, move to fixed workflows when decomposition is predictable, and reserve autonomous agents for open-ended tasks where the model must choose steps and tools over...</p>
+  <div class="idea-loop" aria-label="Agent loop">
+    <div><strong>Model</strong><span>reason</span></div>
+    <div><strong>Runtime</strong><span>act</span></div>
+    <div><strong>World</strong><span>observe</span></div>
+  </div>
+  <div class="step-strip">
+    <div class="step-item">
+  <span>01</span>
+  <p>Find the simplest solution, often a single LLM call with retrieval or examples.</p>
+</div>
+<div class="step-item">
+  <span>02</span>
+  <p>If a task decomposes cleanly, implement a fixed workflow with checks or routing.</p>
+</div>
+<div class="step-item">
+  <span>03</span>
+  <p>If subtasks cannot be predicted in advance, let an orchestrator or agent dynamically decompose the task.</p>
+</div>
+<div class="step-item">
+  <span>04</span>
+  <p>For autonomous agents, keep environment feedback, sandbox testing, guardrails, and stopping conditions explicit.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="grammar-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Action grammar</p>
+  <h2>The agent is an interface contract.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>Augmentation: retrieval, tools, and memory available to each LLM call through well-documented interfaces.</p></div>
+<div class="apple-card"><p>Workflow: prompt chaining, routing, parallelization, orchestrator-workers, or evaluator-optimizer patterns encoded in...</p></div>
+<div class="apple-card"><p>Agent loop: human command or discussion, model planning, tool/environment action, ground-truth observation, optional...</p></div>
+<div class="apple-card"><p>Tool interface: tool schema, parameter descriptions, examples, edge cases, and formats chosen to be easy for the model...</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="code-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Executable shape</p>
+  <h2>The mechanism should fit on one screen.</h2>
+
+```python
+if single_call_with_context_passes_eval(task):
+    return augmented_llm(task)
+if task_has_fixed_decomposition(task):
+    return workflow(task)
+if task_requires_open_ended_steps(task) and trust_boundary_allows_autonomy(task):
+    return agent_loop(task, tools, observations, checkpoints)
+return simplify_or_block(task)
+```
+</div>
+
+---
+
+<!-- .slide: class="proof-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Evidence</p>
+  <h2>The proof objects.</h2>
+  <div class="proof-grid">
+    <div class="proof-card">
+  <span>E-workflow-agent-distinction</span>
+  <p>The article defines workflows as systems where LLMs and tools are orchestrated through predefined code paths, and agents as systems where LLMs dynamically direct their own...</p>
+</div>
+<div class="proof-card">
+  <span>E-simplicity-guidance</span>
+  <p>The article recommends finding the simplest solution possible, says agentic systems trade latency and cost for task performance, and summarizes the rule as starting simple and...</p>
+</div>
+<div class="proof-card">
+  <span>E-augmented-llm</span>
+  <p>The article identifies an LLM with retrieval, tools, and memory as the basic building block, and stresses tailoring those capabilities plus documenting interfaces for model use.</p>
+</div>
+<div class="proof-card">
+  <span>E-workflow-patterns</span>
+  <p>The article describes prompt chaining, routing, parallelization, orchestrator-workers, and evaluator-optimizer workflows, including when each is useful.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="claim-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Claim map</p>
+  <h2>What the review actually supports.</h2>
+  <div class="claim-grid">
+    <div class="claim-card">
+  <span>C1 · source-supported</span>
+  <p>The article distinguishes workflows from agents by whether code paths are predefined or dynamically directed by the LLM.</p>
+  <small>E-workflow-agent-distinction</small>
+</div>
+<div class="claim-card">
+  <span>C2 · source-supported</span>
+  <p>Anthropic recommends starting with the simplest LLM application and adding agentic complexity only when it demonstrably improves outcomes.</p>
+  <small>E-simplicity-guidance</small>
+</div>
+<div class="claim-card">
+  <span>C3 · source-supported</span>
+  <p>The augmented LLM is treated as the foundational building block for agentic systems, with retrieval, tools, and memory exposed through clear interfaces.</p>
+  <small>E-augmented-llm</small>
+</div>
+<div class="claim-card">
+  <span>C4 · source-supported</span>
+  <p>The article names five common workflow patterns: prompt chaining, routing, parallelization, orchestrator-workers, and evaluator-optimizer.</p>
+  <small>E-workflow-patterns</small>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="takeaway-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Agent infrastructure</p>
+  <h2>What changes if you build systems.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>Separate workflows from agents in the runtime API. Fixed code paths and model-directed control flow need different observability and safety...</p></div>
+<div class="apple-card"><p>Treat complexity as a cost: every extra loop, branch, worker, or evaluator should have an evaluation reason to exist.</p></div>
+<div class="apple-card"><p>The augmented LLM is the reusable substrate; retrieval, memory, and tools should be documented as model-facing capabilities, not hidden implementation...</p></div>
+<div class="apple-card"><p>Agent loops need environment observations, human checkpoints, sandbox tests, guardrails, and stopping conditions as first-class runtime concepts.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="caveat-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Caveats</p>
+  <h2>What this does not prove.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>This is a practitioner article based on Anthropic and customer experience, not a peer-reviewed research paper.</p></div>
+<div class="apple-card"><p>The framework and model examples can age as Anthropic products and agent frameworks change.</p></div>
+<div class="apple-card"><p>The article gives patterns and fit conditions, but not quantitative benchmark results for each pattern.</p></div>
+<div class="apple-card"><p>The advice is oriented toward LLM application builders and does not fully specify security boundaries for high-risk tool use.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="closing-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Run it</p>
+  <h2>No PoC yet.</h2>
+  <p class="deck-note">No PoC yet - contributions welcome. A useful local PoC would implement the same task as a single augmented call, prompt chain, and agent loop, then compare latency, cost proxy, and success rate on deterministic fixtures.</p>
+  <div class="reference-list">
+    <ul><li>Paper: <a href="https://www.anthropic.com/engineering/building-effective-agents">Building Effective Agents</a></li><li>implementation-path: <a href="https://modelcontextprotocol.io">Model Context Protocol</a></li><li>application-domain: <a href="https://www.swebench.com/">SWE-bench Verified</a></li><li>complements: <a href="https://arxiv.org/abs/2309.02427">CoALA</a></li></ul>
+  </div>
+</div>
+
+Note: This deck is synthesized from `data/reviews/effective-agents-anthropic-2024.json`. Update the review record, then run `bun run build`.
+
+        </textarea>
+      </section>
+    </div>
+  </div>
+  <script type="module" src="../../assets/deck.js"></script>
+</body>
+</html>

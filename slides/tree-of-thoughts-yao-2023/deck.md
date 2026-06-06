@@ -1,0 +1,211 @@
+<!-- .slide: class="title-slide apple-title" -->
+
+<div class="slide-frame slide-frame--center">
+  <p class="deck-kicker">agent-readings / Reasoning, Acting, and Reflection</p>
+  <h1>Tree of Thoughts</h1>
+  <p class="deck-subtitle">Language-model reasoning as explicit search</p>
+
+  <div class="deck-meta-strip">
+    <div class="deck-meta-pill"><strong>2023</strong><span>NeurIPS 2023</span></div>
+    <div class="deck-meta-pill"><strong>6</strong><span>claims</span></div>
+    <div class="deck-meta-pill"><strong>6</strong><span>evidence refs</span></div>
+    <div class="deck-meta-pill"><strong>paper-read</strong><span>status</span></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="statement-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">The one sentence</p>
+  <h2>Tree of Thoughts generalizes chain-of-thought prompting into explicit search over intermediate language states, letting an LLM generate, evaluate, and backtrack among multiple reasoning paths.</h2>
+  <p class="deck-note">ToT makes the reasoning loop look like a planner: the runtime must manage state frontiers, candidate generation, heuristic evaluation, pruning, and search budget.</p>
+</div>
+
+---
+
+<!-- .slide: class="problem-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Before this paper</p>
+  <h2>The friction was structural.</h2>
+  <div class="apple-card-grid apple-card-grid--three">
+    <div class="apple-card"><p>Input-output prompting makes one left-to-right completion.</p></div>
+<div class="apple-card"><p>Chain-of-thought prompting gives a single sequential reasoning trace without local exploration or backtracking.</p></div>
+<div class="apple-card"><p>Self-consistency samples multiple full traces, but does not explore alternatives within each intermediate step and works best when answers can be voted over.</p></div>
+  </div>
+  <div class="deck-callout">
+    <span>Key gap</span>
+    <p>The paper targets tasks where early decisions matter and problem solving requires exploration, lookahead, or backtracking over intermediate states.</p>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="idea-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Core idea</p>
+  <h2>Represent problem solving as search over a tree of language thoughts.</h2>
+  <p class="deck-note">Represent problem solving as search over a tree of language thoughts. For each task, choose the thought granularity, generate candidate thoughts, evaluate partial states with the LLM, and apply a search algorithm such as breadth-first or depth-first search to...</p>
+  <div class="idea-loop" aria-label="Agent loop">
+    <div><strong>Model</strong><span>reason</span></div>
+    <div><strong>Runtime</strong><span>act</span></div>
+    <div><strong>World</strong><span>observe</span></div>
+  </div>
+  <div class="step-strip">
+    <div class="step-item">
+  <span>01</span>
+  <p>Decompose the task into thought units such as equations, writing plans, or crossword words.</p>
+</div>
+<div class="step-item">
+  <span>02</span>
+  <p>Generate candidate next thoughts from each frontier state.</p>
+</div>
+<div class="step-item">
+  <span>03</span>
+  <p>Evaluate candidate states with value prompts or vote prompts.</p>
+</div>
+<div class="step-item">
+  <span>04</span>
+  <p>Use BFS for shallow fixed-depth problems or DFS for deeper variable-depth problems.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="grammar-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Action grammar</p>
+  <h2>The agent is an interface contract.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>State: the original input plus the sequence of thoughts selected so far.</p></div>
+<div class="apple-card"><p>Thought generation: sample or propose candidate next thoughts from the current state.</p></div>
+<div class="apple-card"><p>State evaluation: score states independently or vote among states using the LLM.</p></div>
+<div class="apple-card"><p>Search step: keep, prune, expand, or backtrack based on a BFS/DFS policy and value thresholds.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="code-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Executable shape</p>
+  <h2>The mechanism should fit on one screen.</h2>
+
+```python
+frontier = [initial_state]
+for step in search_budget:
+    candidates = generate_thoughts(frontier)
+    scored = evaluate_states(candidates)
+    frontier = keep_best_or_backtrack(scored)
+return best_complete_solution(frontier)
+```
+</div>
+
+---
+
+<!-- .slide: class="proof-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Evidence</p>
+  <h2>The proof objects.</h2>
+  <div class="proof-grid">
+    <div class="proof-card">
+  <span>E-framework</span>
+  <p>The paper defines each thought as a coherent language sequence and frames a state as a partial solution containing the input and thoughts so far, enabling exploration over a tree...</p>
+</div>
+<div class="proof-card">
+  <span>E-four-questions</span>
+  <p>A ToT instantiation chooses how to decompose thoughts, how to generate candidate thoughts, how to evaluate states, and what search algorithm to use; the paper explores BFS and...</p>
+</div>
+<div class="proof-card">
+  <span>E-game24</span>
+  <p>On Game of 24, IO prompting solves 7.3%, CoT 4.0%, CoT-SC with k=100 solves 9.0%, ToT with breadth 1 solves 45%, and ToT with breadth 5 solves 74%. Best-of-100 CoT reaches 49%.</p>
+</div>
+<div class="proof-card">
+  <span>E-creative-writing</span>
+  <p>The Creative Writing setup asks for a coherent four-paragraph passage ending in four provided sentences; ToT generates writing plans and uses voting to choose plans before final...</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="claim-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Claim map</p>
+  <h2>What the review actually supports.</h2>
+  <div class="claim-grid">
+    <div class="claim-card">
+  <span>C1 · paper-supported</span>
+  <p>ToT defines LLM problem solving as search over a tree whose nodes are partial solutions expressed as language thoughts.</p>
+  <small>E-framework</small>
+</div>
+<div class="claim-card">
+  <span>C2 · paper-supported</span>
+  <p>A ToT implementation must answer four design questions: thought decomposition, thought generation, state evaluation, and search algorithm.</p>
+  <small>E-four-questions</small>
+</div>
+<div class="claim-card">
+  <span>C3 · paper-supported</span>
+  <p>On Game of 24, ToT strongly outperforms IO, CoT, and CoT self-consistency baselines.</p>
+  <small>E-game24</small>
+</div>
+<div class="claim-card">
+  <span>C4 · paper-supported</span>
+  <p>On the Creative Writing task, ToT uses planning plus voting to improve passage coherence relative to IO and CoT baselines.</p>
+  <small>E-creative-writing</small>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="takeaway-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Agent infrastructure</p>
+  <h2>What changes if you build systems.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>ToT turns reasoning into an explicit search workload: the runtime owns frontier state, branch expansion, scoring, pruning, and backtracking.</p></div>
+<div class="apple-card"><p>Thought granularity is an interface decision. A good runtime needs task-specific state representations that are neither token-level nor whole-solution...</p></div>
+<div class="apple-card"><p>LLM-as-heuristic is useful but not authoritative; value prompts should be logged and paired with verifiers when available.</p></div>
+<div class="apple-card"><p>Search raises serving costs sharply because every branch can trigger generation and evaluation calls; batching and budget controls become part of the...</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="caveat-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Caveats</p>
+  <h2>What this does not prove.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>The paper evaluates three custom tasks, not broad production-agent workloads.</p></div>
+<div class="apple-card"><p>The strongest Game of 24 result benefits from an exact success verifier and task-specific decomposition.</p></div>
+<div class="apple-card"><p>Creative Writing evaluation uses GPT-4 judgments, which are weaker evidence than executable checks or human studies.</p></div>
+<div class="apple-card"><p>The framework increases latency and model-call cost compared with a single CoT trace.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="closing-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Run it</p>
+  <h2>No PoC yet.</h2>
+  <p class="deck-note">No PoC yet - contributions welcome. A useful local PoC would implement Game of 24 with a small deterministic verifier and compare IO, CoT, best-of-N, and ToT search under a fixed call budget.</p>
+  <div class="reference-list">
+    <ul><li>Paper: <a href="https://arxiv.org/abs/2305.10601">Tree of Thoughts: Deliberate Problem Solving with Large Language Models</a></li><li>Project/code: <a href="https://github.com/princeton-nlp/tree-of-thought-llm">https://github.com/princeton-nlp/tree-of-thought-llm</a></li><li>generalizes: <a href="https://arxiv.org/abs/2201.11903">Chain-of-Thought Prompting</a></li><li>generalizes: <a href="https://arxiv.org/abs/2203.11171">Self-Consistency</a></li><li>related-planning: <a href="https://arxiv.org/abs/2305.14992">Reasoning with Language Model is Planning with World Model</a></li></ul>
+  </div>
+</div>
+
+Note: This deck is synthesized from `data/reviews/tree-of-thoughts-yao-2023.json`. Update the review record, then run `bun run build`.

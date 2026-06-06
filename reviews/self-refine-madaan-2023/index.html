@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Self-Refine: Iterative Refinement with Self-Feedback</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/self-refine-madaan-2023/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Reasoning, Acting, and Reflection</p>
+        <h1>Self-Refine</h1>
+        <p class="hero-lede">Self-Refine improves a model's first answer by repeatedly asking the same LLM to critique its output and rewrite it from that feedback.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>6</strong><span>Claims</span></div>
+          <div class="metric"><strong>7</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2023 · NeurIPS 2023</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>3</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/self-refine-madaan-2023/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2303.17651">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>For agents, Self-Refine turns intermediate artifacts into maintainable state: draft, feedback, revised draft, stop signal, and iteration budget are separate records that can be inspected, replayed, and connected to external checks.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Many LLM generations are useful but incomplete or suboptimal on the first attempt.</li><li>Prior iterative refinement methods often trained separate refiners or depended on supervised feedback data, scalar reward models, or human annotation.</li><li>One-shot prompting gives no durable place to store why an answer is wrong or how the next version should change.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks whether a strong frozen LLM can improve its own outputs across tasks by generating task-specific natural-language feedback and then refining from that feedback.</p>
+
+      <h2>Method</h2>
+      <p>Generate an initial output, prompt the same LLM for specific feedback on that output, prompt the same LLM to refine the output using the feedback, append prior outputs and feedback to later prompts, and repeat until a stop condition or maximum iteration count.</p>
+      <ul><li>Produce a first draft for the task.</li><li>Ask the model to critique the draft with specific, actionable feedback.</li><li>Ask the model to revise the draft using that feedback.</li><li>Carry the output and feedback history into the next iteration.</li><li>Return the final refinement after the stop condition or iteration budget is reached.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>Self-Refine needs no supervised training data, additional training, or reinforcement learning; it uses the same LLM as generator, feedback provider, and refiner.</p>
+  <p><strong>Scope:</strong> Abstract, Introduction, Section 2, and NeurIPS abstract page.</p>
+  <ul><li><strong>E-method</strong>: The paper defines Self-Refine as initial generation, self-feedback, and refinement using the same LLM, with no additional supervised training data, extra training, or reinforcement learning.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>The loop retains previous outputs and feedback in the prompt, making intermediate drafts and critiques part of the computation state.</p>
+  <p><strong>Scope:</strong> Section 2 algorithm and refinement equation discussion.</p>
+  <ul><li><strong>E-state-loop</strong>: The algorithm alternates feedback and refine steps until a stop condition. The paper says previous feedback and outputs are retained by appending them to the prompt, and the last refinement is returned.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>Across seven evaluated tasks, Self-Refine improves strong base LLM outputs by about 20 absolute points on average over conventional one-step generation.</p>
+  <p><strong>Scope:</strong> Abstract and Section 3 evaluation on GPT-3.5, ChatGPT, GPT-4, and code-model variants.</p>
+  <ul><li><strong>E-main-results</strong>: The abstract reports about 20 absolute points average improvement. Table 1 shows improvements across Sentiment Reversal, Dialogue Response, Code Optimization, Code Readability, Math Reasoning, Acronym Generation, and Constrained Generation for GPT-3.5, ChatGPT, and GPT-4.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>The largest gains appear on tasks where feedback can point to missing constraints or preference defects, while math reasoning improves only modestly without stronger error signals.</p>
+  <p><strong>Scope:</strong> Table 1 and Section 3.3 results discussion.</p>
+  <ul><li><strong>E-task-pattern</strong>: Examples include GPT-4 Dialogue Response improving from 25.4 to 74.6, ChatGPT Constrained Generation from 44.0 to 67.0, and GPT-4 Constrained Generation from 15.0 to 45.0. Math Reasoning changes are small in Table 1, such as GPT-4 92.9 to 93.1, and the paper attributes modest math gains to weak error identification.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>Specific, actionable feedback is an important mechanism: generic or absent feedback reduces performance in the paper's ablations.</p>
+  <p><strong>Scope:</strong> Section 4 feedback-quality analysis and Table 2.</p>
+  <ul><li><strong>E-feedback-quality</strong>: The feedback ablation reports lower scores with generic or no feedback. For ChatGPT Code Optimization, Self-Refine feedback scores 27.5 versus 26.0 generic feedback and 24.8 no feedback. For Sentiment Reversal, Self-Refine feedback scores 43.2 versus 31.2 generic feedback and 0 with no feedback.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>Self-Refine depends on strong instruction-following models and has practical limits around iteration cost, non-monotonic refinement, English-only experiments, proprietary model dependence, and harmful-use risk.</p>
+  <p><strong>Scope:</strong> Section 4 analysis and Section 6 limitations.</p>
+  <ul><li><strong>E-iterations-and-limits</strong>: The evaluation allows up to 4 iterations. Figure 4 reports average gains from more iterations with diminishing returns, while the analysis notes performance may not always increase monotonically. The Vicuna-13B experiment struggles to generate feedback in the required format or apply even oracle feedback.</li><li><strong>E-formal-limits</strong>: The limitations section says Self-Refine requires sufficient few-shot or instruction-following ability, uses non-open-source models in the experiments, evaluates English datasets only, and does not explicitly guard against malicious prompting for harmful text.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Treat generate, critique, refine, and stop-decision as separate logged runtime steps rather than one opaque completion.</li><li>Persist every intermediate output and feedback item so a review can explain why a slide, summary, or code artifact changed.</li><li>Do not treat self-feedback as a verifier. Where possible, pair critique prompts with external checks such as tests, parsers, graders, or task-specific constraints.</li><li>Iteration count is an infrastructure knob: it trades latency and cost for quality, and diminishing returns should be measured per task.</li><li>Refinement can be non-monotonic, so systems need selection policies, rollback to earlier candidates, or scoring across iterations.</li><li>Weak local models may fail at the feedback protocol itself; schema validation and prompt-format checks are part of the runtime contract.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>Self-Refine is a test-time prompting and orchestration method, not a new trained model.</li><li>The strongest experiments use proprietary models such as GPT-3.5, ChatGPT, GPT-4, and Codex.</li><li>Preference-based evaluations rely partly on humans and GPT-4-as-judge, so they are not all executable verifiers.</li><li>Math reasoning gains are modest without an external signal that identifies wrong answers.</li><li>More iterations increase inference cost and can produce non-monotonic quality changes.</li><li>The paper's evaluation is English-only and does not address safeguards against harmful prompted refinements.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/self-refine-madaan-2023.json.</span>
+  </footer>
+</body>
+</html>

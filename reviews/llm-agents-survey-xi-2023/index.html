@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · The Rise and Potential of Large Language Model Based Agents: A Survey</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/llm-agents-survey-xi-2023/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Surveys and Perspectives</p>
+        <h1>LLM Agent Survey</h1>
+        <p class="hero-lede">Xi et al. map LLM-based agents around a broad brain-perception-action framework, then survey single-agent, multi-agent, human-agent, and agent-society applications.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>7</strong><span>Claims</span></div>
+          <div class="metric"><strong>7</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2023 · arXiv 2023</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>3</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/llm-agents-survey-xi-2023/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2309.07864">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>For this reading list, the paper supplies breadth and vocabulary. It is less about one new mechanism and more about organizing the agent stack from model cognition through tools, embodiment, multi-agent coordination, and risk.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Classical agent research had many algorithms and task-specific training setups, but no general foundation model that could adapt broadly across scenarios.</li><li>Early LLM-agent work was scattered across prompting, tools, memory, embodiment, multi-agent systems, and simulation.</li><li>The field lacked a single map connecting construction, application, agent societies, evaluation, and risks.</li><li>Many agent surveys were still focused on narrower capability or application slices.</li></ul>
+      <p><strong>Key gap:</strong> The survey asks how to organize the rapidly expanding LLM-agent literature into a general conceptual framework and application taxonomy.</p>
+
+      <h2>Method</h2>
+      <p>Synthesize the LLM-agent literature into a construction framework, then classify applications and open problems by the agent's components, interaction setting, society behavior, evaluation needs, and risks.</p>
+      <ul><li>Trace the concept of agents from philosophical and AI origins.</li><li>Explain why LLMs are suitable as the primary component of an agent brain.</li><li>Introduce the brain-perception-action framework for LLM-based agent construction.</li><li>Survey applications across single agents, multi-agent systems, and human-agent cooperation.</li><li>Survey agent societies, including behavior, personality, environments, and social simulation.</li><li>Discuss evaluation dimensions and risks such as adversarial robustness, trustworthiness, misuse, and large-scale deployment.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>The survey proposes brain, perception, and action as the main construction components of LLM-based agents.</p>
+  <p><strong>Scope:</strong> Abstract and Section 3.</p>
+  <ul><li><strong>E-framework</strong>: The paper presents a general conceptual framework with three main components: brain, perception, and action.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>The agent brain is organized around natural-language interaction, knowledge, memory, reasoning/planning, and transfer/generalization.</p>
+  <p><strong>Scope:</strong> Section 3.1.</p>
+  <ul><li><strong>E-brain</strong>: The brain section is organized around natural-language interaction, knowledge, memory, reasoning/planning, and transfer/generalization.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>The perception/action split highlights that LLM agents become more than chatbots when they receive multimodal inputs and can use tools or embodied actions.</p>
+  <p><strong>Scope:</strong> Sections 3.2 and 3.3.</p>
+  <ul><li><strong>E-perception-action</strong>: The paper surveys perception inputs such as text, vision, and audio, and action outputs including text generation, tool use, and embodied actions.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>The survey groups applications into single-agent, multi-agent, and human-agent scenarios, with multi-agent interaction split into cooperative and adversarial patterns.</p>
+  <p><strong>Scope:</strong> Section 4.</p>
+  <ul><li><strong>E-application-taxonomy</strong>: Applications are grouped into single-agent deployment, multi-agent coordination, and human-agent interaction; multi-agent systems include cooperative and adversarial interaction patterns.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>The paper treats agent societies as a distinct research area covering behavior, personality, social environments, and simulation.</p>
+  <p><strong>Scope:</strong> Section 5.</p>
+  <ul><li><strong>E-agent-society</strong>: The paper surveys LLM-agent societies through behavior/personality, text/virtual/physical environments, and social simulation.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>The survey identifies evaluation, adversarial robustness, trustworthiness, misuse, and scaling the number of agents as important open problems.</p>
+  <p><strong>Scope:</strong> Section 6.</p>
+  <ul><li><strong>E-open-problems</strong>: The discussion covers evaluation dimensions, adversarial robustness, trustworthiness, misuse, unemployment/social risks, scaling up agent counts, Agent-as-a-Service, and AGI framing.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · inference</h3>
+  <p>For an infrastructure reading list, the paper is useful mainly as a component map: each box in brain-perception-action implies storage, I/O, tool protocol, evaluation, and safety machinery.</p>
+  <p><strong>Scope:</strong> Application to agent infrastructure.</p>
+  <ul><li><strong>E-infra-map</strong>: Brain-perception-action maps naturally to runtime concerns: memory/state for the brain, input adapters for perception, capability control for action, and evaluation/security around all three.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Use this survey as a map of the agent stack rather than as evidence for any one mechanism.</li><li>The brain-perception-action frame makes infrastructure boundaries visible: memory/state, input adapters, tool protocols, and effect control.</li><li>The action module is where agent infrastructure becomes safety-critical because text generation turns into tool use or embodied side effects.</li><li>Multi-agent and human-agent patterns require message protocols, role boundaries, logging, and coordination policies, not just prompts.</li><li>Agent-society work is useful for thinking about emergent behavior, but it needs stronger evaluation before operational claims should be trusted.</li><li>The risks section connects directly to later readings on prompt injection, adversarial attacks, sandboxing, and benchmark validity.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>This is a broad 2023 survey; many systems and benchmarks have changed since publication.</li><li>The paper is strongest as taxonomy and orientation, not as a source of primary empirical evidence.</li><li>The AGI framing is more aspirational than operational for production agent infrastructure.</li><li>Because the survey is very broad, readers should follow primary-source papers for mechanisms, numbers, and failure modes.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/llm-agents-survey-xi-2023.json.</span>
+  </footer>
+</body>
+</html>

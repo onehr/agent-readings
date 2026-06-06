@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Speculative Decoding</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/highlight/monokai.css" />
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <section data-markdown
+               data-separator="^\n---\n$"
+               data-separator-vertical="^\n--\n$"
+               data-separator-notes="^Note:">
+        <textarea data-template>
+<!-- .slide: class="title-slide apple-title" -->
+
+<div class="slide-frame slide-frame--center">
+  <p class="deck-kicker">agent-readings / Inference and Serving Infrastructure</p>
+  <h1>Speculative Decoding</h1>
+  <p class="deck-subtitle">Draft fast, verify exactly</p>
+
+  <div class="deck-meta-strip">
+    <div class="deck-meta-pill"><strong>2022</strong><span>ICML 2023 oral; arXiv 2022</span></div>
+    <div class="deck-meta-pill"><strong>6</strong><span>claims</span></div>
+    <div class="deck-meta-pill"><strong>6</strong><span>evidence refs</span></div>
+    <div class="deck-meta-pill"><strong>paper-read</strong><span>status</span></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="statement-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">The one sentence</p>
+  <h2>Speculative decoding uses a faster draft model to propose several tokens, then verifies them with the slow target model in parallel so generation accelerates without changing the target distribution.</h2>
+  <p class="deck-note">For agents, per-step latency compounds across tool loops, search, debate, retries, and self-consistency. Speculative decoding attacks the wall-clock cost of every generation without requiring a new target model.</p>
+</div>
+
+---
+
+<!-- .slide: class="problem-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Before this paper</p>
+  <h2>The friction was structural.</h2>
+  <div class="apple-card-grid apple-card-grid--three">
+    <div class="apple-card"><p>Generating K tokens from an autoregressive Transformer normally requires K serial target-model invocations.</p></div>
+<div class="apple-card"><p>Large target-model decode steps are slow and often limited by memory bandwidth or communication rather than raw arithmetic.</p></div>
+<div class="apple-card"><p>Adaptive computation methods can speed some cases but often require architecture changes, retraining, or accept changed output distributions.</p></div>
+  </div>
+  <div class="deck-callout">
+    <span>Key gap</span>
+    <p>The paper asks whether a small approximation model can propose tokens while a large target model verifies them in a way that preserves exact target-model sampling behavior.</p>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="idea-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Core idea</p>
+  <h2>Generate a speculative token block with a cheap model, run the expensive target model once over that block to score all proposed positions, accept the longest...</h2>
+  <p class="deck-note">Generate a speculative token block with a cheap model, run the expensive target model once over that block to score all proposed positions, accept the longest prefix allowed by a distribution-preserving rule, and sample a corrected token when a draft token is...</p>
+  <div class="idea-loop" aria-label="Agent loop">
+    <div><strong>Model</strong><span>reason</span></div>
+    <div><strong>Runtime</strong><span>act</span></div>
+    <div><strong>World</strong><span>observe</span></div>
+  </div>
+  <div class="step-strip">
+    <div class="step-item">
+  <span>01</span>
+  <p>Run the approximation model autoregressively for gamma draft tokens.</p>
+</div>
+<div class="step-item">
+  <span>02</span>
+  <p>Run the target model once on the prompt plus speculative tokens to obtain target probabilities for all draft positions.</p>
+</div>
+<div class="step-item">
+  <span>03</span>
+  <p>Walk through proposed tokens in order and accept each according to the speculative sampling rule.</p>
+</div>
+<div class="step-item">
+  <span>04</span>
+  <p>If all proposed tokens are accepted, sample one additional token from the target model's next-token distribution.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="grammar-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Action grammar</p>
+  <h2>The agent is an interface contract.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>q: approximation model distribution.</p></div>
+<div class="apple-card"><p>p: target model distribution.</p></div>
+<div class="apple-card"><p>gamma: number of speculative tokens proposed per round.</p></div>
+<div class="apple-card"><p>draft token: token sampled from q.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="code-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Executable shape</p>
+  <h2>The mechanism should fit on one screen.</h2>
+
+```python
+while not done:
+    draft = []
+    ctx = prefix
+    for i in range(gamma):
+        token = sample(q(. | ctx))
+        draft.append(token)
+        ctx += token
+
+    p_scores = target_model.score(prefix + draft)
+
+    accepted = []
+    for i, token in enumerate(draft):
+        if random() <= min(1, p_scores[i][token] / q_score(i, token)):
+            accepted.append(token)
+        else:
+            correction = sample(residual(p_scores[i], q_score(i)))
+            prefix += accepted + [correction]
+            break
+    else:
+        bonus = sample(p_scores_next)
+        prefix += accepted + [bonus]
+```
+</div>
+
+---
+
+<!-- .slide: class="proof-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Evidence</p>
+  <h2>The proof objects.</h2>
+  <div class="proof-grid">
+    <div class="proof-card">
+  <span>E-serial-decoding</span>
+  <p>The paper states that decoding K tokens takes K serial runs of the large autoregressive target model.</p>
+</div>
+<div class="proof-card">
+  <span>E-speculative-method</span>
+  <p>The paper proposes sampling a speculative prefix from an efficient approximation model, then running the target model on those proposed tokens to verify them in parallel.</p>
+</div>
+<div class="proof-card">
+  <span>E-distribution-preserving</span>
+  <p>The authors state the speculative sampling method can generate several tokens concurrently without changing the target distribution, and Figure 1 illustrates fewer target runs...</p>
+</div>
+<div class="proof-card">
+  <span>E-off-the-shelf</span>
+  <p>The abstract says the method accelerates existing off-the-shelf models without retraining or architecture changes.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="claim-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Claim map</p>
+  <h2>What the review actually supports.</h2>
+  <div class="claim-grid">
+    <div class="claim-card">
+  <span>C1 · paper-supported</span>
+  <p>Standard autoregressive decoding requires K serial target-model runs to generate K tokens.</p>
+  <small>E-serial-decoding</small>
+</div>
+<div class="claim-card">
+  <span>C2 · paper-supported</span>
+  <p>Speculative decoding proposes several tokens with an efficient approximation model and verifies them using the target model in parallel.</p>
+  <small>E-speculative-method</small>
+</div>
+<div class="claim-card">
+  <span>C3 · paper-supported</span>
+  <p>The algorithm preserves the target model's output distribution rather than merely approximating it.</p>
+  <small>E-distribution-preserving</small>
+</div>
+<div class="claim-card">
+  <span>C4 · paper-supported</span>
+  <p>The method can accelerate off-the-shelf models without retraining or architecture changes.</p>
+  <small>E-off-the-shelf</small>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="takeaway-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Agent infrastructure</p>
+  <h2>What changes if you build systems.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>Speculative decoding is a latency primitive for agent loops: every model call can return faster without changing the requested target distribution.</p></div>
+<div class="apple-card"><p>The draft model becomes serving infrastructure. It must be co-located, versioned, monitored, and chosen per target/workload.</p></div>
+<div class="apple-card"><p>Exactness matters for agent reliability. Speculative decoding's appeal is preserving outputs, not merely making a cheaper model answer first.</p></div>
+<div class="apple-card"><p>Speedup depends on acceptance rate. Hard reasoning, long-tail domains, or mismatched draft models can reduce gains.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="caveat-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Caveats</p>
+  <h2>What this does not prove.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>The method needs a useful approximation model; a weak draft model can waste work.</p></div>
+<div class="apple-card"><p>The target distribution is preserved only if the sampling rule and probabilities are implemented exactly.</p></div>
+<div class="apple-card"><p>The headline 2x-3x speedup is workload/model/implementation-specific.</p></div>
+<div class="apple-card"><p>Speculative decoding reduces latency but does not reduce the semantic number of agent decisions.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="closing-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Run it</p>
+  <h2>No PoC yet.</h2>
+  <p class="deck-note">No PoC yet - contributions welcome. A compact PoC could implement speculative sampling over two tiny Markov models and empirically verify output-distribution preservation.</p>
+  <div class="reference-list">
+    <ul><li>Paper: <a href="https://arxiv.org/abs/2211.17192">Fast Inference from Transformers via Speculative Decoding</a></li><li>Project/code: <a href="https://proceedings.mlr.press/v202/leviathan23a.html">https://proceedings.mlr.press/v202/leviathan23a.html</a></li><li>complements: <a href="https://www.usenix.org/conference/osdi22/presentation/yu">Orca</a></li><li>complements: <a href="https://arxiv.org/abs/2309.06180">PagedAttention</a></li><li>makes_cheaper: <a href="https://arxiv.org/abs/2203.11171">Self-Consistency</a></li></ul>
+  </div>
+</div>
+
+Note: This deck is synthesized from `data/reviews/speculative-decoding-leviathan-2022.json`. Update the review record, then run `bun run build`.
+
+        </textarea>
+      </section>
+    </div>
+  </div>
+  <script type="module" src="../../assets/deck.js"></script>
+</body>
+</html>

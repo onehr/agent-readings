@@ -1,0 +1,220 @@
+<!-- .slide: class="title-slide apple-title" -->
+
+<div class="slide-frame slide-frame--center">
+  <p class="deck-kicker">agent-readings / Surveys and Perspectives</p>
+  <h1>Foundation Agents</h1>
+  <p class="deck-subtitle">Brain-inspired modules, evolution, collaboration, safety</p>
+
+  <div class="deck-meta-strip">
+    <div class="deck-meta-pill"><strong>2025</strong><span>arXiv 2025</span></div>
+    <div class="deck-meta-pill"><strong>7</strong><span>claims</span></div>
+    <div class="deck-meta-pill"><strong>7</strong><span>evidence refs</span></div>
+    <div class="deck-meta-pill"><strong>paper-read</strong><span>status</span></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="statement-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">The one sentence</p>
+  <h2>This survey reframes agents as foundation-agent systems with brain-inspired modules, self-evolution, multi-agent collaboration, and safety as coequal design axes.</h2>
+  <p class="deck-note">For agent infrastructure, this is a roadmap paper. It shows which state, learning, coordination, and safety surfaces future agent runtimes will have to expose and govern.</p>
+</div>
+
+---
+
+<!-- .slide: class="problem-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Before this paper</p>
+  <h2>The friction was structural.</h2>
+  <div class="apple-card-grid apple-card-grid--three">
+    <div class="apple-card"><p>Earlier LLM-agent taxonomies often centered on prompting, memory, tools, and applications.</p></div>
+<div class="apple-card"><p>2024-2025 work expanded the agent field into multimodal perception, self-improvement, reinforcement learning, world models, scientific agents, and multi-agent societies.</p></div>
+<div class="apple-card"><p>Agent systems increasingly need continuous improvement, collaboration, and safety properties rather than one-shot task execution.</p></div>
+  </div>
+  <div class="deck-callout">
+    <span>Key gap</span>
+    <p>The survey asks how to organize foundation agents as modular, adaptive, collaborative, and safe systems rather than isolated LLM wrappers.</p>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="idea-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Core idea</p>
+  <h2>Synthesize foundation-agent research into four connected layers: modular brain-inspired components, self-enhancement, collaborative/evolutionary multi-agent...</h2>
+  <p class="deck-note">Synthesize foundation-agent research into four connected layers: modular brain-inspired components, self-enhancement, collaborative/evolutionary multi-agent systems, and safety.</p>
+  <div class="idea-loop" aria-label="Agent loop">
+    <div><strong>Model</strong><span>reason</span></div>
+    <div><strong>Runtime</strong><span>act</span></div>
+    <div><strong>World</strong><span>observe</span></div>
+  </div>
+  <div class="step-strip">
+    <div class="step-item">
+  <span>01</span>
+  <p>Define foundation agents as modular intelligent systems rather than just LLM-driven applications.</p>
+</div>
+<div class="step-item">
+  <span>02</span>
+  <p>Map core agent components to brain-inspired functional analogies.</p>
+</div>
+<div class="step-item">
+  <span>03</span>
+  <p>Survey cognition, memory, perception, world models, action, reward, and emotion-like systems.</p>
+</div>
+<div class="step-item">
+  <span>04</span>
+  <p>Survey self-enhancement and adaptive evolution mechanisms for autonomous improvement.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="grammar-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Action grammar</p>
+  <h2>The agent is an interface contract.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>perception: multimodal sensing and observation intake.</p></div>
+<div class="apple-card"><p>cognition: learning, reasoning, planning, decision-making, and internal state update.</p></div>
+<div class="apple-card"><p>memory: persistent and working state used for continuity and retrieval.</p></div>
+<div class="apple-card"><p>world model: predictive or simulator-like representation of environment dynamics.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="code-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Executable shape</p>
+  <h2>The mechanism should fit on one screen.</h2>
+
+```python
+mental_state = {
+  memory,
+  world_model,
+  goals,
+  reward_signals,
+  emotion_like_state
+}
+
+while agent_is_active:
+  observation = perceive(environment)
+  mental_state = learn(mental_state, previous_action, observation)
+  action = reason_and_plan(mental_state)
+  environment = execute(action)
+
+# Foundation-agent infrastructure has to make this loop inspectable, controllable, and safe.
+```
+</div>
+
+---
+
+<!-- .slide: class="proof-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Evidence</p>
+  <h2>The proof objects.</h2>
+  <div class="proof-grid">
+    <div class="proof-card">
+  <span>E-brain-inspired</span>
+  <p>The survey frames intelligent agents within a modular, brain-inspired architecture that integrates cognitive science, neuroscience, and computational research.</p>
+</div>
+<div class="proof-card">
+  <span>E-core-components</span>
+  <p>The survey and companion repository organize core components around cognition, memory, perception, world model, action, reward, and emotion.</p>
+</div>
+<div class="proof-card">
+  <span>E-agent-loop</span>
+  <p>The framework is described as a perception-cognition-action loop with evolving internal mental-state components such as memory, world model, goals, reward, and emotion-like...</p>
+</div>
+<div class="proof-card">
+  <span>E-self-enhancement</span>
+  <p>The survey's second part covers self-enhancement and adaptive evolution, including continual learning and automated optimization paradigms.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="claim-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Claim map</p>
+  <h2>What the review actually supports.</h2>
+  <div class="claim-grid">
+    <div class="claim-card">
+  <span>C1 · paper-supported</span>
+  <p>The survey frames foundation agents with a modular, brain-inspired architecture integrating cognitive, perceptual, and operational modules.</p>
+  <small>E-brain-inspired</small>
+</div>
+<div class="claim-card">
+  <span>C2 · paper-supported</span>
+  <p>Core components include cognition, memory, perception, world models, action, reward, and emotion-like systems.</p>
+  <small>E-core-components</small>
+</div>
+<div class="claim-card">
+  <span>C3 · paper-supported</span>
+  <p>The paper emphasizes a perception-cognition-action loop with evolving internal state rather than a stateless prompt-response model.</p>
+  <small>E-agent-loop</small>
+</div>
+<div class="claim-card">
+  <span>C4 · paper-supported</span>
+  <p>Self-enhancement and adaptive evolution are treated as central mechanisms for agents that refine capabilities and adapt to dynamic environments.</p>
+  <small>E-self-enhancement</small>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="takeaway-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Agent infrastructure</p>
+  <h2>What changes if you build systems.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>The paper is useful as a forward-looking schema stress test: it adds world models, reward/goals, emotion-like state, and self-evolution to the usual...</p></div>
+<div class="apple-card"><p>Foundation-agent infrastructure needs inspectable internal state, not just logs of external tool calls.</p></div>
+<div class="apple-card"><p>World models and reward signals create new audit surfaces because they can shape future behavior without an obvious immediate tool call.</p></div>
+<div class="apple-card"><p>Self-evolving agents need versioning, rollback, evaluation gates, and provenance for every optimization step.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="caveat-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Caveats</p>
+  <h2>What this does not prove.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>This is a very broad 2025 survey/book, not a single empirical contribution.</p></div>
+<div class="apple-card"><p>The brain-inspired framing is useful for gap analysis but can overstate biological analogy if read too literally.</p></div>
+<div class="apple-card"><p>The detailed ar5iv HTML was unavailable during this review, so the review relies on the arXiv abstract plus companion project materials and accessible...</p></div>
+<div class="apple-card"><p>Some sections describe aspirational research directions rather than mature production patterns.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="closing-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Run it</p>
+  <h2>No PoC yet.</h2>
+  <p class="deck-note">No PoC yet. A useful future PoC would be a tiny inspectable perception-cognition-action loop with versioned mental state and rollback around self-improvement steps.</p>
+  <div class="reference-list">
+    <ul><li>Paper: <a href="https://arxiv.org/abs/2504.01990">Advances and Challenges in Foundation Agents: From Brain-Inspired Intelligence to Evolutionary, Collaborative, and Safe Systems</a></li><li>Project/code: <a href="https://foundationagents.org/papers/">https://foundationagents.org/papers/</a></li><li>prior_survey: <a href="https://arxiv.org/abs/2308.11432">A Survey on Large Language Model Based Autonomous Agents</a></li><li>prior_survey: <a href="https://arxiv.org/abs/2309.07864">The Rise and Potential of Large Language Model Based Agents</a></li><li>cognitive_architecture: <a href="https://arxiv.org/abs/2309.02427">CoALA</a></li></ul>
+  </div>
+</div>
+
+Note: This deck is synthesized from `data/reviews/foundation-agents-liu-2025.json`. Update the review record, then run `bun run build`.

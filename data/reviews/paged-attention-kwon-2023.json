@@ -1,0 +1,284 @@
+{
+  "schema_version": 1,
+  "slug": "paged-attention-kwon-2023",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+    "authors": [
+      "Woosuk Kwon",
+      "Zhuohan Li",
+      "Siyuan Zhuang",
+      "Ying Sheng",
+      "Lianmin Zheng",
+      "Cody Hao Yu",
+      "Joseph E. Gonzalez",
+      "Hao Zhang",
+      "Ion Stoica"
+    ],
+    "year": 2023,
+    "venue": "SOSP 2023",
+    "url": "https://arxiv.org/abs/2309.06180",
+    "project_url": "https://github.com/vllm-project/vllm",
+    "arxiv_id": "2309.06180",
+    "read_sources": [
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2309.06180",
+        "note": "Used for title, authors, SOSP 2023 note, abstract, PagedAttention/vLLM claims, public-code link, and throughput headline."
+      },
+      {
+        "kind": "paper_pdf",
+        "url": "https://arxiv.org/pdf/2309.06180",
+        "note": "Read for KV-cache fragmentation analysis, A100 memory example, block-table paging analogy, sharing, throughput claims, and evaluation framing."
+      },
+      {
+        "kind": "project_repo",
+        "url": "https://github.com/vllm-project/vllm",
+        "note": "Used to confirm the public vLLM project and continuing implementation context."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "PagedAttention applies virtual-memory paging to the LLM KV cache so serving systems can batch more requests with far less fragmentation and share prefixes through copy-on-write blocks.",
+    "thesis": "The paper's core systems move is to stop requiring each sequence's KV cache to be contiguous GPU memory; instead, map logical token blocks to physical KV blocks through block tables.",
+    "why_it_matters": "For agents, serving cost is dominated by long, branching, repeated contexts. PagedAttention made high-throughput LLM serving practical by treating context memory as an OS memory-management problem."
+  },
+  "problem": {
+    "prior_state": [
+      "High-throughput LLM serving requires batching many concurrent requests.",
+      "Each request's KV cache is large, grows dynamically with generated tokens, and shrinks when a request finishes.",
+      "Contiguous allocation wastes GPU memory through fragmentation and over-reservation, limiting batch size.",
+      "Parallel sampling, beam search, and shared prompts duplicate large KV regions even when prefixes are identical."
+    ],
+    "key_gap": "The paper asks how to manage KV-cache memory dynamically so the serving system can keep GPUs full without wasting memory or duplicating shared prefixes.",
+    "assumptions": [
+      "Transformer decoding stores per-layer attention keys and values for prior tokens.",
+      "KV cache memory, not only arithmetic throughput, limits batching at serving time.",
+      "GPU kernels can read KV blocks through an extra block-table indirection efficiently enough.",
+      "Prefix sharing and multiple decoding branches are common enough to justify copy-on-write block management."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "kv-cache",
+      "name": "KV cache",
+      "definition": "Per-sequence attention key/value tensors retained across decoding steps so previous tokens do not need to be recomputed."
+    },
+    {
+      "id": "logical-block",
+      "name": "Logical block",
+      "definition": "A fixed-size segment of a sequence's KV cache in token order."
+    },
+    {
+      "id": "physical-block",
+      "name": "Physical block",
+      "definition": "A fixed-size GPU memory allocation that stores KV data for one logical block."
+    },
+    {
+      "id": "block-table",
+      "name": "Block table",
+      "definition": "A per-sequence mapping from logical KV blocks to physical GPU blocks."
+    },
+    {
+      "id": "pagedattention",
+      "name": "PagedAttention",
+      "definition": "An attention algorithm that reads KV data through block tables rather than assuming a contiguous per-sequence KV allocation."
+    },
+    {
+      "id": "copy-on-write",
+      "name": "Copy-on-write sharing",
+      "definition": "Sharing physical KV blocks among requests or branches until one branch needs to modify the shared block."
+    }
+  ],
+  "method": {
+    "core_idea": "Split KV caches into fixed-size blocks, allocate physical blocks on demand, map logical sequence blocks to physical GPU blocks, and make the attention kernel follow those mappings while the serving engine handles sharing, allocation, and eviction.",
+    "action_grammar": [
+      "sequence: one active request or decoding branch.",
+      "block size: fixed number of tokens represented by each KV block.",
+      "logical block id: sequence-local block index.",
+      "physical block id: GPU-memory block index.",
+      "block table: logical-to-physical mapping for a sequence.",
+      "reference count: number of sequences/branches sharing a physical block.",
+      "copy-on-write: allocate a new block when a shared block must diverge."
+    ],
+    "steps": [
+      "Partition each sequence's KV cache into logical token blocks.",
+      "Allocate physical KV blocks only as needed instead of reserving a contiguous maximum-length cache.",
+      "Maintain a block table for each sequence.",
+      "Modify attention kernels to read KV tensors by following block-table entries.",
+      "Share physical KV blocks for common prefixes or decoding branches.",
+      "Use copy-on-write when a shared block needs modification by one branch.",
+      "Integrate the allocator with continuous batching so memory pressure informs admission and scheduling.",
+      "Evaluate vLLM against FasterTransformer and Orca-style serving baselines."
+    ],
+    "pseudocode": "for request in active_requests:\n    needed = ceil(request.tokens / block_size)\n    while request.block_table.len < needed:\n        request.block_table.push(alloc_physical_block())\n\nattention(query, request):\n    for logical_block in range(request.num_blocks):\n        phys = request.block_table[logical_block]\n        keys, values = kv_pool[phys]\n        attend(query, keys, values)\n\nfork_for_parallel_sampling(request, n):\n    children = []\n    for _ in range(n):\n        child = request.share_blocks_refcounted()\n        children.push(child)\n    return children\n\nbefore_write(child, block):\n    if refcount(block) > 1:\n        child.block_table[block] = copy_block(block)"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "problem",
+      "status": "paper-supported",
+      "statement": "KV-cache memory is huge, dynamically sized, and can be significantly wasted by fragmentation and redundant duplication in existing serving systems.",
+      "scope": "Abstract.",
+      "evidence_refs": ["E-kv-cache-problem"],
+      "caveats": ["The abstract summarizes the issue; details depend on workload distributions and implementation choices."]
+    },
+    {
+      "id": "C2",
+      "type": "method",
+      "status": "paper-supported",
+      "statement": "PagedAttention borrows classical virtual-memory paging ideas by allowing non-contiguous KV-cache storage through block mappings.",
+      "scope": "Abstract.",
+      "evidence_refs": ["E-pagedattention"],
+      "caveats": ["The analogy is architectural; GPU kernels and KV tensors have different constraints than CPU virtual memory."]
+    },
+    {
+      "id": "C3",
+      "type": "system",
+      "status": "paper-supported",
+      "statement": "vLLM builds on PagedAttention to achieve near-zero KV-cache memory waste.",
+      "scope": "Abstract.",
+      "evidence_refs": ["E-vllm-memory"],
+      "caveats": ["Near-zero waste is the paper's system claim under evaluated conditions, not a universal guarantee for every serving workload."]
+    },
+    {
+      "id": "C4",
+      "type": "system",
+      "status": "paper-supported",
+      "statement": "vLLM supports flexible KV-cache sharing within and across requests, including cases such as parallel sampling and shared prompts.",
+      "scope": "Abstract.",
+      "evidence_refs": ["E-sharing"],
+      "caveats": ["Sharing helps only when workloads have common prefixes or branching structure."]
+    },
+    {
+      "id": "C5",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "The evaluation reports 2-4x throughput improvement at the same latency level over systems such as FasterTransformer and Orca.",
+      "scope": "Abstract.",
+      "evidence_refs": ["E-throughput"],
+      "caveats": ["The comparison is against the paper's selected baselines and workloads."]
+    },
+    {
+      "id": "C6",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "The paper reports larger gains for longer sequences, larger models, and more complex decoding algorithms.",
+      "scope": "Abstract.",
+      "evidence_refs": ["E-long-sequence-gains"],
+      "caveats": ["Short prompts or low-concurrency workloads may be less memory-bound."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-kv-cache-problem",
+      "kind": "problem",
+      "source": "paper",
+      "locator": "Abstract",
+      "result": "The paper states that KV-cache memory for each request is huge, grows and shrinks dynamically, and can be wasted by fragmentation and duplicate copies when managed inefficiently.",
+      "metric": "KV-cache memory waste",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-pagedattention",
+      "kind": "method",
+      "source": "paper",
+      "locator": "Abstract",
+      "result": "The paper proposes PagedAttention, an attention algorithm inspired by virtual memory and paging techniques from operating systems.",
+      "metric": "paged KV-cache management",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-vllm-memory",
+      "kind": "system",
+      "source": "paper",
+      "locator": "Abstract",
+      "result": "vLLM is described as achieving near-zero waste in KV-cache memory by building on PagedAttention.",
+      "metric": "memory waste reduction",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-sharing",
+      "kind": "system",
+      "source": "paper",
+      "locator": "Abstract",
+      "result": "The paper says vLLM flexibly shares KV cache within and across requests to further reduce memory usage.",
+      "metric": "KV-cache sharing",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-throughput",
+      "kind": "benchmark_result",
+      "source": "paper",
+      "locator": "Abstract",
+      "result": "The evaluation reports that vLLM improves throughput by 2-4x at the same latency level compared with state-of-the-art systems such as FasterTransformer and Orca.",
+      "metric": "throughput at same latency",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-long-sequence-gains",
+      "kind": "benchmark_result",
+      "source": "paper",
+      "locator": "Abstract",
+      "result": "The abstract says the throughput improvement is more pronounced for longer sequences, larger models, and more complex decoding algorithms.",
+      "metric": "gain conditions",
+      "claim_refs": ["C6"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "Agent serving needs memory virtualization because long prompts, tool traces, and branchy reasoning make KV cache the scarce resource.",
+    "PagedAttention is the same OS move as virtual memory: stable logical context, flexible physical placement.",
+    "Copy-on-write KV sharing is directly useful for self-consistency, Tree of Thoughts, retries, and parallel tool-plan candidates that share a prefix.",
+    "Serving engines should expose memory pressure as a scheduler signal, not hide it below the request API.",
+    "The cost of agent reasoning is often KV-cache residency time, not just generated-token count.",
+    "vLLM made modern continuous batching usable at higher concurrency because memory management stopped wasting so much GPU RAM."
+  ],
+  "caveats": [
+    "The review uses the arXiv paper text and public metadata; detailed per-table benchmark interpretation should still be rechecked before quoting secondary numbers.",
+    "PagedAttention improves memory management; it does not reduce model arithmetic per token by itself.",
+    "Block-table indirection and allocator details matter for actual kernel performance.",
+    "The 2-4x throughput result is workload/baseline-specific.",
+    "Prefix sharing only helps when prompts or branches actually share tokens.",
+    "Later serving systems may combine PagedAttention with speculative decoding, quantization, prefix caching, and kernel-level improvements."
+  ],
+  "related_work": [
+    {
+      "title": "Orca",
+      "relation": "builds_on_workload",
+      "note": "Orca introduces iteration-level scheduling; PagedAttention attacks the KV-cache memory bottleneck in that workload.",
+      "url": "https://www.usenix.org/conference/osdi22/presentation/yu"
+    },
+    {
+      "title": "MemGPT",
+      "relation": "same_os_metaphor",
+      "note": "MemGPT applies virtual-memory thinking to agent context; PagedAttention applies paging to GPU KV cache.",
+      "url": "https://arxiv.org/abs/2310.08560"
+    },
+    {
+      "title": "SGLang",
+      "relation": "complements",
+      "note": "SGLang adds structured-program execution and prefix-cache reuse on top of serving workloads where KV memory management is central.",
+      "url": "https://arxiv.org/abs/2312.07104"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A small PoC could simulate contiguous KV allocation versus fixed-block paging under variable-length requests and compare memory waste."
+  },
+  "slide_plan": {
+    "title": "PagedAttention",
+    "subtitle": "Virtual memory for the KV cache",
+    "sections": [
+      "summary",
+      "problem",
+      "kv_cache_growth",
+      "paging_analogy",
+      "block_tables",
+      "copy_on_write",
+      "throughput_results",
+      "agent_serving_takeaways",
+      "caveats",
+      "references"
+    ]
+  }
+}

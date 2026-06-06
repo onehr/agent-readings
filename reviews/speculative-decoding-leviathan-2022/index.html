@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Fast Inference from Transformers via Speculative Decoding</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/speculative-decoding-leviathan-2022/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Inference and Serving Infrastructure</p>
+        <h1>Speculative Decoding</h1>
+        <p class="hero-lede">Speculative decoding uses a faster draft model to propose several tokens, then verifies them with the slow target model in parallel so generation accelerates without changing the target distribution.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>6</strong><span>Claims</span></div>
+          <div class="metric"><strong>6</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2022 · ICML 2023 oral; arXiv 2022</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>3</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/speculative-decoding-leviathan-2022/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2211.17192">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>For agents, per-step latency compounds across tool loops, search, debate, retries, and self-consistency. Speculative decoding attacks the wall-clock cost of every generation without requiring a new target model.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Generating K tokens from an autoregressive Transformer normally requires K serial target-model invocations.</li><li>Large target-model decode steps are slow and often limited by memory bandwidth or communication rather than raw arithmetic.</li><li>Adaptive computation methods can speed some cases but often require architecture changes, retraining, or accept changed output distributions.</li><li>Serving systems need latency improvements that work with existing off-the-shelf models.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks whether a small approximation model can propose tokens while a large target model verifies them in a way that preserves exact target-model sampling behavior.</p>
+
+      <h2>Method</h2>
+      <p>Generate a speculative token block with a cheap model, run the expensive target model once over that block to score all proposed positions, accept the longest prefix allowed by a distribution-preserving rule, and sample a corrected token when a draft token is rejected.</p>
+      <ul><li>Run the approximation model autoregressively for gamma draft tokens.</li><li>Run the target model once on the prompt plus speculative tokens to obtain target probabilities for all draft positions.</li><li>Walk through proposed tokens in order and accept each according to the speculative sampling rule.</li><li>If all proposed tokens are accepted, sample one additional token from the target model's next-token distribution.</li><li>If a proposed token is rejected, sample a correction from the residual distribution and stop the round.</li><li>Append accepted and corrected tokens to the output.</li><li>Repeat until termination.</li><li>Choose approximation model and gamma to balance target-pass savings against rejected draft work.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>Standard autoregressive decoding requires K serial target-model runs to generate K tokens.</p>
+  <p><strong>Scope:</strong> Abstract and Introduction.</p>
+  <ul><li><strong>E-serial-decoding</strong>: The paper states that decoding K tokens takes K serial runs of the large autoregressive target model.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>Speculative decoding proposes several tokens with an efficient approximation model and verifies them using the target model in parallel.</p>
+  <p><strong>Scope:</strong> Abstract and Introduction.</p>
+  <ul><li><strong>E-speculative-method</strong>: The paper proposes sampling a speculative prefix from an efficient approximation model, then running the target model on those proposed tokens to verify them in parallel.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>The algorithm preserves the target model's output distribution rather than merely approximating it.</p>
+  <p><strong>Scope:</strong> Abstract, Introduction, and method sections.</p>
+  <ul><li><strong>E-distribution-preserving</strong>: The authors state the speculative sampling method can generate several tokens concurrently without changing the target distribution, and Figure 1 illustrates fewer target runs with unchanged probability.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>The method can accelerate off-the-shelf models without retraining or architecture changes.</p>
+  <p><strong>Scope:</strong> Abstract.</p>
+  <ul><li><strong>E-off-the-shelf</strong>: The abstract says the method accelerates existing off-the-shelf models without retraining or architecture changes.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>On T5-XXL, the paper reports 2x-3x latency acceleration versus the standard T5X implementation with identical outputs.</p>
+  <p><strong>Scope:</strong> Abstract and Introduction.</p>
+  <ul><li><strong>E-t5xxl-speedup</strong>: The paper reports 2x-3x acceleration over the standard T5X implementation on T5-XXL with identical outputs.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>The paper evaluates tasks/models including a 97M GPT-like model, 11B T5-XXL for translation and summarization, and a 137B LaMDA dialog model.</p>
+  <p><strong>Scope:</strong> Introduction.</p>
+  <ul><li><strong>E-evaluation-scope</strong>: The paper says it analyzes unconditional generation with a 97M GPT-like model, translation and summarization with 11B T5-XXL, and a dialog task with 137B LaMDA.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Speculative decoding is a latency primitive for agent loops: every model call can return faster without changing the requested target distribution.</li><li>The draft model becomes serving infrastructure. It must be co-located, versioned, monitored, and chosen per target/workload.</li><li>Exactness matters for agent reliability. Speculative decoding's appeal is preserving outputs, not merely making a cheaper model answer first.</li><li>Speedup depends on acceptance rate. Hard reasoning, long-tail domains, or mismatched draft models can reduce gains.</li><li>Speculative decoding complements continuous batching and PagedAttention: one attacks serial depth, the others attack concurrency and memory.</li><li>For agent search, faster decoding lowers the cost of self-consistency, debate, reflection, and tree expansion.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The method needs a useful approximation model; a weak draft model can waste work.</li><li>The target distribution is preserved only if the sampling rule and probabilities are implemented exactly.</li><li>The headline 2x-3x speedup is workload/model/implementation-specific.</li><li>Speculative decoding reduces latency but does not reduce the semantic number of agent decisions.</li><li>Serving integration can be nontrivial because the draft and target models must share tokenization and efficient scheduling.</li><li>The method may interact with quantization, caching, batching, and structured decoding constraints in engine-specific ways.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/speculative-decoding-leviathan-2022.json.</span>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!-- .slide: class="title-slide apple-title" -->
+
+<div class="slide-frame slide-frame--center">
+  <p class="deck-kicker">agent-readings / Isolation and Sandboxing</p>
+  <h1>Firecracker</h1>
+  <p class="deck-subtitle">VM isolation at serverless density</p>
+
+  <div class="deck-meta-strip">
+    <div class="deck-meta-pill"><strong>2020</strong><span>NSDI 2020</span></div>
+    <div class="deck-meta-pill"><strong>7</strong><span>claims</span></div>
+    <div class="deck-meta-pill"><strong>7</strong><span>evidence refs</span></div>
+    <div class="deck-meta-pill"><strong>paper-read</strong><span>status</span></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="statement-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">The one sentence</p>
+  <h2>Firecracker makes hardware virtualization viable for dense serverless multi-tenancy by replacing general-purpose QEMU with a small Rust VMM specialized for Linux microVMs.</h2>
+  <p class="deck-note">For agent infrastructure, Firecracker is the practical default answer when untrusted agent-generated code needs a real tenant boundary without giving up cloud-scale density.</p>
+</div>
+
+---
+
+<!-- .slide: class="problem-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Before this paper</p>
+  <h2>The friction was structural.</h2>
+  <div class="apple-card-grid apple-card-grid--three">
+    <div class="apple-card"><p>Serverless providers need to run many tenants on the same hardware while preserving security, performance isolation, and fast startup.</p></div>
+<div class="apple-card"><p>Linux containers are dense and fast but share the host kernel, creating a security-versus-compatibility tradeoff through seccomp and syscall restrictions.</p></div>
+<div class="apple-card"><p>Traditional VMs provide stronger boundaries but carry large VMM, device-model, memory, and boot-time overheads.</p></div>
+  </div>
+  <div class="deck-callout">
+    <span>Key gap</span>
+    <p>The paper asks whether a VM boundary can be made cheap enough for serverless function/container density while preserving broad Linux compatibility.</p>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="idea-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Core idea</p>
+  <h2>Keep the hardware virtualization boundary but aggressively specialize the VMM for serverless: minimal devices, one process per microVM, Rust implementation,...</h2>
+  <p class="deck-note">Keep the hardware virtualization boundary but aggressively specialize the VMM for serverless: minimal devices, one process per microVM, Rust implementation, REST configuration API, Linux/KVM host primitives, and no BIOS, PCI, migration, GPU, USB, or...</p>
+  <div class="idea-loop" aria-label="Agent loop">
+    <div><strong>Model</strong><span>reason</span></div>
+    <div><strong>Runtime</strong><span>act</span></div>
+    <div><strong>World</strong><span>observe</span></div>
+  </div>
+  <div class="step-strip">
+    <div class="step-item">
+  <span>01</span>
+  <p>Use KVM for hardware virtualization instead of relying only on host-kernel container isolation.</p>
+</div>
+<div class="step-item">
+  <span>02</span>
+  <p>Replace QEMU with a purpose-built Rust VMM around 50k lines of code.</p>
+</div>
+<div class="step-item">
+  <span>03</span>
+  <p>Expose only the devices required by serverless/container workloads.</p>
+</div>
+<div class="step-item">
+  <span>04</span>
+  <p>Boot minimal Linux kernels directly, avoiding BIOS and legacy hardware emulation.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="grammar-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Action grammar</p>
+  <h2>The agent is an interface contract.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>host: Linux machine running KVM.</p></div>
+<div class="apple-card"><p>Firecracker process: one userspace VMM process per microVM.</p></div>
+<div class="apple-card"><p>guest: minimal Linux kernel/userland or OSv.</p></div>
+<div class="apple-card"><p>configuration API: REST over Unix socket before VM start.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="code-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Executable shape</p>
+  <h2>The mechanism should fit on one screen.</h2>
+
+```python
+slot = firecracker.spawn()
+slot.configure({
+    kernel: "minimal-linux",
+    rootfs: "function-image.ext4",
+    vcpu: 1,
+    memory_mb: 256,
+    net: "tap0",
+    block: "virtio-rootfs",
+    rate_limits: policy,
+})
+slot.start()
+
+for invoke in routed_invocations(function_id):
+    result = slot.run_function(invoke.payload)
+    return result
+
+if slot.age > 12_hours or unhealthy(slot):
+    slot.recycle()
+```
+</div>
+
+---
+
+<!-- .slide: class="proof-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Evidence</p>
+  <h2>The proof objects.</h2>
+  <div class="proof-grid">
+    <div class="proof-card">
+  <span>E-isolation-boundary</span>
+  <p>The paper contrasts containers, where untrusted code calls the host kernel directly, with KVM virtualization, where untrusted code runs with a guest kernel and the VMM/KVM...</p>
+</div>
+<div class="proof-card">
+  <span>E-specialization</span>
+  <p>Firecracker intentionally does not provide BIOS, arbitrary-kernel boot, legacy devices, PCI, USB, GPU, video/audio, or migration, and exposes only a limited device set such as...</p>
+</div>
+<div class="proof-card">
+  <span>E-loc</span>
+  <p>The paper states QEMU is over 1.4 million lines of code, while Firecracker contains approximately 50k lines of Rust, about 96% fewer lines.</p>
+</div>
+<div class="proof-card">
+  <span>E-headline-performance</span>
+  <p>The introduction reports less than 5MB memory overhead per container, boot to application code in less than 125ms, and up to 150 microVM creations per second per host.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="claim-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Claim map</p>
+  <h2>What the review actually supports.</h2>
+  <div class="claim-grid">
+    <div class="claim-card">
+  <span>C1 · paper-supported</span>
+  <p>Firecracker shifts the isolation boundary from shared host-kernel container isolation to KVM-backed virtualization with a much smaller VMM than QEMU.</p>
+  <small>E-isolation-boundary</small>
+</div>
+<div class="claim-card">
+  <span>C2 · paper-supported</span>
+  <p>The low overhead comes from specialization: Firecracker omits BIOS, arbitrary kernels, PCI, USB, video, audio, migration, and many legacy devices.</p>
+  <small>E-specialization</small>
+</div>
+<div class="claim-card">
+  <span>C3 · paper-supported</span>
+  <p>Firecracker is roughly 50k lines of Rust, around 96% fewer lines than QEMU in the paper's comparison.</p>
+  <small>E-loc</small>
+</div>
+<div class="claim-card">
+  <span>C4 · paper-supported</span>
+  <p>With a minimal Linux guest, Firecracker offers less than 5MB memory overhead, boots to application code in under 125ms in the paper's introduction claim, and...</p>
+  <small>E-headline-performance</small>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="takeaway-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Agent infrastructure</p>
+  <h2>What changes if you build systems.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>When an agent can run arbitrary code, a VM boundary is the honest security default for multi-tenant or untrusted workloads.</p></div>
+<div class="apple-card"><p>Firecracker's lesson is deletion as security engineering: remove devices, firmware, compatibility paths, and management features not required by the...</p></div>
+<div class="apple-card"><p>Agent sandboxes should separate orchestration from execution. Firecracker gives a microVM, not a policy engine, scheduler, package manager, or...</p></div>
+<div class="apple-card"><p>Cold-start and memory overhead are product constraints. Fine-grained agent tool execution needs sandbox creation and recycling to be fast enough for...</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="caveat-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Caveats</p>
+  <h2>What this does not prove.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>The paper is AWS-authored and reports AWS production experience.</p></div>
+<div class="apple-card"><p>Firecracker is not a general VM replacement; it intentionally omits many VM features.</p></div>
+<div class="apple-card"><p>Firecracker secures the compute boundary but does not solve tool authorization, data exfiltration, prompt injection, or network policy alone.</p></div>
+<div class="apple-card"><p>Boot and memory results depend on minimal kernel/userland configuration and may not hold for arbitrary guest images.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="closing-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Run it</p>
+  <h2>No PoC yet.</h2>
+  <p class="deck-note">No PoC yet - contributions welcome. A PoC could compare local tool execution in a host process versus a microVM/container boundary and record startup, memory, and egress-control behavior.</p>
+  <div class="reference-list">
+    <ul><li>Paper: <a href="https://www.usenix.org/conference/nsdi20/presentation/agache">Firecracker: Lightweight Virtualization for Serverless Applications</a></li><li>Project/code: <a href="https://firecracker-microvm.github.io/">https://firecracker-microvm.github.io/</a></li><li>contrasts: <a href="https://gvisor.dev/">gVisor</a></li><li>security_boundary: <a href="https://sel4.systems/">seL4</a></li><li>permission_model: <a href="http://srl.cs.jhu.edu/pubs/SRL2003-02.pdf">Capability Myths Demolished</a></li></ul>
+  </div>
+</div>
+
+Note: This deck is synthesized from `data/reviews/firecracker-agache-2020.json`. Update the review record, then run `bun run build`.

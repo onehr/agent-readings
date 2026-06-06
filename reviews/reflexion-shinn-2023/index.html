@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Reflexion: Language Agents with Verbal Reinforcement Learning</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/reflexion-shinn-2023/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Reasoning, Acting, and Reflection</p>
+        <h1>Reflexion</h1>
+        <p class="hero-lede">Reflexion teaches an LLM agent across trials by turning task feedback into verbal self-reflections stored in memory, without updating model weights.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>6</strong><span>Claims</span></div>
+          <div class="metric"><strong>6</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2023 · arXiv</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>2</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/reflexion-shinn-2023/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2303.11366">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>Reflexion makes agent learning a runtime data problem rather than only a training problem: trajectories, evaluator signals, reflections, and memory windows become first-class state.</p>
+
+      <h2>Problem</h2>
+      <ul><li>LLM agents could act in environments using prompting, but mostly learned from in-context examples rather than from their own failed trials.</li><li>Traditional reinforcement learning can learn from reward, but often requires many samples and expensive model updates.</li><li>Scalar rewards provide weak credit assignment for long language-agent trajectories.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks whether agents can improve over repeated attempts by converting feedback into natural-language experience summaries and reusing those summaries as memory.</p>
+
+      <h2>Method</h2>
+      <p>Run the agent for a task attempt, evaluate the trajectory, generate a natural-language reflection from the feedback and trajectory, append that reflection to memory, and retry with the memory in context until success or a trial limit.</p>
+      <ul><li>Generate an initial trajectory with an Actor such as ReAct or CoT.</li><li>Evaluate the result with task-specific feedback.</li><li>Ask the Self-Reflection model to convert feedback and trajectory into a useful lesson.</li><li>Store the reflection in memory.</li><li>Retry the task with memory included in the Actor context until success, repeated failure, or max trials.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>Reflexion reinforces an agent through verbal self-reflection stored in memory rather than through weight updates.</p>
+  <p><strong>Scope:</strong> Framework definition in Sections 1 and 3.</p>
+  <ul><li><strong>E-method</strong>: The paper defines Reflexion as verbal reinforcement where an agent reflects on task feedback, stores reflective text in memory, and conditions future trials on that memory without updating LLM weights.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>The framework decomposes learning into Actor, Evaluator, Self-Reflection, and memory components.</p>
+  <p><strong>Scope:</strong> Section 3 modular formulation and Figure 2 algorithm.</p>
+  <ul><li><strong>E-components</strong>: Reflexion uses an Actor to generate text/actions, an Evaluator to score trajectories, a Self-Reflection model to generate verbal cues, and short/long-term memory. The paper bounds reflection memory, usually to 1-3 stored experiences.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>On ALFWorld, ReAct plus Reflexion solves far more tasks than ReAct alone over repeated trials.</p>
+  <p><strong>Scope:</strong> 134 ALFWorld environments across six task types.</p>
+  <ul><li><strong>E-alfworld</strong>: On 134 ALFWorld tasks, ReAct + Reflexion completes 130 of 134 tasks using the simple heuristic, and the paper summarizes an absolute 22% improvement over strong baselines in 12 iterative learning steps.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>On HotPotQA, Reflexion improves both CoT-style reasoning and ReAct-style retrieval/reasoning over repeated attempts.</p>
+  <p><strong>Scope:</strong> 100 HotPotQA questions with exact-match feedback and memory size 3.</p>
+  <ul><li><strong>E-hotpotqa</strong>: The paper reports Reflexion outperforms CoT-only, ReAct-only, and CoT(GT)-only baselines across several learning steps on 100 HotPotQA questions, and summarizes a 20% reasoning improvement.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>On coding tasks, Reflexion achieves the paper's headline 91% pass@1 on HumanEval and improves several Python/Rust code-generation benchmarks.</p>
+  <p><strong>Scope:</strong> HumanEval, MBPP, HumanEval Rust, and LeetcodeHardGym experiments.</p>
+  <ul><li><strong>E-coding</strong>: The abstract reports 91% pass@1 on HumanEval, surpassing the previous GPT-4 80% baseline. Section 4.3 says Reflexion outperforms all baseline accuracies and sets new state-of-the-art standards on all Python/Rust benchmarks except MBPP Python.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>Reflexion can fail when feedback or self-tests are misleading, when memory is too small, or when verbal policy optimization gets stuck in a local minimum.</p>
+  <p><strong>Scope:</strong> Coding analysis and limitations section.</p>
+  <ul><li><strong>E-limitations</strong>: The paper analyzes false positives/false negatives from generated unit tests, reports HumanEval Rust ablations where Reflexion with tests and self-reflection reaches 0.68 versus 0.60 baseline, and states Reflexion may get stuck in local minima while memory is limited to a sliding window.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Reflexion makes failed trajectories reusable data. A runtime should persist trajectory, evaluator result, reflection text, and retry attempt together.</li><li>Feedback amplification is a separate component: scalar reward or binary failure is not enough unless converted into an actionable memory item.</li><li>Reflection memory needs lifecycle rules: size limits, replacement, retrieval, and stale or misleading lessons become correctness concerns.</li><li>External evaluators matter. Exact match, environment completion, compiler logs, and unit tests all create different reflection quality and failure modes.</li><li>For coding agents, generated tests are part of the trust boundary; false positives can make the agent accept wrong code.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>Reflexion is not gradient-based reinforcement learning and does not update model weights.</li><li>The method depends on the LLM's self-evaluation or on task heuristics; poor feedback can produce poor reflections.</li><li>The memory window is small in the paper's experiments, usually 1-3 reflections, and can lose useful history.</li><li>Repeated retries increase cost and can still converge to non-optimal local behavior.</li><li>Code-generation success is bounded by the quality and coverage of generated tests or compiler feedback.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/reflexion-shinn-2023.json.</span>
+  </footer>
+</body>
+</html>

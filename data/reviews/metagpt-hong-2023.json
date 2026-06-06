@@ -1,0 +1,324 @@
+{
+  "schema_version": 1,
+  "slug": "metagpt-hong-2023",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "MetaGPT: Meta Programming for A Multi-Agent Collaborative Framework",
+    "authors": [
+      "Sirui Hong",
+      "Mingchen Zhuge",
+      "Jiaqi Chen",
+      "Xiawu Zheng",
+      "Yuheng Cheng",
+      "Ceyao Zhang",
+      "Jinlin Wang",
+      "Zili Wang",
+      "Steven Ka Shing Yau",
+      "Zijuan Lin",
+      "Liyang Zhou",
+      "Chenyu Ran",
+      "Lingfeng Xiao",
+      "Chenglin Wu",
+      "Jürgen Schmidhuber"
+    ],
+    "year": 2023,
+    "venue": "arXiv 2023; current arXiv v7 revised 2024",
+    "url": "https://arxiv.org/abs/2308.00352",
+    "project_url": "https://github.com/FoundationAgents/MetaGPT",
+    "arxiv_id": "2308.00352",
+    "read_sources": [
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2308.00352",
+        "note": "Used for metadata, author list, abstract, revision history, and original project URL."
+      },
+      {
+        "kind": "paper_html",
+        "url": "https://ar5iv.labs.arxiv.org/html/2308.00352v7",
+        "note": "Read for SOP framing, role specialization, structured communication, publish-subscribe message pool, executable feedback, benchmarks, and ablations."
+      },
+      {
+        "kind": "project_repo",
+        "url": "https://github.com/FoundationAgents/MetaGPT",
+        "note": "Used to confirm the current repository location and README framing after the original geekan/MetaGPT URL redirects."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "MetaGPT makes multi-agent software development work more like an assembly line by encoding SOPs, role handoffs, and structured artifacts.",
+    "thesis": "The paper's key claim is that multi-agent systems need process, not just conversation: roles, intermediate document schemas, publish-subscribe handoffs, and executable feedback reduce cascading hallucination.",
+    "why_it_matters": "MetaGPT is the strongest SOP argument in the reading list. It treats agent orchestration as workflow engineering, where the payloads are PRDs, designs, APIs, tasks, code, tests, and feedback rather than free-form chat."
+  },
+  "problem": {
+    "prior_state": [
+      "Role-playing and chat-based multi-agent systems can drift into idle chatter or inconsistent handoffs.",
+      "Naively chaining LLMs can amplify hallucinations across agents.",
+      "Software development requires structured intermediate artifacts, not only conversational agreement.",
+      "Many agent frameworks lacked precompilation execution, PRD generation, technical design, API interface generation, and full role-based task management."
+    ],
+    "key_gap": "The paper asks whether encoding human software-development SOPs into an LLM multi-agent framework can make collaborative code generation more coherent and executable.",
+    "assumptions": [
+      "Human software-development SOPs are useful abstractions for LLM-agent collaboration.",
+      "Specialized roles with structured artifacts reduce errors compared with unconstrained dialogue.",
+      "A shared message pool and role-specific subscriptions can improve handoff efficiency.",
+      "Software benchmarks plus human executability scoring can measure the value of the workflow."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "sop",
+      "name": "Standard Operating Procedure",
+      "definition": "A predefined workflow that assigns responsibilities, intermediate outputs, and handoff standards to roles."
+    },
+    {
+      "id": "software-company",
+      "name": "Simulated software company",
+      "definition": "MetaGPT's role setup with Product Manager, Architect, Project Manager, Engineer, and QA Engineer."
+    },
+    {
+      "id": "structured-output",
+      "name": "Structured communication",
+      "definition": "Role-specific documents and diagrams such as PRDs, user stories, system designs, data structures, API definitions, and test cases."
+    },
+    {
+      "id": "message-pool",
+      "name": "Publish-subscribe message pool",
+      "definition": "A global shared pool where agents publish structured messages and subscribe to role-relevant information."
+    },
+    {
+      "id": "executable-feedback",
+      "name": "Executable feedback",
+      "definition": "A runtime self-correction loop where the Engineer executes generated code and tests, then debugs using execution results and historical messages."
+    }
+  ],
+  "method": {
+    "core_idea": "Model software development as a standardized multi-agent assembly line: each role creates structured outputs, publishes them to a shared pool, downstream roles subscribe to prerequisites, and the Engineer iterates using executable tests and feedback.",
+    "action_grammar": [
+      "Requirement intake: the user provides a one-line software requirement.",
+      "Product Manager: produce PRD, user stories, and requirement pool.",
+      "Architect: turn requirements into file lists, data structures, interface definitions, and flow diagrams.",
+      "Project Manager: decompose the design into implementable tasks.",
+      "Engineer: write code from the PRD, design, and assigned tasks.",
+      "QA Engineer: write tests and bug reports to enforce quality.",
+      "Publish message: a role publishes structured output into the shared message pool.",
+      "Subscribe message: a role consumes prerequisite documents based on role profile.",
+      "Executable feedback: generated code is executed and debugged up to a bounded retry count."
+    ],
+    "steps": [
+      "Define agent profiles with name, role, goal, constraints, skills, and context.",
+      "Run the SOP sequence from requirement analysis through design, task decomposition, code generation, and QA.",
+      "Require structured artifacts at each handoff instead of unconstrained natural-language dialogue.",
+      "Store artifacts in a shared message pool and use subscriptions so agents receive relevant dependencies.",
+      "After initial code generation, execute unit tests or precompilation checks.",
+      "If errors occur, feed execution results, historical messages, PRD, design, and code back to the Engineer for up to three retries.",
+      "Evaluate on HumanEval, MBPP, and SoftwareDev."
+    ],
+    "pseudocode": "requirement = user.one_line_requirement()\n\nprd = product_manager.write_prd(requirement)\nmessage_pool.publish(prd)\n\ndesign = architect.write_design(message_pool.subscribe(\"prd\"))\nmessage_pool.publish(design)\n\ntasks = project_manager.assign_tasks(design)\nmessage_pool.publish(tasks)\n\nfor task in tasks:\n    code = engineer.write_code(prd, design, task)\n    for retry in range(3):\n        result = run_tests_or_precompile(code)\n        if result.ok:\n            break\n        code = engineer.debug(code, result, message_pool.relevant_history())\n    message_pool.publish(code)\n\nqa_report = qa_engineer.write_tests_and_report(message_pool.subscribe(\"code\"))"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "architecture",
+      "status": "paper-supported",
+      "statement": "MetaGPT encodes software-development SOPs into prompt sequences and agent workflows to reduce the cascading hallucinations of naive multi-agent chaining.",
+      "scope": "Abstract, Introduction, and Section 3.",
+      "evidence_refs": ["E-sop-framing"],
+      "caveats": ["The paper studies software-development workflows; the SOP pattern needs domain-specific adaptation elsewhere."]
+    },
+    {
+      "id": "C2",
+      "type": "roles",
+      "status": "paper-supported",
+      "statement": "The core simulated company uses specialized Product Manager, Architect, Project Manager, Engineer, and QA Engineer roles.",
+      "scope": "Section 3.1.",
+      "evidence_refs": ["E-roles"],
+      "caveats": ["Roles are prompt-defined and do not guarantee true domain expertise."]
+    },
+    {
+      "id": "C3",
+      "type": "communication",
+      "status": "paper-supported",
+      "statement": "MetaGPT replaces much unconstrained dialogue with structured documents and diagrams so downstream agents receive standardized handoff artifacts.",
+      "scope": "Section 3.2.",
+      "evidence_refs": ["E-structured-communication"],
+      "caveats": ["Structured outputs can still be wrong; schema improves handoff clarity, not factual correctness by itself."]
+    },
+    {
+      "id": "C4",
+      "type": "runtime",
+      "status": "paper-supported",
+      "statement": "The shared message pool plus role-specific subscriptions is the communication substrate for publishing artifacts and triggering downstream actions.",
+      "scope": "Section 3.2.",
+      "evidence_refs": ["E-message-pool"],
+      "caveats": ["The paper presents a simple subscription mechanism; production systems would need richer dependency tracking and access control."]
+    },
+    {
+      "id": "C5",
+      "type": "runtime",
+      "status": "paper-supported",
+      "statement": "Executable feedback improves code quality by having the Engineer execute code and tests, use errors plus historical context, and retry debugging up to a bounded limit.",
+      "scope": "Section 3.3 and Section 4.4.",
+      "evidence_refs": ["E-executable-feedback"],
+      "caveats": ["Execution feedback requires a safe sandbox; the paper focuses on quality, not isolation."]
+    },
+    {
+      "id": "C6",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "MetaGPT reports 85.9% and 87.7% Pass@1 on HumanEval and MBPP with GPT-4 collaboration.",
+      "scope": "Introduction and Section 4.2.",
+      "evidence_refs": ["E-code-benchmarks"],
+      "caveats": ["The paper modifies role prompts for function-generation benchmarks, so benchmark configuration matters."]
+    },
+    {
+      "id": "C7",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "On SoftwareDev, MetaGPT improves executability and reduces human revision cost compared with ChatDev.",
+      "scope": "Section 4.2, Table 1.",
+      "evidence_refs": ["E-softwaredev"],
+      "caveats": ["SoftwareDev includes 70 self-generated tasks and seven representative tasks for comparison, so benchmark scope is limited."]
+    },
+    {
+      "id": "C8",
+      "type": "ablation",
+      "status": "paper-supported",
+      "statement": "Role ablations show that adding Product Manager, Architect, and Project Manager roles improves executability and reduces revision burden, while increasing cost.",
+      "scope": "Section 4.4, Table 3.",
+      "evidence_refs": ["E-role-ablation"],
+      "caveats": ["More roles help in this software workflow but can increase expense and may not generalize to every task."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-sop-framing",
+      "kind": "architecture",
+      "source": "paper",
+      "locator": "Abstract, Introduction, Section 3",
+      "result": "The paper frames cascading hallucination as a problem in naive LLM chaining and proposes SOPs, role specialization, structured outputs, and workflow management as a meta-programming framework.",
+      "metric": "design rationale",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-roles",
+      "kind": "architecture",
+      "source": "paper",
+      "locator": "Section 3.1",
+      "result": "MetaGPT defines Product Manager, Architect, Project Manager, Engineer, and QA Engineer roles, each with profile, goal, constraints, context, and skills.",
+      "metric": "role set",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-structured-communication",
+      "kind": "communication",
+      "source": "paper",
+      "locator": "Section 3.2",
+      "result": "The paper argues pure natural language can distort information, so agents communicate through role-specific documents and diagrams such as PRDs, system interface designs, sequence flow diagrams, data structures, and API definitions.",
+      "metric": "handoff artifact types",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-message-pool",
+      "kind": "runtime_design",
+      "source": "paper",
+      "locator": "Section 3.2",
+      "result": "Agents publish structured messages into a shared message pool and subscribe to role-relevant information; actions activate after prerequisite dependencies are received.",
+      "metric": "publish-subscribe coordination",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-executable-feedback",
+      "kind": "runtime_feedback",
+      "source": "paper",
+      "locator": "Section 3.3, Section 4.4",
+      "result": "After code generation, the Engineer executes code and test cases, receives test results, debugs with past messages and artifacts, and retries until tests pass or a maximum of three retries is reached. Executable feedback adds 4.2% on HumanEval and 5.4% on MBPP and reduces SoftwareDev human revision cost from 2.25 to 0.83.",
+      "metric": "feedback mechanism and ablation gain",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-code-benchmarks",
+      "kind": "benchmark_result",
+      "source": "paper",
+      "locator": "Introduction, Section 4.2, Figure 4",
+      "result": "The paper reports MetaGPT with GPT-4 collaboration achieving 85.9% Pass@1 on HumanEval and 87.7% Pass@1 on MBPP.",
+      "metric": "Pass@1",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-softwaredev",
+      "kind": "benchmark_result",
+      "source": "paper",
+      "locator": "Section 4.2, Table 1",
+      "result": "On SoftwareDev, ChatDev scores 2.25 executability with 2.5 human revisions, while MetaGPT scores 3.75 executability with 0.83 revisions. ChatDev uses 248.9 tokens per code line; MetaGPT uses 124.3.",
+      "metric": "executability, revision cost, token productivity",
+      "claim_refs": ["C7"]
+    },
+    {
+      "id": "E-role-ablation",
+      "kind": "ablation",
+      "source": "paper",
+      "locator": "Section 4.4, Table 3",
+      "result": "Engineer-only has executability 1.0 and 10 revisions. Adding Product Manager gives 2.0 and 6.5 revisions; adding Architect gives 2.5 and 4.0 revisions; adding all Product, Architect, and Project Manager gives executability 4.0 and 2.5 revisions, with expense rising from $0.915 to $1.385.",
+      "metric": "role ablation",
+      "claim_refs": ["C8"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "Multi-agent collaboration needs artifacts, not just messages. PRDs, designs, APIs, tasks, tests, and code are the state transferred between agents.",
+    "SOPs are control planes. They define who acts, what they emit, who consumes it, and when downstream work can start.",
+    "Publish-subscribe beats point-to-point chat for complex workflows because dependencies are explicit and reusable.",
+    "Executable feedback is the load-bearing verifier. Code review by another LLM is weaker than running tests in a sandbox.",
+    "More agents help only when they correspond to real workflow responsibilities and produce useful structured outputs.",
+    "The runtime must record artifacts and provenance so later agents can debug against the PRD, design, task, and previous execution results."
+  ],
+  "caveats": [
+    "The current arXiv version is v7 from 2024, while the reading-list entry anchors the original 2023 paper.",
+    "MetaGPT focuses on software-development workflows; claims should not be generalized to arbitrary multi-agent systems without evidence.",
+    "The SoftwareDev benchmark is self-generated and only seven representative tasks are used for some comparisons.",
+    "The framework requires safe code execution infrastructure, but the paper does not deeply analyze sandboxing.",
+    "Structured outputs can reduce drift but cannot make hallucinated requirements or designs correct by themselves.",
+    "The open-source project has evolved and moved from the original geekan/MetaGPT URL to FoundationAgents/MetaGPT."
+  ],
+  "related_work": [
+    {
+      "title": "AutoGen",
+      "relation": "contrast",
+      "note": "AutoGen provides a generic conversation-programming framework; MetaGPT imposes software-company SOPs and structured artifacts.",
+      "url": "https://arxiv.org/abs/2308.08155"
+    },
+    {
+      "title": "CAMEL",
+      "relation": "contrast",
+      "note": "CAMEL role-play generates cooperative dialogue data; MetaGPT converts roles into a structured software development pipeline.",
+      "url": "https://arxiv.org/abs/2303.17760"
+    },
+    {
+      "title": "Voyager",
+      "relation": "connects-to",
+      "note": "Both use executable feedback, but Voyager stores reusable embodied skills while MetaGPT uses tests and artifacts for software generation.",
+      "url": "https://arxiv.org/abs/2305.16291"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A useful PoC would implement a tiny SOP pipeline that turns a one-line requirement into PRD, interface spec, code, and tests, with each artifact persisted and checked."
+  },
+  "slide_plan": {
+    "title": "MetaGPT",
+    "subtitle": "SOPs as the multi-agent control plane",
+    "sections": [
+      "summary",
+      "problem",
+      "sop",
+      "roles",
+      "structured_communication",
+      "message_pool",
+      "executable_feedback",
+      "benchmarks",
+      "role_ablation",
+      "infra_takeaways",
+      "caveats",
+      "references"
+    ]
+  }
+}

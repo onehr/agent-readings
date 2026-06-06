@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Orca: A Distributed Serving System for Transformer-Based Generative Models</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/orca-yu-2022/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Inference and Serving Infrastructure</p>
+        <h1>Orca</h1>
+        <p class="hero-lede">Orca reframes LLM serving as token-iteration scheduling: instead of batching full requests until every sequence finishes, it admits, removes, and schedules requests after every generated token.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>6</strong><span>Claims</span></div>
+          <div class="metric"><strong>6</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2022 · OSDI 2022</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>2</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/orca-yu-2022/">Open deck</a>
+        <a class="button" href="https://www.usenix.org/conference/osdi22/presentation/yu">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>Agents create many short and long generations with unpredictable lengths. Orca is the first paper in this list that makes inference serving feel like a scheduler problem rather than only a model-kernel problem.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Existing inference servers such as Triton/TensorFlow Serving were designed around request-level batching.</li><li>Autoregressive Transformer generation runs one model iteration per output token.</li><li>Requests in a batch can need different output lengths, so short requests wait for longer ones and new arrivals wait for the whole batch to finish.</li><li>Naively changing the batch after each token breaks simple batched execution because attention tensors have variable shapes across sequence lengths.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks how to keep batching efficient while allowing the serving system to make scheduling decisions after every generation iteration.</p>
+
+      <h2>Method</h2>
+      <p>Run one token iteration at a time, update request membership after each iteration, selectively batch parameter-heavy operations while handling attention's variable-length state separately, and coordinate model-parallel workers with memory-aware scheduling.</p>
+      <ul><li>Admit an initial batch of requests.</li><li>Invoke the model execution engine for one iteration rather than the whole request.</li><li>After the iteration returns, immediately return finished requests to clients.</li><li>Admit newly arrived requests into free batch slots before the next iteration.</li><li>Apply batching to parameter-heavy operations such as linear layers and MLPs.</li><li>Handle attention separately where per-request tensor shapes differ.</li><li>Track KV memory growth so the scheduler does not admit more requests than memory can support.</li><li>Use intra-layer/inter-layer model parallelism and pipelining for large models.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>Autoregressive generation breaks request-level batching because each request can require a different number of model iterations.</p>
+  <p><strong>Scope:</strong> Abstract and Section 1.</p>
+  <ul><li><strong>E-request-batching-problem</strong>: The paper explains that existing request-level serving systems cannot change a batch until all requests in the batch finish, so short requests wait for long ones and new arrivals wait for the current batch.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>Iteration-level scheduling lets newly arrived requests wait only for one model iteration and lets completed requests return immediately after their final token.</p>
+  <p><strong>Scope:</strong> Abstract and Section 1.</p>
+  <ul><li><strong>E-iteration-scheduling</strong>: Orca invokes the engine to run one model iteration on the batch, then checks completion and admits new requests after every iteration.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>Selective batching batches only selected operations and handles attention differently because attention tensors have variable shapes as sequence lengths diverge.</p>
+  <p><strong>Scope:</strong> Abstract and Section 1.</p>
+  <ul><li><strong>E-selective-batching</strong>: Selective batching applies batching only to selected operations, while attention is processed per request because its tensor shapes depend on already processed tokens and it has no model parameters to amortize.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>Orca includes distributed serving support for models with hundreds of billions of parameters through intra-layer and inter-layer model parallelism.</p>
+  <p><strong>Scope:</strong> Section 1 and system design sections.</p>
+  <ul><li><strong>E-distributed-serving</strong>: The paper states Orca adopts intra-layer and inter-layer model parallelism and adds scheduling, memory management, and pipelined execution for large-scale models.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>On GPT-3-style models up to 341B parameters, Orca reports up to 36.9x throughput improvement over FasterTransformer at the same latency level.</p>
+  <p><strong>Scope:</strong> Abstract and Section 1.</p>
+  <ul><li><strong>E-throughput</strong>: The evaluation on GPT-3 175B and additional GPT-3-style models up to 341B reports 36.9x throughput improvement at the same latency level compared with NVIDIA FasterTransformer.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>Orca still treats KV-cache memory as a central scheduling constraint because attention state grows with generated sequence length.</p>
+  <p><strong>Scope:</strong> Sections 1-3 and memory design.</p>
+  <ul><li><strong>E-kv-growth</strong>: The paper describes Transformer key/value state as growing with the number of processed tokens, requiring the scheduler to consider memory while requests continue generating.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>LLM serving for agents is scheduling, not just kernels: every agent step consumes a variable number of token iterations.</li><li>Iteration-level scheduling is the ancestor of modern continuous batching. Agents need it because task lengths are unpredictable.</li><li>Short generations should not wait behind long generations from the same batch; the scheduler must retire completed sequences immediately.</li><li>Admission control must account for KV-cache growth, not just current batch size.</li><li>Serving optimizations change product behavior indirectly: lower per-step latency and higher throughput determine whether multi-call agent loops feel usable.</li><li>Orca makes a useful separation between parameter-heavy operations worth batching and state-heavy attention operations that need different treatment.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The evaluation is on GPT-style language models, not every generative model domain.</li><li>The main comparison is against the evaluated FasterTransformer baseline from the paper era.</li><li>The paper predates PagedAttention/vLLM and modern production serving engines.</li><li>Selective batching handles variable-length attention, but does not fully solve KV-cache memory fragmentation and sharing.</li><li>Serving throughput gains do not guarantee semantic reliability for agents; they make retries, self-consistency, search, and multi-step workflows cheaper.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/orca-yu-2022.json.</span>
+  </footer>
+</body>
+</html>

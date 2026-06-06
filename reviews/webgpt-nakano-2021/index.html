@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · WebGPT: Browser-Assisted Question-Answering with Human Feedback</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/webgpt-nakano-2021/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Training Agents</p>
+        <h1>WebGPT</h1>
+        <p class="hero-lede">WebGPT trains GPT-3 to answer long-form questions by operating a text browser, collecting citations, and optimizing answer quality with human feedback.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>7</strong><span>Claims</span></div>
+          <div class="metric"><strong>9</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2021 · arXiv 2021; revised 2022</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>3</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/webgpt-nakano-2021/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2112.09332">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>WebGPT predates most agent frameworks but already has the shape of a serious agent: a constrained tool interface, trajectory demonstrations, preference optimization, citations for audit, and a threat model for side effects.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Long-form QA systems needed both retrieval and synthesis, and prior methods often optimized document retrieval separately from answer quality.</li><li>Language models hallucinated obscure factual claims because pretraining alone did not force grounding in current sources.</li><li>Human evaluation of factual accuracy is hard when model answers do not expose the evidence behind their claims.</li><li>Browser-use models needed a task setup humans could perform so demonstrations and comparisons could be collected.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks how to train a language model to use a web browser for open-ended QA and make factuality evaluation tractable through collected references.</p>
+
+      <h2>Method</h2>
+      <p>Expose a restricted text browser to GPT-3, collect human browsing demonstrations and answer comparisons on ELI5 questions, train with behavior cloning and reward modeling, then use best-of-n rejection sampling or PPO to optimize answer quality.</p>
+      <ul><li>Represent browser state as text: question, page title, visible page text, cursor state, prior actions, and action budget.</li><li>Collect human demonstrations of using the browser to answer long-form ELI5 questions.</li><li>Collect human comparisons between two model-generated cited answers.</li><li>Fine-tune GPT-3 with behavior cloning on browser-command demonstrations.</li><li>Train reward models from answer comparisons.</li><li>Optimize with PPO or, for the best reported model, sample many behavior-cloned answers and select the reward-model winner.</li><li>Evaluate against human demonstrators, ELI5 reference answers, and TruthfulQA.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>WebGPT turns web research into a constrained text-browser action loop that both humans and models can operate.</p>
+  <p><strong>Scope:</strong> Section 2 and Table 1.</p>
+  <ul><li><strong>E-browser-actions</strong>: The model receives a text summary of browser state and must issue one valid command: search, click, find, quote, scroll, top, back, or end. Invalid actions count against the action budget.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>The paper collects human demonstrations and model-output comparisons, mostly on ELI5, to train browser use and answer preference.</p>
+  <p><strong>Scope:</strong> Section 3.1.</p>
+  <ul><li><strong>E-data</strong>: The authors collected around 6,000 browser demonstrations, 92% for ELI5 questions, and around 21,500 comparisons, 98% for ELI5 questions.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>The best reported WebGPT model uses behavior cloning followed by reward-model best-of-n rejection sampling rather than PPO alone.</p>
+  <p><strong>Scope:</strong> Abstract, Section 3.2, and Section 5.1.</p>
+  <ul><li><strong>E-training</strong>: Training methods include behavior cloning on demonstrations, reward modeling from comparisons, PPO against the reward model with a KL penalty, and best-of-n rejection sampling against the reward model.</li><li><strong>E-rejection-sampling</strong>: The main evaluated models are behavior-cloned policies with best-of-n rejection sampling: 760M best-of-4, 13B best-of-16, and 175B best-of-64. The paper reports 175B best-of-64 BC preferred 68% of the time to 175B BC, while 175B RL is preferred 58% of the time to 175B BC.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>On ELI5, the 175B best-of-64 WebGPT model is preferred to human browser demonstrators 56% of the time and to highest-voted Reddit answers 69% of the time.</p>
+  <p><strong>Scope:</strong> Abstract and Section 4.1.</p>
+  <ul><li><strong>E-eli5</strong>: The best 175B best-of-64 model is preferred 56% of the time to human demonstrator answers and 69% of the time to highest-voted ELI5 Reddit answers.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>WebGPT improves TruthfulQA over GPT-3 but remains below human performance on out-of-distribution adversarial questions.</p>
+  <p><strong>Scope:</strong> Abstract, Section 4.2, and project page.</p>
+  <ul><li><strong>E-truthfulqa</strong>: The best model's TruthfulQA answers are true 75% of the time and both true and informative 54% of the time; all WebGPT models outperform GPT-3 prompts but remain below humans.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>Collected references make factuality evaluation more inspectable, but citations can also create overreliance and reward cherry-picked evidence.</p>
+  <p><strong>Scope:</strong> Section 6.2 and Section 6.4.</p>
+  <ul><li><strong>E-reference-benefits</strong>: The paper argues references make feedback more accurate and less noisy because labelers can judge whether claims are supported by cited sources, and they make browsing trajectories inspectable.</li><li><strong>E-reference-risks</strong>: The paper warns that citations can make answers appear more authoritative, cause overreliance, and incentivize models to cherry-pick references that persuade labelers rather than fairly represent evidence.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · paper-supported</h3>
+  <p>Even restricted web access creates train-time and inference-time side-effect risks that grow with model capability.</p>
+  <p><strong>Scope:</strong> Section 6.5.</p>
+  <ul><li><strong>E-web-risk</strong>: The authors discuss live web access risks at train and inference time, including hypothetical side effects such as editing a source to create convincing evidence, and say safety burden should rise with model capability.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>WebGPT is an agent paper before the term stabilized: observation, action grammar, environment transition, evidence collection, and final answer.</li><li>Tool interfaces should be constrained and logged. The text browser makes invalid actions explicit and preserves a trajectory humans can inspect.</li><li>Citations are not decoration; they are training infrastructure that lets humans evaluate factual support without doing unrestricted research from scratch.</li><li>Reward-model optimization can move from training time to inference time. Best-of-n is expensive, but effective when the environment is unpredictable.</li><li>A browser is a side-effect boundary. Even read-mostly web access creates risks once the model can search, click, and choose evidence strategically.</li><li>For agent evaluation, judge the trajectory as well as the final answer: sources, search path, quote selection, and synthesis errors are separate failure modes.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The system is trained primarily on ELI5 long-form QA, so it is not a general-purpose web automation benchmark.</li><li>The best model uses substantial inference-time compute through best-of-64 sampling.</li><li>The browser is restricted; conclusions do not directly transfer to agents with forms, authenticated sites, or write actions.</li><li>Citations can increase perceived truthfulness even when the answer is wrong or the source is unreliable.</li><li>The model can reinforce biases from GPT-3, the web, source selection, and question framing.</li><li>The paper reports out-of-distribution brittleness on TruthfulQA and examples of unreliable-source failures.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/webgpt-nakano-2021.json.</span>
+  </footer>
+</body>
+</html>

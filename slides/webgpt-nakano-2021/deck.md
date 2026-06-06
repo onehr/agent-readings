@@ -1,0 +1,221 @@
+<!-- .slide: class="title-slide apple-title" -->
+
+<div class="slide-frame slide-frame--center">
+  <p class="deck-kicker">agent-readings / Training Agents</p>
+  <h1>WebGPT</h1>
+  <p class="deck-subtitle">Browser use as an auditable agent trajectory</p>
+
+  <div class="deck-meta-strip">
+    <div class="deck-meta-pill"><strong>2021</strong><span>arXiv 2021; revised 2022</span></div>
+    <div class="deck-meta-pill"><strong>7</strong><span>claims</span></div>
+    <div class="deck-meta-pill"><strong>9</strong><span>evidence refs</span></div>
+    <div class="deck-meta-pill"><strong>paper-read</strong><span>status</span></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="statement-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">The one sentence</p>
+  <h2>WebGPT trains GPT-3 to answer long-form questions by operating a text browser, collecting citations, and optimizing answer quality with human feedback.</h2>
+  <p class="deck-note">WebGPT predates most agent frameworks but already has the shape of a serious agent: a constrained tool interface, trajectory demonstrations, preference optimization, citations for audit, and a threat model for side effects.</p>
+</div>
+
+---
+
+<!-- .slide: class="problem-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Before this paper</p>
+  <h2>The friction was structural.</h2>
+  <div class="apple-card-grid apple-card-grid--three">
+    <div class="apple-card"><p>Long-form QA systems needed both retrieval and synthesis, and prior methods often optimized document retrieval separately from answer quality.</p></div>
+<div class="apple-card"><p>Language models hallucinated obscure factual claims because pretraining alone did not force grounding in current sources.</p></div>
+<div class="apple-card"><p>Human evaluation of factual accuracy is hard when model answers do not expose the evidence behind their claims.</p></div>
+  </div>
+  <div class="deck-callout">
+    <span>Key gap</span>
+    <p>The paper asks how to train a language model to use a web browser for open-ended QA and make factuality evaluation tractable through collected references.</p>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="idea-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Core idea</p>
+  <h2>Expose a restricted text browser to GPT-3, collect human browsing demonstrations and answer comparisons on ELI5 questions, train with behavior cloning and...</h2>
+  <p class="deck-note">Expose a restricted text browser to GPT-3, collect human browsing demonstrations and answer comparisons on ELI5 questions, train with behavior cloning and reward modeling, then use best-of-n rejection sampling or PPO to optimize answer quality.</p>
+  <div class="idea-loop" aria-label="Agent loop">
+    <div><strong>Model</strong><span>reason</span></div>
+    <div><strong>Runtime</strong><span>act</span></div>
+    <div><strong>World</strong><span>observe</span></div>
+  </div>
+  <div class="step-strip">
+    <div class="step-item">
+  <span>01</span>
+  <p>Represent browser state as text: question, page title, visible page text, cursor state, prior actions, and action budget.</p>
+</div>
+<div class="step-item">
+  <span>02</span>
+  <p>Collect human demonstrations of using the browser to answer long-form ELI5 questions.</p>
+</div>
+<div class="step-item">
+  <span>03</span>
+  <p>Collect human comparisons between two model-generated cited answers.</p>
+</div>
+<div class="step-item">
+  <span>04</span>
+  <p>Fine-tune GPT-3 with behavior cloning on browser-command demonstrations.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="grammar-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Action grammar</p>
+  <h2>The agent is an interface contract.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>Search &lt;query&gt;: send a query to Bing and display search results.</p></div>
+<div class="apple-card"><p>Clicked on link &lt;id&gt;: follow a search result or page link.</p></div>
+<div class="apple-card"><p>Find in page: &lt;text&gt;: locate text on the current page.</p></div>
+<div class="apple-card"><p>Quote: &lt;text&gt;: store a passage as a reference for the final answer.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="code-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Executable shape</p>
+  <h2>The mechanism should fit on one screen.</h2>
+
+```python
+state = browser.reset(question)
+refs = []
+for step in range(max_actions):
+    action = policy(state)
+    if action.type == "Quote":
+        refs.append(browser.quote(action.text))
+    elif action.type == "End: Answer":
+        break
+    else:
+        state = browser.apply(action)
+
+answer = policy.compose_answer(question, refs)
+score = reward_model(question, answer, refs)
+
+# best-of-n inference
+return max(sample_answers(policy, question, n=64), key=reward_model)
+```
+</div>
+
+---
+
+<!-- .slide: class="proof-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Evidence</p>
+  <h2>The proof objects.</h2>
+  <div class="proof-grid">
+    <div class="proof-card">
+  <span>E-browser-actions</span>
+  <p>The model receives a text summary of browser state and must issue one valid command: search, click, find, quote, scroll, top, back, or end. Invalid actions count against the...</p>
+</div>
+<div class="proof-card">
+  <span>E-data</span>
+  <p>The authors collected around 6,000 browser demonstrations, 92% for ELI5 questions, and around 21,500 comparisons, 98% for ELI5 questions.</p>
+</div>
+<div class="proof-card">
+  <span>E-training</span>
+  <p>Training methods include behavior cloning on demonstrations, reward modeling from comparisons, PPO against the reward model with a KL penalty, and best-of-n rejection sampling...</p>
+</div>
+<div class="proof-card">
+  <span>E-rejection-sampling</span>
+  <p>The main evaluated models are behavior-cloned policies with best-of-n rejection sampling: 760M best-of-4, 13B best-of-16, and 175B best-of-64. The paper reports 175B best-of-64...</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="claim-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Claim map</p>
+  <h2>What the review actually supports.</h2>
+  <div class="claim-grid">
+    <div class="claim-card">
+  <span>C1 · paper-supported</span>
+  <p>WebGPT turns web research into a constrained text-browser action loop that both humans and models can operate.</p>
+  <small>E-browser-actions</small>
+</div>
+<div class="claim-card">
+  <span>C2 · paper-supported</span>
+  <p>The paper collects human demonstrations and model-output comparisons, mostly on ELI5, to train browser use and answer preference.</p>
+  <small>E-data</small>
+</div>
+<div class="claim-card">
+  <span>C3 · paper-supported</span>
+  <p>The best reported WebGPT model uses behavior cloning followed by reward-model best-of-n rejection sampling rather than PPO alone.</p>
+  <small>E-training, E-rejection-sampling</small>
+</div>
+<div class="claim-card">
+  <span>C4 · paper-supported</span>
+  <p>On ELI5, the 175B best-of-64 WebGPT model is preferred to human browser demonstrators 56% of the time and to highest-voted Reddit answers 69% of the time.</p>
+  <small>E-eli5</small>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="takeaway-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Agent infrastructure</p>
+  <h2>What changes if you build systems.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>WebGPT is an agent paper before the term stabilized: observation, action grammar, environment transition, evidence collection, and final answer.</p></div>
+<div class="apple-card"><p>Tool interfaces should be constrained and logged. The text browser makes invalid actions explicit and preserves a trajectory humans can inspect.</p></div>
+<div class="apple-card"><p>Citations are not decoration; they are training infrastructure that lets humans evaluate factual support without doing unrestricted research from...</p></div>
+<div class="apple-card"><p>Reward-model optimization can move from training time to inference time. Best-of-n is expensive, but effective when the environment is unpredictable.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="caveat-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Caveats</p>
+  <h2>What this does not prove.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>The system is trained primarily on ELI5 long-form QA, so it is not a general-purpose web automation benchmark.</p></div>
+<div class="apple-card"><p>The best model uses substantial inference-time compute through best-of-64 sampling.</p></div>
+<div class="apple-card"><p>The browser is restricted; conclusions do not directly transfer to agents with forms, authenticated sites, or write actions.</p></div>
+<div class="apple-card"><p>Citations can increase perceived truthfulness even when the answer is wrong or the source is unreliable.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="closing-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Run it</p>
+  <h2>No PoC yet.</h2>
+  <p class="deck-note">No PoC yet - contributions welcome. A local PoC could mock a text-browser over a small static corpus, collect quoted passages, and compare behavior cloning versus best-of-n reward selection.</p>
+  <div class="reference-list">
+    <ul><li>Paper: <a href="https://arxiv.org/abs/2112.09332">WebGPT: Browser-Assisted Question-Answering with Human Feedback</a></li><li>Project/code: <a href="https://openai.com/index/webgpt/">https://openai.com/index/webgpt/</a></li><li>connects: <a href="https://arxiv.org/abs/2203.02155">InstructGPT</a></li><li>precedes: <a href="https://arxiv.org/abs/2210.03629">ReAct</a></li><li>sets-up: <a href="https://arxiv.org/abs/2302.12173">Indirect Prompt Injection</a></li></ul>
+  </div>
+</div>
+
+Note: This deck is synthesized from `data/reviews/webgpt-nakano-2021.json`. Update the review record, then run `bun run build`.

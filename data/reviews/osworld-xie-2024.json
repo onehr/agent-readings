@@ -1,0 +1,315 @@
+{
+  "schema_version": 1,
+  "slug": "osworld-xie-2024",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "OSWorld: Benchmarking Multimodal Agents for Open-Ended Tasks in Real Computer Environments",
+    "authors": [
+      "Tianbao Xie",
+      "Danyang Zhang",
+      "Jixuan Chen",
+      "Xiaochuan Li",
+      "Siheng Zhao",
+      "Ruisheng Cao",
+      "Toh Jing Hua",
+      "Zhoujun Cheng",
+      "Dongchan Shin",
+      "Fangyu Lei",
+      "Yitao Liu",
+      "Yiheng Xu",
+      "Shuyan Zhou",
+      "Silvio Savarese",
+      "Caiming Xiong",
+      "Victor Zhong",
+      "Tao Yu"
+    ],
+    "year": 2024,
+    "venue": "NeurIPS 2024 Datasets and Benchmarks Track; arXiv 2024",
+    "url": "https://arxiv.org/abs/2404.07972",
+    "project_url": "https://os-world.github.io/",
+    "code_url": "https://github.com/xlang-ai/OSWorld",
+    "arxiv_id": "2404.07972",
+    "read_sources": [
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2404.07972",
+        "note": "Used for arXiv metadata, authors, abstract, task count, headline human/model results, and public resource link."
+      },
+      {
+        "kind": "proceedings",
+        "url": "https://proceedings.neurips.cc/paper_files/paper/2024/hash/5d413e48f84dc61244b6be550f1cd8f5-Abstract-Datasets_and_Benchmarks_Track.html",
+        "note": "Used to confirm NeurIPS 2024 Datasets and Benchmarks Track venue and DOI."
+      },
+      {
+        "kind": "project_page",
+        "url": "https://os-world.github.io/",
+        "note": "Used for environment description, benchmark statistics, execution-based evaluator count, benchmark caveats, and OSWorld-Verified update context."
+      },
+      {
+        "kind": "project_repo",
+        "url": "https://github.com/xlang-ai/OSWorld",
+        "note": "Used to confirm runnable environment requirements, VM/Docker/KVM support, baseline command shape, and code/data availability."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "OSWorld evaluates multimodal computer-use agents inside real desktop environments with task setup, browser/desktop actions, and execution-based grading.",
+    "thesis": "The benchmark's central move is to treat computer-use evaluation as an executable environment problem: reset a real OS/app state, let the agent operate the GUI and files, then grade the final state with custom scripts.",
+    "why_it_matters": "For computer-use agents, OSWorld is a close proxy for production difficulty because the agent must ground pixels/UI state, coordinate applications, mutate files, and survive long-horizon desktop workflows."
+  },
+  "problem": {
+    "prior_state": [
+      "Many digital-agent benchmarks are static, text-only, web-only, or limited to one application/domain.",
+      "GUI agents need to handle visual grounding, OS state, files, browser tabs, desktop apps, and cross-application workflows.",
+      "Action matching is too brittle for open-ended computer tasks where many valid paths can reach the target state.",
+      "Live or ad hoc desktop evaluations are hard to reproduce without controlled setup and executable validators."
+    ],
+    "key_gap": "The paper asks how to build a realistic, reproducible benchmark for multimodal agents that use real computer environments rather than simplified interfaces.",
+    "assumptions": [
+      "Virtualized desktop environments can preserve enough real-computer complexity for useful agent evaluation.",
+      "Task-specific setup and execution-based evaluation scripts can make open-ended GUI tasks reproducible.",
+      "Multimodal observations such as screenshots and accessibility trees are appropriate agent inputs.",
+      "Desktop benchmark infrastructure should support parallelism and headless operation to make evaluation tractable."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "real-computer-environment",
+      "name": "Real computer environment",
+      "definition": "A virtualized operating-system environment with real desktop/web applications, files, GUI state, and executable task setup/evaluation."
+    },
+    {
+      "id": "execution-based-evaluation",
+      "name": "Execution-based evaluation",
+      "definition": "A grading method that runs task-specific checks against the final environment state rather than matching the action trace."
+    },
+    {
+      "id": "multimodal-agent",
+      "name": "Multimodal computer-use agent",
+      "definition": "An agent that observes screenshots or other UI representations and emits computer-control actions."
+    },
+    {
+      "id": "initial-state-setup",
+      "name": "Initial state setup",
+      "definition": "A per-task configuration that prepares files, applications, credentials, or OS state before the agent starts."
+    },
+    {
+      "id": "cross-app-task",
+      "name": "Cross-application task",
+      "definition": "A task whose solution may require coordinating more than one application or data source."
+    },
+    {
+      "id": "vm-provider",
+      "name": "VM/provider backend",
+      "definition": "The runtime substrate, such as VMware, VirtualBox, Docker with KVM, or cloud infrastructure, used to host desktop environments."
+    }
+  ],
+  "method": {
+    "core_idea": "Create a benchmark inside controllable desktop environments, define real-world tasks with setup configuration and execution-based validators, run agents through a standardized computer-control interface, and compare success rates with human performance.",
+    "action_grammar": [
+      "task instruction: natural-language computer-use objective.",
+      "initial state: VM, app, file, account, and OS state configured before execution.",
+      "observation: screenshot, accessibility tree, or related UI representation.",
+      "action: GUI, keyboard, mouse, browser, file, or code-like computer operation.",
+      "trajectory: sequence of observations and actions inside the OS.",
+      "post-processing: environment cleanup or artifact retrieval after the run.",
+      "validator: execution-based script that checks final task success."
+    ],
+    "steps": [
+      "Prepare a virtualized desktop environment and load the task-specific initial state.",
+      "Give the agent a natural-language instruction and a multimodal computer observation.",
+      "Let the agent execute actions against real web and desktop applications over multiple steps.",
+      "Collect screenshots, actions, videos, files, and other artifacts during the run.",
+      "Run the custom task evaluation script against the final state.",
+      "Aggregate success rates across 369 tasks and compare model baselines with human performance.",
+      "Analyze failure modes such as GUI grounding, operational knowledge, layout robustness, and history handling."
+    ],
+    "pseudocode": "env = DesktopEnv(provider=\"vmware_or_docker\", task=task_id)\nobs = env.reset(task.initial_state)\n\nfor step in range(max_steps):\n    action = agent.act(task.instruction, obs, history)\n    obs = env.step(action)\n    history.append((action, obs))\n\nartifacts = env.collect()\nsuccess = task.validator(env.final_state, artifacts)\nscore += int(success)"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "benchmark",
+      "status": "paper-supported",
+      "statement": "OSWorld introduces a scalable real computer environment for multimodal agents across operating systems including Ubuntu, Windows, and macOS.",
+      "scope": "Abstract.",
+      "evidence_refs": ["E-real-computer-env"],
+      "caveats": ["The released and commonly used benchmark setup is infrastructure-heavy and depends on supported VM/provider configurations."]
+    },
+    {
+      "id": "C2",
+      "type": "benchmark",
+      "status": "paper-supported",
+      "statement": "The benchmark contains 369 computer tasks involving real web apps, desktop apps, OS file I/O, and workflows across multiple applications.",
+      "scope": "Abstract and project page statistics.",
+      "evidence_refs": ["E-task-count"],
+      "caveats": ["The project page notes that 8 Google Drive tasks may require manual configuration or exclusion in some setups."]
+    },
+    {
+      "id": "C3",
+      "type": "evaluation",
+      "status": "paper-supported",
+      "statement": "Each task includes detailed initial-state setup and a custom execution-based evaluation script for reproducible grading.",
+      "scope": "Abstract and environment infrastructure description.",
+      "evidence_refs": ["E-setup-eval"],
+      "caveats": ["Validator correctness and setup reliability become benchmark validity concerns."]
+    },
+    {
+      "id": "C4",
+      "type": "environment",
+      "status": "paper-supported",
+      "statement": "OSWorld is designed for multimodal and cross-application computer-use tasks, including intermediate initial states and many execution-based evaluation functions.",
+      "scope": "Project page comparison table.",
+      "evidence_refs": ["E-feature-table"],
+      "caveats": ["The benchmark's breadth is broader than web-only tasks but still constrained by curated applications and available VM images."]
+    },
+    {
+      "id": "C5",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "The paper reports that humans complete over 72.36% of tasks while the best evaluated model achieves only 12.24% success.",
+      "scope": "Abstract.",
+      "evidence_refs": ["E-human-model-gap"],
+      "caveats": ["These are paper-era model results; newer OSWorld-Verified leaderboards may differ."]
+    },
+    {
+      "id": "C6",
+      "type": "failure_analysis",
+      "status": "paper-supported",
+      "statement": "The authors attribute major model deficiencies to GUI grounding and operational knowledge, with further analysis of resolution, history, layout/noise robustness, and OS transfer.",
+      "scope": "Abstract and project page analysis.",
+      "evidence_refs": ["E-failure-analysis"],
+      "caveats": ["Failure patterns depend on the evaluated model interfaces and observation types."]
+    },
+    {
+      "id": "C7",
+      "type": "infrastructure",
+      "status": "paper-supported",
+      "statement": "Running OSWorld is itself a systems task: the code supports local VM providers and Docker/KVM/cloud-style parallel execution, and records artifacts for result inspection.",
+      "scope": "Project repository setup and experiments instructions.",
+      "evidence_refs": ["E-runtime-requirements"],
+      "caveats": ["This makes OSWorld faithful, but also harder to run than text-only or API-only benchmarks."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-real-computer-env",
+      "kind": "environment",
+      "source": "paper",
+      "locator": "Abstract",
+      "result": "The paper describes OSWorld as a scalable real computer environment for multimodal agents with task setup, execution-based evaluation, and interactive learning across Ubuntu, Windows, and macOS.",
+      "metric": "environment scope",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-task-count",
+      "kind": "benchmark",
+      "source": "paper",
+      "locator": "Abstract and project page",
+      "result": "OSWorld contains 369 tasks involving real web and desktop apps, open domains, OS file I/O, and multi-application workflows.",
+      "metric": "task count and task coverage",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-setup-eval",
+      "kind": "evaluation",
+      "source": "paper",
+      "locator": "Abstract and project page environment infrastructure section",
+      "result": "Each task uses detailed initial state setup and custom execution-based evaluation scripts; the environment infrastructure includes task initialization, agent interaction, post-processing, retrieval, and evaluation.",
+      "metric": "setup and grading design",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-feature-table",
+      "kind": "benchmark",
+      "source": "project_page",
+      "locator": "Data Statistics and Comparison",
+      "result": "The project page lists OSWorld as supporting a controllable executable computer environment, multimodal support, cross-app tasks, intermediate initial state, and 134 execution-based evaluation functions.",
+      "metric": "benchmark feature coverage",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-human-model-gap",
+      "kind": "benchmark_result",
+      "source": "paper",
+      "locator": "Abstract",
+      "result": "Humans accomplish over 72.36% of OSWorld tasks while the best evaluated model achieves 12.24% success.",
+      "metric": "task success rate",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-failure-analysis",
+      "kind": "failure_analysis",
+      "source": "paper_and_project_page",
+      "locator": "Abstract and project page analysis section",
+      "result": "The paper emphasizes GUI grounding and operational knowledge failures; the project page summarizes analysis on screenshot resolution, trajectory history, UI layout/noise robustness, and cross-OS performance correlation.",
+      "metric": "failure mode analysis",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-runtime-requirements",
+      "kind": "implementation",
+      "source": "project_repo",
+      "locator": "README installation and experiments sections",
+      "result": "The repository documents VMware/VirtualBox setup, Docker with KVM support, AWS-style parallel evaluation, headless runs, baseline agent commands, and result artifacts including screenshots/actions/videos.",
+      "metric": "benchmark runtime requirements",
+      "claim_refs": ["C7"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "Computer-use evaluation is runtime infrastructure, not just data curation: reset, isolation, credentials, files, GUI state, and validators all matter.",
+    "Execution-based validators are the right primitive for open-ended desktop tasks because many action paths can be valid.",
+    "Multimodal agents fail on grounding and operational procedures, so benchmark logs must preserve screenshots, actions, videos, and final artifacts.",
+    "VM/provider choice affects reproducibility, parallelism, cost, and security; these are benchmark design variables.",
+    "Desktop agents need durable execution and cleanup because interrupted runs can leave containers, files, accounts, or app state behind.",
+    "OSWorld sits downstream of WebArena and tau-bench: it expands from websites and business APIs to full operating-system control."
+  ],
+  "caveats": [
+    "The benchmark is much heavier to run than text-only or browser-only evaluations.",
+    "Some tasks involve credentials or network-sensitive services, and the project notes Google Drive setup issues for 8 tasks.",
+    "The reported 12.24% best-model score is historical and not the current leaderboard ceiling.",
+    "VM images, provider support, and setup scripts are part of the benchmark surface and can drift over time.",
+    "Execution-based evaluation is only as good as the task validator and setup isolation.",
+    "Full-computer tasks are faithful but can make failure attribution harder because perception, planning, app knowledge, and infrastructure issues mix together."
+  ],
+  "related_work": [
+    {
+      "title": "WebArena",
+      "relation": "predecessor",
+      "note": "WebArena evaluates realistic self-hosted web applications; OSWorld expands evaluation into full desktop and OS workflows.",
+      "url": "https://arxiv.org/abs/2307.13854"
+    },
+    {
+      "title": "tau-bench",
+      "relation": "complement",
+      "note": "tau-bench stresses user dialogue, policy, APIs, and database final state; OSWorld stresses GUI grounding and full computer state.",
+      "url": "https://arxiv.org/abs/2406.12045"
+    },
+    {
+      "title": "Firecracker",
+      "relation": "runtime_context",
+      "note": "Computer-use benchmarks make isolation and cleanup concrete; VM-level isolation is one way to contain side effects.",
+      "url": "https://www.usenix.org/conference/nsdi20/presentation/agache"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A minimal PoC could package one desktop task in a disposable container/VM, run a scripted agent action trace, and validate a final file or GUI state."
+  },
+  "slide_plan": {
+    "title": "OSWorld",
+    "subtitle": "Computer-use agents need executable environments",
+    "sections": [
+      "summary",
+      "problem",
+      "real_computer_environment",
+      "task_setup_and_validation",
+      "benchmark_scope",
+      "results",
+      "runtime_requirements",
+      "agent_eval_takeaways",
+      "caveats",
+      "references"
+    ]
+  }
+}

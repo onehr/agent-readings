@@ -1,0 +1,314 @@
+{
+  "schema_version": 1,
+  "slug": "agentbench-liu-2023",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "AgentBench: Evaluating LLMs as Agents",
+    "authors": [
+      "Xiao Liu",
+      "Hao Yu",
+      "Hanchen Zhang",
+      "Yifan Xu",
+      "Xuanyu Lei",
+      "Hanyu Lai",
+      "Yu Gu",
+      "Hangliang Ding",
+      "Kaiwen Men",
+      "Kejuan Yang",
+      "Shudan Zhang",
+      "Xiang Deng",
+      "Aohan Zeng",
+      "Zhengxiao Du",
+      "Chenhui Zhang",
+      "Sheng Shen",
+      "Tianjun Zhang",
+      "Yu Su",
+      "Huan Sun",
+      "Minlie Huang",
+      "Yuxiao Dong",
+      "Jie Tang"
+    ],
+    "year": 2023,
+    "venue": "ICLR 2024; arXiv 2023",
+    "url": "https://arxiv.org/abs/2308.03688",
+    "project_url": "https://github.com/THUDM/AgentBench",
+    "arxiv_id": "2308.03688",
+    "read_sources": [
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2308.03688",
+        "note": "Used for metadata, venue note, abstract, model count, benchmark summary, and high-level findings."
+      },
+      {
+        "kind": "paper_html",
+        "url": "https://ar5iv.labs.arxiv.org/html/2308.03688v3",
+        "note": "Read for the eight-environment taxonomy, POMDP framing, evaluation setup, dataset statistics, failure categories, and headline result table."
+      },
+      {
+        "kind": "project_repo",
+        "url": "https://github.com/THUDM/AgentBench",
+        "note": "Used to confirm released benchmark code, task list, setup requirements, Docker/task-worker architecture, and current repository caveats."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "AgentBench evaluates LLMs as text-based agents across eight interactive environments spanning code, games, and web tasks.",
+    "thesis": "The benchmark's core move is breadth: instead of measuring one agent skill in isolation, it runs the same class of prompted LLM agents through multiple environment families and exposes cross-domain gaps.",
+    "why_it_matters": "For agent infrastructure, AgentBench is an early systems-shaped benchmark: it needs task servers, isolated workers, interaction histories, score normalization, and environment-specific validators."
+  },
+  "problem": {
+    "prior_state": [
+      "Traditional NLP benchmarks evaluate static input-output behavior rather than multi-turn action in environments.",
+      "Many early agent evaluations focused on a single environment, which hid cross-domain weaknesses.",
+      "Embodied or multimodal simulators were not always practical for evaluating text-only LLM agents.",
+      "Agent failure modes such as invalid actions, format errors, and turn-limit exhaustion were not consistently tracked across tasks."
+    ],
+    "key_gap": "The paper asks how to systematically evaluate LLMs as autonomous agents across multiple realistic interactive task families.",
+    "assumptions": [
+      "Text-based interactive environments can cover a useful slice of agent behavior before full multimodal computer use.",
+      "A common dialogue/action format can make heterogeneous environments comparable enough for benchmarking.",
+      "Dockerized and worker-isolated tasks reduce environment conflict and improve reproducibility.",
+      "Weighted score normalization is needed because task metrics and difficulty differ across environments."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "llm-as-agent",
+      "name": "LLM-as-Agent",
+      "definition": "An LLM operating in a loop where it receives task instructions and environment feedback, reasons, chooses actions, and updates the environment."
+    },
+    {
+      "id": "interactive-evaluation",
+      "name": "Interactive evaluation",
+      "definition": "Evaluation over a multi-turn process modeled as state, observation, action, transition, reward, and task instruction."
+    },
+    {
+      "id": "environment-family",
+      "name": "Environment family",
+      "definition": "A group of benchmark tasks grounded in code, game, or web interactions."
+    },
+    {
+      "id": "finish-reason",
+      "name": "Finish reason",
+      "definition": "A diagnostic label for why an agent episode ends, such as complete, invalid format, invalid action, context-limit exceeded, or task-limit exceeded."
+    },
+    {
+      "id": "task-worker",
+      "name": "Task worker",
+      "definition": "An isolated service process/container that hosts a particular environment and exposes it to the benchmark controller."
+    },
+    {
+      "id": "weighted-overall-score",
+      "name": "Weighted overall score",
+      "definition": "AgentBench's aggregate score that rescales task scores by per-task difficulty/average performance before averaging."
+    }
+  ],
+  "method": {
+    "core_idea": "Wrap eight heterogeneous environments in a common multi-turn interface, prompt LLMs with thought/action style outputs, execute environment transitions through task workers, and report both per-environment and normalized overall scores.",
+    "action_grammar": [
+      "state: hidden environment state for a task.",
+      "observation: environment feedback returned to the LLM as user-side messages.",
+      "action: model output command in the expected environment format.",
+      "transition: environment update after the action.",
+      "reward/score: task-specific success rate, reward, F1, game progress, or step success.",
+      "trajectory: alternating user/environment feedback and agent actions.",
+      "finish reason: diagnostic episode termination category."
+    ],
+    "steps": [
+      "Define eight environments grouped as code-grounded, game-grounded, and web-grounded tasks.",
+      "Adapt or build each environment so a text-only LLM can interact in multi-turn dialogue/action form.",
+      "Use Chain-of-Thought-style thought/action prompting with greedy decoding for reproducible baseline comparisons.",
+      "Run API and open-source LLMs through an HTTP/server-client evaluation toolkit.",
+      "Host complex task environments in Docker images and separate task workers to avoid environment conflicts.",
+      "Score each environment with its task-specific metric and compute a weighted overall score.",
+      "Analyze model gaps and episode failure reasons across environments."
+    ],
+    "pseudocode": "for env_name in agentbench_envs:\n    worker = start_task_worker(env_name)\n    for task in worker.test_split:\n        history = [task.instruction]\n        for turn in range(task.max_turns):\n            response = model.generate(format_prompt(history), temperature=0)\n            action = parse_action(response)\n            obs, done, score, reason = worker.step(task.id, action)\n            history.append((response, obs))\n            if done:\n                break\n        record(env_name, task.id, score, reason)\n\noverall = weighted_average(environment_scores)"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "benchmark",
+      "status": "paper-supported",
+      "statement": "AgentBench defines eight distinct interactive environments for evaluating LLMs as agents.",
+      "scope": "Abstract, Introduction, and Section 3.",
+      "evidence_refs": ["E-eight-envs"],
+      "caveats": ["The environments are primarily text-agent environments, not full GUI or physical-world settings."]
+    },
+    {
+      "id": "C2",
+      "type": "taxonomy",
+      "status": "paper-supported",
+      "statement": "The eight environments are grouped into code-grounded, game-grounded, and web-grounded task families.",
+      "scope": "Section 3.",
+      "evidence_refs": ["E-env-taxonomy"],
+      "caveats": ["The grouping is useful for breadth but does not imply equal difficulty or equal production relevance."]
+    },
+    {
+      "id": "C3",
+      "type": "evaluation",
+      "status": "paper-supported",
+      "statement": "AgentBench evaluates multi-turn, open-ended agent behavior and reports environment-specific metrics plus a weighted overall score.",
+      "scope": "Section 4.1.",
+      "evidence_refs": ["E-metrics"],
+      "caveats": ["Aggregating heterogeneous metrics requires weighting assumptions that affect rankings."]
+    },
+    {
+      "id": "C4",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "The paper evaluates 27 API-based and open-source LLMs and finds a large gap between top commercial models and many OSS models at the time.",
+      "scope": "Abstract, Introduction, and Table 3.",
+      "evidence_refs": ["E-model-results"],
+      "caveats": ["The model landscape has changed substantially since the original paper-era evaluation."]
+    },
+    {
+      "id": "C5",
+      "type": "failure_analysis",
+      "status": "paper-supported",
+      "statement": "The paper identifies poor long-term reasoning, decision-making, and instruction following as major obstacles for usable LLM agents.",
+      "scope": "Abstract and Section 2.",
+      "evidence_refs": ["E-failure-reasons"],
+      "caveats": ["Failure attributions are based on the benchmark's text-oriented environments and prompt setup."]
+    },
+    {
+      "id": "C6",
+      "type": "infrastructure",
+      "status": "paper-supported",
+      "statement": "AgentBench ships an integrated evaluation toolkit with server-client model access, Dockerized environments, and isolated task workers.",
+      "scope": "Introduction, Section 4.1, and repository README.",
+      "evidence_refs": ["E-toolkit"],
+      "caveats": ["The repository has evolved; current main includes newer function-calling variants and version notes."]
+    },
+    {
+      "id": "C7",
+      "type": "diagnostic",
+      "status": "paper-supported",
+      "statement": "AgentBench explicitly tracks finish reasons such as invalid format, invalid action, context-limit exceeded, task-limit exceeded, and complete.",
+      "scope": "Section 2.",
+      "evidence_refs": ["E-finish-reasons"],
+      "caveats": ["Finish reasons diagnose episode termination, but not every semantic failure mode inside a completed task."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-eight-envs",
+      "kind": "benchmark",
+      "source": "paper",
+      "locator": "Abstract and Introduction",
+      "result": "AgentBench is introduced as a benchmark with 8 distinct interactive environments for assessing LLM-as-Agent reasoning and decision-making.",
+      "metric": "environment count",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-env-taxonomy",
+      "kind": "taxonomy",
+      "source": "paper",
+      "locator": "Section 3",
+      "result": "The environments are Operating System, Database, Knowledge Graph, Digital Card Game, Lateral Thinking Puzzles, House-Holding, Web Shopping, and Web Browsing, grouped as code, game, and web.",
+      "metric": "environment coverage",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-metrics",
+      "kind": "evaluation",
+      "source": "paper",
+      "locator": "Table 2 and Section 4.1",
+      "result": "The paper reports per-environment metrics including success rate, F1, reward, game progress, and step success, then computes a weighted overall score to reduce dominance by easier tasks.",
+      "metric": "per-environment and weighted score",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-model-results",
+      "kind": "benchmark_result",
+      "source": "paper",
+      "locator": "Abstract and Table 3",
+      "result": "The paper evaluates 27 API-based and OSS LLMs and reports GPT-4 leading the weighted overall score, with a clear gap to OSS models included in the study.",
+      "metric": "overall AgentBench score and per-environment scores",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-failure-reasons",
+      "kind": "failure_analysis",
+      "source": "paper",
+      "locator": "Abstract and Section 2",
+      "result": "The authors identify long-term reasoning, decision-making, and instruction following as obstacles, with invalid format/action and task-limit exceeded as common diagnostics.",
+      "metric": "failure categories",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-toolkit",
+      "kind": "implementation",
+      "source": "paper_and_project_repo",
+      "locator": "Introduction, Section 4.1, and README",
+      "result": "AgentBench provides datasets, environments, and an evaluation package using HTTP model access, Docker images, task workers, and a controller/assigner-style workflow.",
+      "metric": "benchmark tooling",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-finish-reasons",
+      "kind": "diagnostic",
+      "source": "paper",
+      "locator": "Section 2",
+      "result": "The paper lists context limit exceeded, invalid format, invalid action, task limit exceeded, and complete as typical finish reasons for agent episodes.",
+      "metric": "episode termination diagnostics",
+      "claim_refs": ["C7"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "A serious agent benchmark needs a harness, not just prompts: task servers, workers, model adapters, logs, and environment reset all matter.",
+    "Cross-domain evaluation is useful because code, game, and web tasks stress different mixes of planning, state tracking, action validity, and domain knowledge.",
+    "Tracking finish reasons is a practical debugging primitive for agent systems and should be preserved in traces.",
+    "Dockerized task workers are an early example of benchmark-side isolation for heterogeneous agent environments.",
+    "Weighted aggregate scores are convenient for leaderboards but should not hide per-environment collapse.",
+    "AgentBench is a bridge from ReAct-style text agents toward later executable benchmarks such as WebArena, tau-bench, and OSWorld."
+  ],
+  "caveats": [
+    "The headline model results are historical and should not be treated as current model capability.",
+    "The benchmark is broad, but some environments are adapted or simplified compared with live production systems.",
+    "Text-only interaction makes the benchmark cheaper and broader, but misses multimodal GUI grounding that OSWorld later targets.",
+    "The repository has evolved beyond the original paper version, including function-calling and newer benchmark variants.",
+    "Weighted overall scores can obscure which environment caused an agent to fail.",
+    "Some task environments have nontrivial setup and resource requirements, including Docker images and service dependencies."
+  ],
+  "related_work": [
+    {
+      "title": "ReAct",
+      "relation": "agent_loop",
+      "note": "AgentBench uses thought/action prompting as a common primitive for running LLMs in environments.",
+      "url": "https://arxiv.org/abs/2210.03629"
+    },
+    {
+      "title": "WebArena",
+      "relation": "successor",
+      "note": "WebArena narrows in on realistic self-hosted web tasks with functional validators.",
+      "url": "https://arxiv.org/abs/2307.13854"
+    },
+    {
+      "title": "OSWorld",
+      "relation": "successor",
+      "note": "OSWorld pushes from text-agent and web interactions into full multimodal computer-use evaluation.",
+      "url": "https://arxiv.org/abs/2404.07972"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A compact PoC could emulate one AgentBench-style environment with a task worker, a tiny action parser, and finish-reason accounting."
+  },
+  "slide_plan": {
+    "title": "AgentBench",
+    "subtitle": "Cross-domain text-agent evaluation",
+    "sections": [
+      "summary",
+      "problem",
+      "eight_environments",
+      "interactive_eval_loop",
+      "toolkit_and_workers",
+      "results",
+      "failure_reasons",
+      "agent_eval_takeaways",
+      "caveats",
+      "references"
+    ]
+  }
+}

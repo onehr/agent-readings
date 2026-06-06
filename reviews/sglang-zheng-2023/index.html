@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · SGLang: Efficient Execution of Structured Language Model Programs</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/sglang-zheng-2023/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Inference and Serving Infrastructure</p>
+        <h1>SGLang</h1>
+        <p class="hero-lede">SGLang treats multi-call prompting, agent control flow, and structured outputs as language-model programs, then accelerates them with a Python DSL plus runtime optimizations such as RadixAttention and compressed-FSM decoding.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>6</strong><span>Claims</span></div>
+          <div class="metric"><strong>6</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2023 · arXiv 2023, revised 2024</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>3</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/sglang-zheng-2023/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2312.07104">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>For agents, SGLang is the serving/runtime bridge: it gives a programming surface for LM workflows and a backend that reuses KV state across calls instead of treating each call as an unrelated request.</p>
+
+      <h2>Problem</h2>
+      <ul><li>LLM applications increasingly use multiple generation calls, prompting techniques, control flow, tool interaction, and structured inputs/outputs.</li><li>Developers often implement LM programs with brittle string manipulation, output parsing, manual parallelism, and ad-hoc synchronization.</li><li>General inference engines such as vLLM, TGI, and TensorRT-LLM optimize individual calls without knowing the multi-call program structure.</li><li>Existing engines often discard KV cache after a request, missing reuse opportunities across calls with shared prefixes.</li><li>Structured output decoding often masks next-token probabilities one token at a time, even when constraints permit multi-token progress.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks how to both program and efficiently execute structured multi-call LLM workflows rather than isolated model invocations.</p>
+
+      <h2>Method</h2>
+      <p>Expose LM-program structure through a Python DSL, represent prompt state as a stream, execute branches asynchronously, retain and index KV cache in a radix tree for prefix reuse, and speed structured decoding with compressed automata.</p>
+      <ul><li>Write the LM workflow as a Python-embedded SGLang program using generation and control-flow primitives.</li><li>Interpret the program while maintaining prompt state streams and asynchronous primitive execution.</li><li>When a generation call arrives, match its prefix against the RadixAttention tree.</li><li>Reuse matching KV-cache blocks and insert newly generated suffixes into the radix tree.</li><li>Evict cached prefixes with LRU-like policy when memory pressure requires it.</li><li>Compile structured output constraints into a compressed finite-state machine.</li><li>Skip token-by-token work where the FSM has deterministic multi-token paths.</li><li>For API-only models, speculatively issue likely future calls to hide multi-call latency.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>Modern LM applications increasingly require multiple generation calls, control flow, advanced prompting, and structured inputs/outputs.</p>
+  <p><strong>Scope:</strong> Abstract and Introduction.</p>
+  <ul><li><strong>E-lm-programs</strong>: The paper states LLMs are used for complex tasks requiring multiple generation calls, advanced prompting, control flow, and structured inputs/outputs, and names these workloads language model programs.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>SGLang consists of a frontend language and runtime: the frontend simplifies programming with generation and parallelism primitives.</p>
+  <p><strong>Scope:</strong> Abstract and Introduction.</p>
+  <ul><li><strong>E-frontend</strong>: The frontend is a Python-embedded DSL with primitives for generation and parallelism control, including examples using gen, select, fork, and structured regex output.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>RadixAttention reuses KV cache across generation calls by maintaining an LRU cache in a radix tree for efficient matching, insertion, and eviction.</p>
+  <p><strong>Scope:</strong> Introduction and Section 3.</p>
+  <ul><li><strong>E-radixattention</strong>: The runtime maintains an LRU cache of KV cache entries in a radix tree, enabling efficient prefix matching, insertion, eviction, and cache-aware scheduling across calls.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>Compressed finite-state machines speed structured output decoding by collapsing deterministic multi-token constraint paths into a single step when possible.</p>
+  <p><strong>Scope:</strong> Abstract and Introduction.</p>
+  <ul><li><strong>E-compressed-fsm</strong>: The runtime compiles constraints into a compressed finite-state machine that can collapse multi-token deterministic paths and decode multiple tokens at once.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>SGLang also supports API-only models and introduces API speculative execution for multi-call programs where the local runtime cannot directly control the model engine.</p>
+  <p><strong>Scope:</strong> Introduction.</p>
+  <ul><li><strong>E-api-speculation</strong>: The paper says SGLang supports API-only models like GPT-4 and introduces API speculative execution to optimize multi-call programs for those models.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>Across workloads including agent control, reasoning, few-shot learning, JSON decoding, RAG, multi-turn chat, and multimodal tasks, SGLang reports up to 6.4x higher throughput than compared systems.</p>
+  <p><strong>Scope:</strong> Abstract and Introduction.</p>
+  <ul><li><strong>E-throughput</strong>: Experiments on models such as Llama-7B/70B, Mistral-8x7B, LLaVA-v1.5-7B, and LLaVA-NeXT-34B across agent control, reasoning, few-shot, JSON, RAG, multi-turn chat, and multimodal workloads report up to 6.4x higher throughput than Guidance, vLLM, and LMQL-style baselines.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Agent workflows are LM programs. A serving runtime that sees the program can optimize across calls; an HTTP API that sees only isolated prompts cannot.</li><li>Prefix sharing is everywhere in agents: system prompts, tool schemas, retrieval context, task state, and branch roots should not be recomputed blindly.</li><li>RadixAttention turns prompt structure into a cache key and makes cache reuse a scheduler concern.</li><li>Structured output is a serving problem, not just parser cleanup. JSON/tool-call constraints can change decode speed.</li><li>The frontend/runtime split is useful: agent code should express control flow, while the runtime owns KV reuse, parallelism, constrained decoding, and API speculation.</li><li>SGLang is a bridge between agent frameworks and inference engines because it exposes enough structure for the engine to optimize agent-like workloads.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The paper is an arXiv preprint and was under review in the version read.</li><li>The largest speedup depends on workloads with reusable prefixes or structured-output opportunities.</li><li>A DSL can simplify some workflows but also adds its own programming model and operational surface.</li><li>API speculative execution can spend money or rate limit budget on branches that are not ultimately needed.</li><li>RadixAttention cache management must compete with ordinary serving memory pressure and may evict useful prefixes.</li><li>SGLang improves execution efficiency; it does not by itself solve tool authorization, durable execution, or semantic correctness.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/sglang-zheng-2023.json.</span>
+  </footer>
+</body>
+</html>

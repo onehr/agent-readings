@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Bringing the Web Up to Speed with WebAssembly</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/webassembly-haas-2017/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Isolation and Sandboxing</p>
+        <h1>WebAssembly</h1>
+        <p class="hero-lede">WebAssembly defines a compact, typed, sandboxed low-level code format whose validated modules can run near native speed while receiving authority only through host-provided imports.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>7</strong><span>Claims</span></div>
+          <div class="metric"><strong>7</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2017 · PLDI 2017</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>4</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/webassembly-haas-2017/">Open deck</a>
+        <a class="button" href="https://research.google/pubs/bringing-the-web-up-to-speed-with-webassembly/">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>For agents, WASM is a useful substrate for tool execution because untrusted code starts with no ambient OS access and every external effect must be mediated by the embedder's import/API layer.</p>
+
+      <h2>Problem</h2>
+      <ul><li>JavaScript had become the only universal built-in Web language despite inconsistent performance and awkwardness as a low-level compilation target.</li><li>asm.js demonstrated that typed low-level subsets could run fast, but still inherited JavaScript parsing and representation costs.</li><li>Mobile code on the Web needed efficient validation, compact transfer, safe execution, and broad browser/vendor support.</li><li>Sandboxing untrusted code required a narrow, well-specified boundary between computation and host environment effects.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks how to define a low-level, portable, safe, efficient, and formally specified compilation target that can run inside the Web and beyond it.</p>
+
+      <h2>Method</h2>
+      <p>Encode low-level code as typed modules, validate before execution, restrict memory to bounds-checked linear memories, keep control flow structured, and require all environmental authority to be imported from an embedder.</p>
+      <ul><li>Compile source languages such as C/C++/Rust into WebAssembly modules.</li><li>Transmit or load the compact binary format.</li><li>Decode and validate the module before execution.</li><li>Instantiate the module with explicitly supplied host imports.</li><li>Run code through JIT, AOT, or interpreter backends with stack and type invariants already checked.</li><li>Use linear memory bounds checks and traps to prevent memory corruption outside the module's memory model.</li><li>Expose only selected host functions and resources through imports.</li><li>Rely on embedding-specific APIs and policies for I/O, OS access, browser integration, or server-side capabilities.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>WebAssembly was designed as a portable low-level bytecode/virtual ISA for efficient validation, compilation, safe execution, and Web-platform interoperability.</p>
+  <p><strong>Scope:</strong> PLDI abstract and spec introduction.</p>
+  <ul><li><strong>E-design-goals</strong>: The publication abstract and spec describe WebAssembly as a low-level bytecode/virtual ISA with compact representation, efficient validation and compilation, safe low-overhead execution, and language/platform independence.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · source-supported</h3>
+  <p>A module goes through decoding, validation, instantiation, and invocation, with validation checking type and stack discipline before execution.</p>
+  <p><strong>Scope:</strong> WebAssembly core spec overview.</p>
+  <ul><li><strong>E-semantic-phases</strong>: The spec divides semantics into decoding, validation, and execution; execution further includes instantiation and invocation.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · source-supported</h3>
+  <p>WebAssembly's memory safety comes from validated code and bounds-checked linear memory; out-of-bounds access traps instead of corrupting host memory.</p>
+  <p><strong>Scope:</strong> WebAssembly core spec introduction and overview.</p>
+  <ul><li><strong>E-memory-safety</strong>: The spec states that code executes in a memory-safe sandbox and that linear-memory loads/stores trap when accesses are outside current memory bounds.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · source-supported</h3>
+  <p>WASM modules have no ambient access to I/O, OS calls, or resources; environmental interaction happens only through host-provided imports.</p>
+  <p><strong>Scope:</strong> WebAssembly security considerations.</p>
+  <ul><li><strong>E-no-ambient-authority</strong>: The spec says WebAssembly provides no ambient access to I/O, resources, operating-system calls, or the computing environment; interaction happens only by invoking embedder-provided imports.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>The WebAssembly design prioritizes compact binary representation and fast single-pass decoding, validation, and compilation.</p>
+  <p><strong>Scope:</strong> PLDI abstract and spec design goals.</p>
+  <ul><li><strong>E-compact-fast</strong>: The paper and spec emphasize compact binary representation, fast decoding/validation/compilation, streamability, parallelizability, and near-native execution on common hardware.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · source-supported</h3>
+  <p>The core WebAssembly specification deliberately does not define host-specific APIs; embeddings such as browsers or server runtimes define imports, invocation, and environmental access.</p>
+  <p><strong>Scope:</strong> WebAssembly core spec scope.</p>
+  <ul><li><strong>E-embedding-boundary</strong>: The core spec defines instruction set, binary encoding, validation, execution semantics, and text format, but leaves environment interaction, module loading, imports, and exports to embedding-specific API definitions.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · source-supported</h3>
+  <p>WASM execution can still be vulnerable to hardware side channels and host-import misuse, so additional embedder mitigations are required where those risks matter.</p>
+  <p><strong>Scope:</strong> WebAssembly security considerations.</p>
+  <ul><li><strong>E-side-channels</strong>: The spec notes that because WebAssembly may be translated into machine code running directly on host hardware, it can be vulnerable to hardware-level side channels and embedders may need mitigations.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>WASM is a useful agent-tool ABI because code starts with computation but no ambient authority.</li><li>The import list is the permission model. If an agent tool should not access the network, filesystem, clock, or secrets, do not import those capabilities.</li><li>Host imports need the same design care as syscalls: stable names, typed inputs, policy checks, audit logs, timeouts, resource limits, and idempotency keys.</li><li>WASM is strongest for deterministic, CPU-bound, narrow-API tools. It is weaker when the task needs broad POSIX compatibility or arbitrary native packages.</li><li>WASM validation gives a cheap admission check before execution, which is useful for contributed tools and generated code.</li><li>WASM does not solve prompt injection or misuse of allowed imports. The sandbox only controls what the code can do, not whether the agent should have asked it to do that.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The review combines the 2017 PLDI paper framing with the current WebAssembly core spec for precise semantics.</li><li>WASM is not a full operating-system sandbox by itself; host embeddings decide what resources are available.</li><li>Unsafe source languages can corrupt their own data structures inside linear memory even if host memory is protected.</li><li>Hardware side channels and host-import vulnerabilities remain outside the core validation guarantee.</li><li>Practical WASM tool execution often depends on WASI or another embedding layer, which has its own security and compatibility semantics.</li><li>Native package compatibility is narrower than gVisor or Firecracker unless the toolchain and imports are designed for WASM.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/webassembly-haas-2017.json.</span>
+  </footer>
+</body>
+</html>

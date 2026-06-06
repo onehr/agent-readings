@@ -1,0 +1,281 @@
+{
+  "schema_version": 1,
+  "slug": "self-refine-madaan-2023",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "Self-Refine: Iterative Refinement with Self-Feedback",
+    "authors": [
+      "Aman Madaan",
+      "Niket Tandon",
+      "Prakhar Gupta",
+      "Skyler Hallinan",
+      "Luyu Gao",
+      "Sarah Wiegreffe",
+      "Uri Alon",
+      "Nouha Dziri",
+      "Shrimai Prabhumoye",
+      "Yiming Yang",
+      "Shashank Gupta",
+      "Bodhisattwa Prasad Majumder",
+      "Katherine Hermann",
+      "Sean Welleck",
+      "Amir Yazdanbakhsh",
+      "Peter Clark"
+    ],
+    "year": 2023,
+    "venue": "NeurIPS 2023",
+    "url": "https://arxiv.org/abs/2303.17651",
+    "project_url": "https://selfrefine.info/",
+    "arxiv_id": "2303.17651",
+    "read_sources": [
+      {
+        "kind": "paper_html",
+        "url": "https://ar5iv.labs.arxiv.org/html/2303.17651",
+        "note": "Read for algorithm, prompt roles, evaluation setup, main results, feedback ablations, iteration analysis, weak-model analysis, and limitations."
+      },
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2303.17651",
+        "note": "Used for metadata, abstract claims, arXiv version history, DOI, and project link."
+      },
+      {
+        "kind": "venue_page",
+        "url": "https://proceedings.neurips.cc/paper_files/paper/2023/hash/91edff07232fb1b55a505a9e9f6c0ff3-Abstract-Conference.html",
+        "note": "Used to confirm NeurIPS 2023 venue and proceedings metadata."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "Self-Refine improves a model's first answer by repeatedly asking the same LLM to critique its output and rewrite it from that feedback.",
+    "thesis": "A single instruction-following LLM can act as generator, feedback provider, and refiner at test time, so refinement becomes a prompt/runtime loop rather than a supervised training or reinforcement-learning problem.",
+    "why_it_matters": "For agents, Self-Refine turns intermediate artifacts into maintainable state: draft, feedback, revised draft, stop signal, and iteration budget are separate records that can be inspected, replayed, and connected to external checks."
+  },
+  "problem": {
+    "prior_state": [
+      "Many LLM generations are useful but incomplete or suboptimal on the first attempt.",
+      "Prior iterative refinement methods often trained separate refiners or depended on supervised feedback data, scalar reward models, or human annotation.",
+      "One-shot prompting gives no durable place to store why an answer is wrong or how the next version should change."
+    ],
+    "key_gap": "The paper asks whether a strong frozen LLM can improve its own outputs across tasks by generating task-specific natural-language feedback and then refining from that feedback.",
+    "assumptions": [
+      "The base model has enough few-shot and instruction-following ability to produce actionable feedback and apply it.",
+      "Each task can be expressed with prompts for initial generation, feedback, and refinement.",
+      "The runtime can afford multiple LLM calls and can decide when to stop iterating.",
+      "For tasks with objective checks, the loop can use task-specific criteria to stop or judge quality."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "feedback-refine-loop",
+      "name": "Feedback-refine loop",
+      "definition": "An iterative test-time loop that alternates between model-generated feedback on the current output and a model-generated refined output."
+    },
+    {
+      "id": "single-model-roles",
+      "name": "Single-model roles",
+      "definition": "The same underlying LLM is prompted as generator, feedback provider, and refiner instead of training separate modules."
+    },
+    {
+      "id": "actionable-feedback",
+      "name": "Actionable feedback",
+      "definition": "Feedback that identifies concrete parts of an output and gives specific changes likely to improve it."
+    }
+  ],
+  "method": {
+    "core_idea": "Generate an initial output, prompt the same LLM for specific feedback on that output, prompt the same LLM to refine the output using the feedback, append prior outputs and feedback to later prompts, and repeat until a stop condition or maximum iteration count.",
+    "action_grammar": [
+      "Initial generation prompt: task input plus examples for producing a first answer.",
+      "Feedback prompt: task input, current output, and examples for writing specific, actionable feedback.",
+      "Refine prompt: task input, current output, feedback, and examples for rewriting the output.",
+      "Stop condition: either a fixed iteration count or a task-specific signal extracted from feedback or an external criterion.",
+      "History: previous outputs and feedback appended to later prompts so the model can avoid repeating earlier mistakes."
+    ],
+    "steps": [
+      "Produce a first draft for the task.",
+      "Ask the model to critique the draft with specific, actionable feedback.",
+      "Ask the model to revise the draft using that feedback.",
+      "Carry the output and feedback history into the next iteration.",
+      "Return the final refinement after the stop condition or iteration budget is reached."
+    ],
+    "pseudocode": "output = generate(input)\nhistory = []\nfor iteration in 1..max_iterations:\n    feedback = critique(input, output, history)\n    if should_stop(feedback, output):\n        break\n    next_output = refine(input, output, feedback, history)\n    history.append({\"output\": output, \"feedback\": feedback})\n    output = next_output\nreturn output"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "method",
+      "status": "paper-supported",
+      "statement": "Self-Refine needs no supervised training data, additional training, or reinforcement learning; it uses the same LLM as generator, feedback provider, and refiner.",
+      "scope": "Abstract, Introduction, Section 2, and NeurIPS abstract page.",
+      "evidence_refs": ["E-method"],
+      "caveats": ["The method still relies on task-specific few-shot prompts for generation, feedback, and refinement."]
+    },
+    {
+      "id": "C2",
+      "type": "architecture",
+      "status": "paper-supported",
+      "statement": "The loop retains previous outputs and feedback in the prompt, making intermediate drafts and critiques part of the computation state.",
+      "scope": "Section 2 algorithm and refinement equation discussion.",
+      "evidence_refs": ["E-state-loop"],
+      "caveats": ["The paper does not solve long-term memory management; history is appended within the available context."]
+    },
+    {
+      "id": "C3",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "Across seven evaluated tasks, Self-Refine improves strong base LLM outputs by about 20 absolute points on average over conventional one-step generation.",
+      "scope": "Abstract and Section 3 evaluation on GPT-3.5, ChatGPT, GPT-4, and code-model variants.",
+      "evidence_refs": ["E-main-results"],
+      "caveats": ["Metrics differ by task: some are task-specific automated metrics, while several are human or GPT-4 preference evaluations."]
+    },
+    {
+      "id": "C4",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "The largest gains appear on tasks where feedback can point to missing constraints or preference defects, while math reasoning improves only modestly without stronger error signals.",
+      "scope": "Table 1 and Section 3.3 results discussion.",
+      "evidence_refs": ["E-task-pattern"],
+      "caveats": ["The paper reports larger math gains when an external source identifies incorrect answers, so pure self-feedback is not the whole story for math."]
+    },
+    {
+      "id": "C5",
+      "type": "mechanism",
+      "status": "paper-supported",
+      "statement": "Specific, actionable feedback is an important mechanism: generic or absent feedback reduces performance in the paper's ablations.",
+      "scope": "Section 4 feedback-quality analysis and Table 2.",
+      "evidence_refs": ["E-feedback-quality"],
+      "caveats": ["The evidence is from selected task ablations, not every task in the benchmark set."]
+    },
+    {
+      "id": "C6",
+      "type": "limitation",
+      "status": "paper-supported",
+      "statement": "Self-Refine depends on strong instruction-following models and has practical limits around iteration cost, non-monotonic refinement, English-only experiments, proprietary model dependence, and harmful-use risk.",
+      "scope": "Section 4 analysis and Section 6 limitations.",
+      "evidence_refs": ["E-iterations-and-limits", "E-formal-limits"],
+      "caveats": ["The paper releases code and outputs, but the main model families were not open source at the time of the experiments."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-method",
+      "kind": "method_formulation",
+      "source": "paper",
+      "locator": "Abstract, Section 1, Section 2, Figure 1, Algorithm 1",
+      "result": "The paper defines Self-Refine as initial generation, self-feedback, and refinement using the same LLM, with no additional supervised training data, extra training, or reinforcement learning.",
+      "metric": "framework definition",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-state-loop",
+      "kind": "algorithm",
+      "source": "paper",
+      "locator": "Section 2, Algorithm 1, lines discussing iteration and history",
+      "result": "The algorithm alternates feedback and refine steps until a stop condition. The paper says previous feedback and outputs are retained by appending them to the prompt, and the last refinement is returned.",
+      "metric": "loop state and stop condition",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-main-results",
+      "kind": "result_table",
+      "source": "paper",
+      "locator": "Abstract, Section 3, Table 1",
+      "result": "The abstract reports about 20 absolute points average improvement. Table 1 shows improvements across Sentiment Reversal, Dialogue Response, Code Optimization, Code Readability, Math Reasoning, Acronym Generation, and Constrained Generation for GPT-3.5, ChatGPT, and GPT-4.",
+      "metric": "task-specific scores and preference percentages",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-task-pattern",
+      "kind": "result_analysis",
+      "source": "paper",
+      "locator": "Section 3.3, Table 1",
+      "result": "Examples include GPT-4 Dialogue Response improving from 25.4 to 74.6, ChatGPT Constrained Generation from 44.0 to 67.0, and GPT-4 Constrained Generation from 15.0 to 45.0. Math Reasoning changes are small in Table 1, such as GPT-4 92.9 to 93.1, and the paper attributes modest math gains to weak error identification.",
+      "metric": "absolute score deltas by task",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-feedback-quality",
+      "kind": "ablation",
+      "source": "paper",
+      "locator": "Section 4, Table 2",
+      "result": "The feedback ablation reports lower scores with generic or no feedback. For ChatGPT Code Optimization, Self-Refine feedback scores 27.5 versus 26.0 generic feedback and 24.8 no feedback. For Sentiment Reversal, Self-Refine feedback scores 43.2 versus 31.2 generic feedback and 0 with no feedback.",
+      "metric": "ablation scores",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-iterations-and-limits",
+      "kind": "analysis",
+      "source": "paper",
+      "locator": "Section 3.1 and Section 4, Figures 4-5, weak-model analysis",
+      "result": "The evaluation allows up to 4 iterations. Figure 4 reports average gains from more iterations with diminishing returns, while the analysis notes performance may not always increase monotonically. The Vicuna-13B experiment struggles to generate feedback in the required format or apply even oracle feedback.",
+      "metric": "iteration and weak-model analysis",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-formal-limits",
+      "kind": "limitations",
+      "source": "paper",
+      "locator": "Section 6",
+      "result": "The limitations section says Self-Refine requires sufficient few-shot or instruction-following ability, uses non-open-source models in the experiments, evaluates English datasets only, and does not explicitly guard against malicious prompting for harmful text.",
+      "metric": "declared limitations",
+      "claim_refs": ["C6"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "Treat generate, critique, refine, and stop-decision as separate logged runtime steps rather than one opaque completion.",
+    "Persist every intermediate output and feedback item so a review can explain why a slide, summary, or code artifact changed.",
+    "Do not treat self-feedback as a verifier. Where possible, pair critique prompts with external checks such as tests, parsers, graders, or task-specific constraints.",
+    "Iteration count is an infrastructure knob: it trades latency and cost for quality, and diminishing returns should be measured per task.",
+    "Refinement can be non-monotonic, so systems need selection policies, rollback to earlier candidates, or scoring across iterations.",
+    "Weak local models may fail at the feedback protocol itself; schema validation and prompt-format checks are part of the runtime contract."
+  ],
+  "caveats": [
+    "Self-Refine is a test-time prompting and orchestration method, not a new trained model.",
+    "The strongest experiments use proprietary models such as GPT-3.5, ChatGPT, GPT-4, and Codex.",
+    "Preference-based evaluations rely partly on humans and GPT-4-as-judge, so they are not all executable verifiers.",
+    "Math reasoning gains are modest without an external signal that identifies wrong answers.",
+    "More iterations increase inference cost and can produce non-monotonic quality changes.",
+    "The paper's evaluation is English-only and does not address safeguards against harmful prompted refinements."
+  ],
+  "related_work": [
+    {
+      "title": "Chain-of-Thought Prompting",
+      "relation": "builds-on",
+      "note": "Self-Refine can be applied to reasoning-style outputs, but adds explicit feedback and rewriting rather than only producing a single chain.",
+      "url": "https://arxiv.org/abs/2201.11903"
+    },
+    {
+      "title": "Self-Consistency",
+      "relation": "contrasts",
+      "note": "Self-consistency samples many independent traces and votes; Self-Refine edits one evolving output through feedback.",
+      "url": "https://arxiv.org/abs/2203.11171"
+    },
+    {
+      "title": "Reflexion",
+      "relation": "contrasts",
+      "note": "Reflexion stores self-reflections across task attempts for agents, while Self-Refine focuses on improving the current generated artifact through feedback-refine iterations.",
+      "url": "https://arxiv.org/abs/2303.11366"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A useful local PoC would refine a generated paper summary against schema checks and compare one-shot versus iterative schema-valid output."
+  },
+  "slide_plan": {
+    "title": "Self-Refine",
+    "subtitle": "A generate-critique-rewrite loop for test-time improvement",
+    "sections": [
+      "summary",
+      "problem",
+      "method",
+      "loop_state",
+      "main_results",
+      "feedback_quality",
+      "iteration_tradeoffs",
+      "failure_modes",
+      "infra_takeaways",
+      "caveats",
+      "run_it",
+      "references"
+    ]
+  }
+}

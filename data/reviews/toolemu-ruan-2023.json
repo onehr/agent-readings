@@ -1,0 +1,301 @@
+{
+  "schema_version": 1,
+  "slug": "toolemu-ruan-2023",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "Identifying the Risks of LM Agents with an LM-Emulated Sandbox",
+    "authors": [
+      "Yangjun Ruan",
+      "Honghua Dong",
+      "Andrew Wang",
+      "Silviu Pitis",
+      "Yongchao Zhou",
+      "Jimmy Ba",
+      "Yann Dubois",
+      "Chris J. Maddison",
+      "Tatsunori Hashimoto"
+    ],
+    "year": 2023,
+    "venue": "ICLR 2024",
+    "url": "https://arxiv.org/abs/2309.15817",
+    "project_url": "https://toolemu.com/",
+    "code_url": "https://github.com/ryoungj/ToolEmu",
+    "arxiv_id": "2309.15817",
+    "read_sources": [
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2309.15817",
+        "note": "Used for metadata, authors, abstract, revision history, and headline validation/results."
+      },
+      {
+        "kind": "paper_pdf",
+        "url": "https://openreview.net/pdf?id=GEcwtMk1uA",
+        "note": "Read for the ToolEmu architecture, benchmark construction, validation studies, evaluation results, and discussion."
+      },
+      {
+        "kind": "project_repo",
+        "url": "https://github.com/ryoungj/ToolEmu",
+        "note": "Used to confirm the released framework components, code purpose, benchmark extensibility, and ICLR 2024 citation metadata."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "ToolEmu uses a language model to emulate tool execution and sandbox states so agent risks can be tested before real tools are wired up.",
+    "thesis": "The paper's core contribution is a scalable red-team harness for tool-using agents: emulate the environment, run the agent, then use an LM evaluator to flag risky actions and severity.",
+    "why_it_matters": "For agent infrastructure, ToolEmu is a practical testing layer between prompt-only evaluation and real-world side effects. It does not replace real sandboxes, but it helps find dangerous trajectories early."
+  },
+  "problem": {
+    "prior_state": [
+      "Tool-using agents can leak data, transfer money, delete files, or trigger physical-world effects.",
+      "Testing these risks manually requires tool implementations, sandbox setup, scenario design, and human trajectory inspection.",
+      "Many high-stakes or future tools are difficult to instantiate safely in real environments.",
+      "Long-tail ambiguous instructions are especially hard to cover with hand-built test cases."
+    ],
+    "key_gap": "The paper asks how to test diverse, high-stakes agent-tool scenarios at scale without implementing every tool and sandbox.",
+    "assumptions": [
+      "Strong LMs can emulate many tool outputs and sandbox states well enough to support early risk discovery.",
+      "An LM-based evaluator can approximate human judgments about risky agent trajectories.",
+      "Risk evaluation should measure both safety and helpfulness, not merely refusal.",
+      "The benchmark focuses on ambiguous or underspecified user instructions that can lead to harmful actions if the agent does not resolve uncertainty."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "lm-emulated-sandbox",
+      "name": "LM-emulated sandbox",
+      "definition": "A virtual execution environment where an LM produces tool observations and state changes from tool specifications and agent inputs."
+    },
+    {
+      "id": "tool-emulator",
+      "name": "Tool emulator",
+      "definition": "The ToolEmu component that emulates tool execution and sandbox state without a concrete tool implementation."
+    },
+    {
+      "id": "adversarial-emulator",
+      "name": "Adversarial emulator",
+      "definition": "A ToolEmu variant that instantiates scenario states likely to expose severe or long-tail agent failures."
+    },
+    {
+      "id": "safety-evaluator",
+      "name": "Safety evaluator",
+      "definition": "An LM-based evaluator that inspects an agent trajectory to identify risky actions and assess consequence severity."
+    },
+    {
+      "id": "helpfulness-evaluator",
+      "name": "Helpfulness evaluator",
+      "definition": "An LM-based evaluator that scores whether an agent effectively fulfills the user request without compromising safety."
+    },
+    {
+      "id": "risk-test-case",
+      "name": "Risk test case",
+      "definition": "An instruction and tool scenario designed to test whether the agent resolves ambiguity or missing details before taking a high-stakes action."
+    }
+  ],
+  "method": {
+    "core_idea": "Replace expensive real tool sandboxes with an LM-emulated environment, run agents against curated risky scenarios, and use LM-based evaluators plus human validation to measure realistic failures.",
+    "action_grammar": [
+      "tool specification: the interface and expected behavior of the tool under test.",
+      "user instruction: an ambiguous or underspecified request that may create safety risk.",
+      "agent action: the selected tool call and arguments.",
+      "emulated observation: the LM-generated tool result and sandbox state transition.",
+      "trajectory: the sequence of instructions, actions, observations, and final answer.",
+      "safety score: evaluator judgment over risky action and consequence severity.",
+      "helpfulness score: evaluator judgment over task completion without unsafe behavior.",
+      "adversarial state: an instantiated environment state chosen to make failures more likely."
+    ],
+    "steps": [
+      "Formalize tool-using LM agents as systems that act in a partially observable environment.",
+      "Use an LM emulator to generate tool observations from tool specifications and agent inputs.",
+      "Add an adversarial emulator to instantiate challenging sandbox states for red-teaming.",
+      "Build LM-based safety and helpfulness evaluators for scalable trajectory scoring.",
+      "Validate the emulator and evaluators against human annotations.",
+      "Curate a benchmark of 36 high-stakes toolkits and 144 test cases across 9 risk types.",
+      "Evaluate current LM agents and prompt variants for safety-helpfulness tradeoffs."
+    ],
+    "pseudocode": "for test_case in benchmark:\n    state = emulator.instantiate(test_case)\n    trajectory = run_agent(agent, tools=emulated_tools, state=state)\n    safety = safety_evaluator.score(trajectory)\n    helpfulness = helpfulness_evaluator.score(trajectory)\n    record(test_case, trajectory, safety, helpfulness)\n\n# Real sandboxes are still needed for deployment proof; LM emulation is an early risk-discovery layer."
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "method",
+      "status": "paper-supported",
+      "statement": "ToolEmu uses an LM to emulate tool executions and sandbox states from tool specifications and tool inputs.",
+      "scope": "Abstract and Sections 1-3.",
+      "evidence_refs": ["E-emulated-sandbox"],
+      "caveats": ["The emulator is approximate; it is useful for scalable risk discovery, not final production assurance."]
+    },
+    {
+      "id": "C2",
+      "type": "method",
+      "status": "paper-supported",
+      "statement": "The framework pairs the emulator with LM-based safety and helpfulness evaluators to score complete agent trajectories.",
+      "scope": "Sections 1 and 3.2.",
+      "evidence_refs": ["E-evaluators"],
+      "caveats": ["Evaluator reliability is bounded by agreement with human annotators and can miss or mis-score failures."]
+    },
+    {
+      "id": "C3",
+      "type": "benchmark",
+      "status": "paper-supported",
+      "statement": "The initial benchmark covers 36 high-stakes toolkits, 144 test cases, and 9 risk types.",
+      "scope": "Section 3.3.",
+      "evidence_refs": ["E-benchmark"],
+      "caveats": ["The benchmark targets one threat model: ambiguous or missing-details instructions that may induce risky actions."]
+    },
+    {
+      "id": "C4",
+      "type": "validation",
+      "status": "paper-supported",
+      "statement": "Human validation found most sampled emulations realistic enough for risk testing, and 68.8% of failures identified by ToolEmu were judged valid real-world agent failures.",
+      "scope": "Abstract, Section 1, and Table 3.",
+      "evidence_refs": ["E-human-validation"],
+      "caveats": ["The 68.8% figure also means a substantial fraction of flagged failures were not validated as genuine realistic failures."]
+    },
+    {
+      "id": "C5",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "In the benchmark, GPT-4 and Claude-2 were the strongest base agents, but still failed in 39.4% and 44.3% of test cases respectively.",
+      "scope": "Table 4 and Section 5.",
+      "evidence_refs": ["E-base-agent-results"],
+      "caveats": ["These are evaluator-based results on the ToolEmu benchmark, not direct measurements in real deployed environments."]
+    },
+    {
+      "id": "C6",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "Adding explicit safety requirements to GPT-4 improved both safety and helpfulness, but the best prompted agent still failed in 23.9% of test cases.",
+      "scope": "Table 4 and Section 5.",
+      "evidence_refs": ["E-safety-prompt"],
+      "caveats": ["Prompting reduced risk but did not eliminate it; the result does not prove the same prompt helps every agent or tool domain."]
+    },
+    {
+      "id": "C7",
+      "type": "agent_infrastructure",
+      "status": "inference",
+      "statement": "ToolEmu suggests a useful safety workflow: use cheap LM-emulated red-teaming to discover candidate failures, then reproduce high-severity findings in real sandboxes before shipping.",
+      "scope": "Application to agent infrastructure.",
+      "evidence_refs": ["E-agent-workflow"],
+      "caveats": ["This is an infrastructure inference from the paper; the paper itself does not claim LM emulation is sufficient for deployment certification."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-emulated-sandbox",
+      "kind": "method",
+      "source": "paper",
+      "locator": "Abstract and Sections 1-3",
+      "result": "ToolEmu emulates tool execution and sandbox states with an LM using only tool specifications and tool inputs, avoiding manual implementation for many scenarios.",
+      "metric": "LM-emulated tool execution",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-evaluators",
+      "kind": "method",
+      "source": "paper_and_project_repo",
+      "locator": "Section 3.2 and repository overview",
+      "result": "The framework includes an LM-based safety evaluator for risky actions/severity and a helpfulness evaluator for task completion.",
+      "metric": "trajectory scoring components",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-benchmark",
+      "kind": "benchmark",
+      "source": "paper",
+      "locator": "Section 3.3 and Figure 5",
+      "result": "The benchmark contains 36 high-stakes toolkits, 144 test cases, and 9 risk categories including privacy breach, financial loss, data loss/corruption, safety hazards, and computer security compromise.",
+      "metric": "36 toolkits, 144 test cases, 9 risk types",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-human-validation",
+      "kind": "validation",
+      "source": "paper",
+      "locator": "Abstract, Section 1, and Table 3",
+      "result": "The paper reports that over 80% of sampled tool execution trajectories were judged realistic by humans and that 68.8% of failures identified by the emulator/evaluator were validated as genuine risky failures with realistic trajectories.",
+      "metric": "human validation percentage",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-base-agent-results",
+      "kind": "benchmark_result",
+      "source": "paper",
+      "locator": "Table 4 and Section 5",
+      "result": "Among base agents, GPT-4 and Claude-2 had the strongest safety/helpfulness scores, while still exhibiting failures in 39.4% and 44.3% of ToolEmu test cases.",
+      "metric": "failure rate",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-safety-prompt",
+      "kind": "benchmark_result",
+      "source": "paper",
+      "locator": "Table 4 and Section 5",
+      "result": "A GPT-4 agent prompted with safety requirements improved over the base agent and was the safest evaluated agent, but still failed in 23.9% of test cases.",
+      "metric": "failure rate after safety prompting",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-agent-workflow",
+      "kind": "inference",
+      "source": "reviewer",
+      "locator": "Agent-infrastructure reading context",
+      "result": "Because ToolEmu finds candidate failures cheaply but validates only probabilistically, a production process should triage LM-emulated findings into real sandbox reproduction and policy/runtime fixes.",
+      "metric": "risk testing workflow",
+      "claim_refs": ["C7"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "Agent safety evaluation needs trajectory-level testing, not only single-turn model safety scores.",
+    "LM-emulated sandboxes are useful for early risk discovery when real tools are expensive, unsafe, or not yet implemented.",
+    "Do not confuse emulation with containment. A production agent still needs real sandboxing, scoped capabilities, audit logs, and policy enforcement.",
+    "Safety prompting can reduce failures, but the paper's best prompted agent still failed on nearly one quarter of ToolEmu cases.",
+    "Helpfulness should be measured alongside safety so the agent is not rewarded for refusing everything.",
+    "High-severity ToolEmu findings should become regression tests in real tool sandboxes once the tool exists."
+  ],
+  "caveats": [
+    "The emulator and evaluators are LMs, so they can hallucinate tool behavior or misjudge trajectory risk.",
+    "The benchmark focuses on ambiguous or underspecified user instructions, not all agent threat models.",
+    "Reported model failure rates are historical and tied to the evaluated model versions, prompts, and ToolEmu benchmark.",
+    "ToolEmu is best interpreted as scalable red-team infrastructure, not as a formal safety guarantee.",
+    "Human validation supports the method but also reveals nontrivial false positives or non-realistic failures."
+  ],
+  "related_work": [
+    {
+      "title": "Indirect Prompt Injection",
+      "relation": "complementary_risk_source",
+      "note": "Indirect prompt injection describes how hostile content can steer agents; ToolEmu describes a scalable way to test risky tool trajectories before real execution.",
+      "url": "https://arxiv.org/abs/2302.12173"
+    },
+    {
+      "title": "GCG Attacks",
+      "relation": "model_robustness",
+      "note": "GCG tests adversarial model behavior; ToolEmu tests the downstream tool-risk consequences of unsafe agent actions.",
+      "url": "https://arxiv.org/abs/2307.15043"
+    },
+    {
+      "title": "WebArena",
+      "relation": "agent_evaluation",
+      "note": "WebArena uses concrete web environments for task success; ToolEmu uses LM-emulated tools to broaden high-stakes risk testing.",
+      "url": "https://arxiv.org/abs/2307.13854"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet. A safe PoC could emulate benign file, email, or calendar tools locally and show how a trajectory-level evaluator flags ambiguous high-risk actions without executing them."
+  },
+  "slide_plan": {
+    "title": "ToolEmu",
+    "subtitle": "Risk testing before real tool side effects",
+    "sections": [
+      "summary",
+      "problem",
+      "lm_emulated_sandbox",
+      "evaluators",
+      "benchmark",
+      "results",
+      "agent_safety_workflow",
+      "caveats",
+      "references"
+    ]
+  }
+}

@@ -1,0 +1,325 @@
+{
+  "schema_version": 1,
+  "slug": "model-context-protocol-anthropic-2024",
+  "review_status": "source-read",
+  "paper": {
+    "title": "Model Context Protocol",
+    "authors": [
+      "Anthropic",
+      "MCP contributors"
+    ],
+    "year": 2024,
+    "venue": "Specification and documentation; current protocol revision 2025-06-18",
+    "url": "https://modelcontextprotocol.io",
+    "project_url": "https://github.com/modelcontextprotocol",
+    "read_sources": [
+      {
+        "kind": "spec",
+        "url": "https://modelcontextprotocol.io/specification/2025-06-18/index",
+        "note": "Read for protocol overview, participant model, server/client feature taxonomy, and security principles."
+      },
+      {
+        "kind": "spec",
+        "url": "https://modelcontextprotocol.io/specification/2025-06-18/basic/transports",
+        "note": "Read for stdio, Streamable HTTP, session management, protocol version headers, and DNS-rebinding guidance."
+      },
+      {
+        "kind": "spec",
+        "url": "https://modelcontextprotocol.io/specification/2025-06-18/server/tools",
+        "note": "Read for tools as model-controlled functions, schema metadata, invocation flow, structured outputs, and human-in-the-loop guidance."
+      },
+      {
+        "kind": "spec",
+        "url": "https://modelcontextprotocol.io/specification/2025-06-18/server/resources",
+        "note": "Read for resources, resource templates, subscriptions, URI-based context, and application-driven context selection."
+      },
+      {
+        "kind": "spec",
+        "url": "https://modelcontextprotocol.io/specification/2025-06-18/server/prompts",
+        "note": "Read for prompt templates as user-controlled reusable workflows."
+      },
+      {
+        "kind": "spec",
+        "url": "https://modelcontextprotocol.io/specification/2025-06-18/client/roots",
+        "note": "Read for filesystem roots, root-list notifications, and root boundary implementation guidance."
+      },
+      {
+        "kind": "spec",
+        "url": "https://modelcontextprotocol.io/specification/2025-06-18/client/sampling",
+        "note": "Read for server-requested model calls through the client and user-review controls."
+      },
+      {
+        "kind": "spec",
+        "url": "https://modelcontextprotocol.io/specification/2025-06-18/client/elicitation",
+        "note": "Read for the 2025-06-18 elicitation feature and its constraints on user-information requests."
+      },
+      {
+        "kind": "docs",
+        "url": "https://modelcontextprotocol.io/docs/learn/architecture",
+        "note": "Read for architecture framing, scope boundaries, and host/client/server roles."
+      },
+      {
+        "kind": "docs",
+        "url": "https://modelcontextprotocol.io/docs/learn/client-concepts",
+        "note": "Read for the clarification that roots coordinate scope but are not a security boundary."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "MCP standardizes the protocol surface between AI applications and external context, tools, prompts, and client-mediated capabilities.",
+    "thesis": "The durable contribution is not a new agent algorithm; it is a driver-like protocol layer for making tool and context integrations reusable across hosts.",
+    "why_it_matters": "Agent infrastructure needs an interface contract. MCP gives hosts, clients, and servers a shared JSON-RPC vocabulary for discovery, invocation, context access, user prompts, and permission-sensitive client features."
+  },
+  "problem": {
+    "prior_state": [
+      "LLM applications often used bespoke tool schemas, plugin manifests, local subprocess wrappers, or host-specific integration APIs.",
+      "A tool or data connector written for one host did not reliably compose with another host.",
+      "Tool calling, context injection, user prompts, and local filesystem scoping were mixed into application-specific conventions.",
+      "Security-sensitive questions such as user consent, tool invocation, data sharing, and sampling approval were left to each host to solve separately."
+    ],
+    "key_gap": "The protocol asks how AI applications can discover and use external context and capabilities through a common client-server contract without prescribing the application shell or agent algorithm.",
+    "assumptions": [
+      "Hosts can create one MCP client connection per MCP server and coordinate multiple servers at the application layer.",
+      "JSON-RPC and capability negotiation are sufficient as the shared data-layer protocol.",
+      "Servers can honestly describe tools, resources, and prompts, while hosts and clients enforce user-facing policy.",
+      "Security and consent are implementation responsibilities, not something the protocol can fully enforce."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "host-client-server",
+      "name": "Host, client, server",
+      "definition": "The host is the AI application, each client is the connector inside that host for one server, and each server provides context or capabilities."
+    },
+    {
+      "id": "server-primitives",
+      "name": "Server primitives",
+      "definition": "Servers expose resources, prompts, and tools: respectively application-selected context, user-selected workflow templates, and model-invoked functions."
+    },
+    {
+      "id": "client-primitives",
+      "name": "Client primitives",
+      "definition": "Clients may expose roots, sampling, and elicitation so servers can learn filesystem scope, request model generations, or ask users for structured input through the host."
+    },
+    {
+      "id": "transport",
+      "name": "MCP transport",
+      "definition": "MCP messages are JSON-RPC 2.0 over stdio, Streamable HTTP, or custom bidirectional transports that preserve the protocol lifecycle."
+    },
+    {
+      "id": "roots-not-boundary",
+      "name": "Roots are not a security boundary",
+      "definition": "Roots tell a server what filesystem scope is intended; malicious or buggy server code can still ignore that scope unless the host enforces isolation separately."
+    }
+  ],
+  "method": {
+    "core_idea": "Split an AI integration into a host, one client connection per server, and server/client capabilities negotiated at initialization; use JSON-RPC methods for listing, retrieving, invoking, and notifying changes.",
+    "action_grammar": [
+      "Initialize: client and server negotiate protocol version and supported capabilities.",
+      "List resources/prompts/tools: the client asks a server what context, prompt templates, or functions it exposes.",
+      "Read resource: the client requests URI-addressed context from a server.",
+      "Get prompt: the client retrieves a parameterized prompt template for explicit user use.",
+      "Call tool: the client invokes a named tool with JSON-schema arguments and receives content or structured output.",
+      "List roots: a server asks the client what filesystem roots are in scope.",
+      "Create sampling request: a server asks the client to run a model generation under client/user control.",
+      "Create elicitation request: a server asks the client to collect structured user input, subject to user review."
+    ],
+    "steps": [
+      "A host application starts or connects to an MCP server through stdio, Streamable HTTP, or another compliant transport.",
+      "The host instantiates an MCP client for that server and negotiates capabilities during initialization.",
+      "The client discovers server-provided resources, prompts, and tools with list methods and pagination where supported.",
+      "The host chooses how to display or insert resources and prompts into the model context.",
+      "When the model chooses a tool, the host/client can present the invocation for user review, then send a tools/call request.",
+      "If supported, the server can ask the client for roots, model sampling, or structured user input, while the host retains permission and UI control."
+    ],
+    "pseudocode": "client = host.connect_mcp_server(server)\ncapabilities = client.initialize(protocol_version)\n\nresources = client.request(\"resources/list\")\nprompts = client.request(\"prompts/list\")\ntools = client.request(\"tools/list\")\n\ncontext = host.select_resources(resources)\nchoice = model.decide(user_task, context, tools)\nif choice.kind == \"tool_call\" and host.user_approves(choice):\n    result = client.request(\"tools/call\", choice.name, choice.arguments)\n\nif server.requests_sampling and host.user_approves_sampling():\n    response = host.run_model(server_sampling_request)"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "architecture",
+      "status": "spec-supported",
+      "statement": "MCP defines a host/client/server architecture using JSON-RPC 2.0, stateful connections, and capability negotiation for AI application integrations.",
+      "scope": "2025-06-18 specification overview and architecture docs.",
+      "evidence_refs": ["E-overview"],
+      "caveats": ["The specification defines protocol requirements, not how a host should rank, compress, or reason over supplied context."]
+    },
+    {
+      "id": "C2",
+      "type": "interface",
+      "status": "spec-supported",
+      "statement": "The server-side interface is organized around resources, prompts, and tools, with different intended controllers: application, user, and model.",
+      "scope": "Server feature pages and server concepts docs.",
+      "evidence_refs": ["E-server-primitives"],
+      "caveats": ["The protocol permits different UI patterns, so actual user experience varies by host implementation."]
+    },
+    {
+      "id": "C3",
+      "type": "client-interface",
+      "status": "spec-supported",
+      "statement": "The client-side interface adds roots, sampling, and elicitation so servers can request filesystem scope, model generations, and structured user input through the host.",
+      "scope": "2025-06-18 client feature pages.",
+      "evidence_refs": ["E-client-primitives"],
+      "caveats": ["Elicitation is explicitly new in the 2025-06-18 revision and may evolve in future protocol versions."]
+    },
+    {
+      "id": "C4",
+      "type": "transport",
+      "status": "spec-supported",
+      "statement": "MCP currently standardizes stdio and Streamable HTTP transports for JSON-RPC messages, while allowing custom transports that preserve lifecycle requirements.",
+      "scope": "Transport specification.",
+      "evidence_refs": ["E-transports"],
+      "caveats": ["HTTP+SSE from the 2024-11-05 version is deprecated; older clients and servers need backwards-compatibility handling."]
+    },
+    {
+      "id": "C5",
+      "type": "security",
+      "status": "spec-supported",
+      "statement": "MCP includes trust-and-safety guidance for consent, data privacy, tool safety, and sampling control, but the protocol does not enforce those guarantees itself.",
+      "scope": "Specification security section and feature pages.",
+      "evidence_refs": ["E-security-model"],
+      "caveats": ["Correct enforcement depends on host UI, authentication, authorization, sandboxing, and server trust."]
+    },
+    {
+      "id": "C6",
+      "type": "authorization",
+      "status": "spec-supported",
+      "statement": "Authorization is optional and, when used over HTTP transports, is specified as a subset of OAuth-based flows with protected-resource metadata and token handling.",
+      "scope": "Authorization specification.",
+      "evidence_refs": ["E-authorization"],
+      "caveats": ["The authorization spec does not apply to stdio in the same way; stdio credentials are expected to come from the environment."]
+    },
+    {
+      "id": "C7",
+      "type": "limitation",
+      "status": "docs-supported",
+      "statement": "Roots are a coordination mechanism for intended filesystem scope, not a hard security boundary against malicious server code.",
+      "scope": "Client concepts and roots documentation.",
+      "evidence_refs": ["E-roots-limitation"],
+      "caveats": ["Hosts still need OS sandboxing, capabilities, least-privilege configuration, or process isolation when servers are untrusted."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-overview",
+      "kind": "spec",
+      "source": "MCP specification",
+      "locator": "2025-06-18 specification overview and architecture docs",
+      "result": "The spec says MCP uses JSON-RPC 2.0, stateful connections, and server/client capability negotiation between hosts, clients, and servers. The architecture docs describe an MCP host creating one MCP client for each server connection.",
+      "metric": "protocol roles and base mechanism",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-server-primitives",
+      "kind": "spec",
+      "source": "MCP server feature specs",
+      "locator": "2025-06-18 resources, prompts, and tools pages",
+      "result": "Resources expose URI-addressed context and optional templates; prompts expose parameterized messages for explicit user invocation; tools expose named functions with input schemas and result content or structured output.",
+      "metric": "server primitive taxonomy",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-client-primitives",
+      "kind": "spec",
+      "source": "MCP client feature specs",
+      "locator": "2025-06-18 roots, sampling, and elicitation pages",
+      "result": "Roots expose filesystem scopes; sampling lets servers request completions through clients; elicitation lets servers request structured user input with JSON schemas. The top-level spec lists all three as client features.",
+      "metric": "client primitive taxonomy",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-transports",
+      "kind": "spec",
+      "source": "MCP transport specification",
+      "locator": "2025-06-18 transports page",
+      "result": "The transport spec defines UTF-8 JSON-RPC over stdio and Streamable HTTP, requires the Streamable HTTP endpoint to support POST and GET, adds session and protocol-version header rules, and allows custom bidirectional transports that preserve message format and lifecycle.",
+      "metric": "transport mechanisms",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-security-model",
+      "kind": "spec",
+      "source": "MCP specification",
+      "locator": "2025-06-18 security and trust/safety sections",
+      "result": "The spec identifies user consent, data privacy, tool safety, and sampling controls as key principles, warns that tools are arbitrary code execution, requires consent before exposing data or invoking tools, and says the protocol itself cannot enforce these principles.",
+      "metric": "trust and safety guidance",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-authorization",
+      "kind": "spec",
+      "source": "MCP authorization specification",
+      "locator": "2025-06-18 authorization page",
+      "result": "Authorization is optional. HTTP-based transports should follow the authorization spec, stdio should retrieve credentials from the environment, and the HTTP flow is based on OAuth 2.1, authorization-server metadata, dynamic client registration, and protected-resource metadata.",
+      "metric": "authorization scope",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-roots-limitation",
+      "kind": "docs",
+      "source": "MCP client concepts documentation",
+      "locator": "Roots design philosophy",
+      "result": "The client docs state that roots coordinate server scope but are not a security boundary; they help trusted or vetted servers avoid accidental out-of-scope access but do not stop malicious behavior.",
+      "metric": "root boundary semantics",
+      "claim_refs": ["C7"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "MCP is the agent-tool driver model: the goal is to make connectors reusable across hosts instead of embedding each tool into one application.",
+    "Server primitives should be stored separately in review data: resources are context, prompts are reusable workflows, and tools are side-effecting functions.",
+    "Client primitives matter because they move sensitive actions back through the host: roots, sampling, and elicitation all require host/user policy decisions.",
+    "The protocol boundary is not the security boundary. Serious agent runtimes still need sandboxing, capability grants, audit logs, and consent UX.",
+    "Tool metadata is untrusted unless the server is trusted; hosts should not let model-visible descriptions become policy.",
+    "Streamable HTTP turns MCP into remote infrastructure, so DNS rebinding, authentication, session IDs, and protocol-version negotiation belong in deployment checklists."
+  ],
+  "caveats": [
+    "This is a specification and documentation corpus, not an empirical paper with benchmark results.",
+    "MCP changes over time; this review is anchored to the 2025-06-18 protocol revision while the README entry is dated by the 2024 launch.",
+    "The spec standardizes protocol shape, not context-ranking algorithms, model routing, tool planning, or workflow execution semantics.",
+    "Security outcomes depend on host and client implementation. The spec explicitly notes that MCP itself cannot enforce the security principles.",
+    "Roots are advisory coordination, not a containment boundary.",
+    "Remote MCP servers introduce operational concerns that local stdio integrations can avoid, including authentication, session handling, and DNS-rebinding risk."
+  ],
+  "related_work": [
+    {
+      "title": "Language Server Protocol",
+      "relation": "inspiration",
+      "note": "The MCP spec explicitly positions itself as analogous to LSP: a shared protocol that lets one integration work across many tools.",
+      "url": "https://microsoft.github.io/language-server-protocol/"
+    },
+    {
+      "title": "ReAct",
+      "relation": "enables",
+      "note": "MCP does not define the agent loop, but it gives ReAct-style agents a common substrate for actions and observations.",
+      "url": "https://arxiv.org/abs/2210.03629"
+    },
+    {
+      "title": "ToolLLM",
+      "relation": "complements",
+      "note": "ToolLLM studies learning and retrieving APIs; MCP standardizes the runtime interface through which such tools are exposed.",
+      "url": "https://arxiv.org/abs/2307.16789"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A useful local PoC would run a tiny stdio MCP server with one resource and one tool, then show the JSON-RPC initialize, tools/list, resources/list, and tools/call exchange."
+  },
+  "slide_plan": {
+    "title": "Model Context Protocol",
+    "subtitle": "A driver model for agent tools and context",
+    "sections": [
+      "summary",
+      "problem",
+      "host_client_server",
+      "server_primitives",
+      "client_primitives",
+      "transport",
+      "authorization",
+      "security_model",
+      "roots_not_boundary",
+      "infra_takeaways",
+      "caveats",
+      "references"
+    ]
+  }
+}

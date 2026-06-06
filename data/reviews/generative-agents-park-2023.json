@@ -1,0 +1,314 @@
+{
+  "schema_version": 1,
+  "slug": "generative-agents-park-2023",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "Generative Agents: Interactive Simulacra of Human Behavior",
+    "authors": [
+      "Joon Sung Park",
+      "Joseph C. O'Brien",
+      "Carrie J. Cai",
+      "Meredith Ringel Morris",
+      "Percy Liang",
+      "Michael S. Bernstein"
+    ],
+    "year": 2023,
+    "venue": "UIST 2023",
+    "url": "https://arxiv.org/abs/2304.03442",
+    "project_url": "https://github.com/joonspk-research/generative_agents",
+    "arxiv_id": "2304.03442",
+    "read_sources": [
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2304.03442",
+        "note": "Used for arXiv metadata, abstract, revision date, author list, DOI, and high-level contribution framing."
+      },
+      {
+        "kind": "paper_html",
+        "url": "https://ar5iv.labs.arxiv.org/html/2304.03442",
+        "note": "Read for architecture, memory stream, retrieval scoring, reflection, planning, evaluation procedure, results, boundaries, and limitations."
+      },
+      {
+        "kind": "project_repo",
+        "url": "https://github.com/joonspk-research/generative_agents",
+        "note": "Used to confirm the public simulation repository and local run/replay setup."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "Generative Agents turns an LLM into a persistent social simulator by logging every experience, retrieving relevant memories, reflecting over them, and planning from them.",
+    "thesis": "Believable long-horizon behavior requires more than single-turn prompting: the agent needs a memory stream, retrieval, reflection, planning, and a world loop that turns perceptions into future state.",
+    "why_it_matters": "This is the most influential memory architecture for agent simulations. It treats memory as an append-only natural-language database where observations, reflections, and plans all become retrievable state."
+  },
+  "problem": {
+    "prior_state": [
+      "LLMs can generate plausible single-turn behavior, but long-running agents need consistency across memories, relationships, and plans.",
+      "A complete event history is too large and distracting to place directly in a prompt.",
+      "Raw observations alone do not support higher-level inferences such as interests, relationships, or social commitments.",
+      "Open-world social simulations need coordination across agents, not just isolated question answering."
+    ],
+    "key_gap": "The paper asks how to build LLM-driven agents that can remain believable over multiple days of simulated life in a shared environment.",
+    "assumptions": [
+      "Natural-language memory records are sufficient as the common substrate for observations, reflections, plans, and dialogue context.",
+      "Prompted ChatGPT can score memory importance, generate reflections, decompose plans, and decide reactions.",
+      "Believability can be evaluated through human-ranked interview answers and descriptive measurements of emergent social behavior.",
+      "The sandbox world can be reduced to text observations and action descriptions for the language model."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "memory-stream",
+      "name": "Memory stream",
+      "definition": "A long-term natural-language database containing observations, reflections, and plans, each with timestamps and retrievable descriptions."
+    },
+    {
+      "id": "retrieval-score",
+      "name": "Retrieval score",
+      "definition": "A weighted combination of recency, importance, and relevance used to select memory records for the current situation."
+    },
+    {
+      "id": "reflection",
+      "name": "Reflection",
+      "definition": "A higher-level memory synthesized from recent records and stored back into the memory stream with evidence pointers."
+    },
+    {
+      "id": "planning",
+      "name": "Recursive planning",
+      "definition": "A top-down plan generation process that starts with broad daily plans, decomposes them into hour-level and 5-15 minute actions, and updates them when observations demand a reaction."
+    },
+    {
+      "id": "smallville",
+      "name": "Smallville",
+      "definition": "The interactive sandbox populated with 25 ChatGPT-driven agents over two game days for the end-to-end evaluation."
+    }
+  ],
+  "method": {
+    "core_idea": "Represent every agent experience as natural language, retrieve a small relevant subset for each decision, periodically synthesize high-level reflections, and generate plans that are recursively decomposed into concrete actions and dialogue.",
+    "action_grammar": [
+      "Perceive: the agent observes nearby environment, objects, and other agents.",
+      "Record: each perception is appended as an observation in the memory stream.",
+      "Retrieve: current context queries the stream using recency, importance, and relevance.",
+      "Reflect: when recent importance passes a threshold, the model generates questions and insights from retrieved memories.",
+      "Plan: the model creates a daily agenda, then decomposes it into hour and 5-15 minute actions.",
+      "React: observations are used to decide whether to continue the current plan or regenerate the plan from the current moment.",
+      "Dialogue: if an action involves another agent, both agents condition utterances on memories about each other and recent dialogue.",
+      "Store again: observations, reflections, plans, and dialogue are written back into the memory stream."
+    ],
+    "steps": [
+      "Initialize each agent from a short natural-language description split into seed memories.",
+      "At each simulation step, convert world state into natural-language observations and append them to memory.",
+      "Retrieve memories using normalized recency, importance, and relevance scores with equal weights in the implementation.",
+      "Generate reflections when accumulated importance from recent events exceeds 150; in practice agents reflect two or three times per day.",
+      "Generate a broad daily plan, recursively decompose it, and store plans in memory for later retrieval.",
+      "Prompt the model to continue or react to observations; regenerate plans after reactions when needed.",
+      "Evaluate agents through human-ranked interviews and a two-day 25-agent end-to-end simulation."
+    ],
+    "pseudocode": "for step in simulation:\n    observations = perceive_world(agent, world)\n    memory_stream.append(observations)\n\n    relevant = retrieve(\n        memory_stream,\n        query=current_situation,\n        score=recency + importance + relevance\n    )\n\n    if recent_importance(memory_stream) > 150:\n        questions = llm.generate_reflection_questions(recent_records=100)\n        for question in questions:\n            evidence = retrieve(memory_stream, query=question)\n            memory_stream.append(llm.extract_insights(evidence))\n\n    if needs_daily_plan(agent):\n        plan = llm.make_day_plan(agent_summary, yesterday_summary)\n        memory_stream.append(decompose(plan, granularity=\"5-15min\"))\n\n    action = llm.choose_continue_or_react(agent_summary, relevant, current_plan)\n    world.apply(action)\n    memory_stream.append(action)"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "system",
+      "status": "paper-supported",
+      "statement": "The paper instantiates 25 ChatGPT-driven agents in an interactive Smallville sandbox where users can observe and intervene in natural language.",
+      "scope": "Introduction and Section 3.",
+      "evidence_refs": ["E-smallville"],
+      "caveats": ["The agents are believable simulacra, not evidence of human-like agency or stable autonomous intent."]
+    },
+    {
+      "id": "C2",
+      "type": "architecture",
+      "status": "paper-supported",
+      "statement": "The architecture centers on a memory stream that stores observations, reflections, and plans as natural-language records for later retrieval.",
+      "scope": "Sections 4 and 4.1.",
+      "evidence_refs": ["E-memory-stream"],
+      "caveats": ["Natural-language records are easy for the model to use but can be ambiguous, incomplete, or vulnerable to injection."]
+    },
+    {
+      "id": "C3",
+      "type": "retrieval",
+      "status": "paper-supported",
+      "statement": "Memory retrieval combines recency, importance, and relevance, where importance is model-scored and relevance uses embedding cosine similarity.",
+      "scope": "Section 4.1.",
+      "evidence_refs": ["E-retrieval"],
+      "caveats": ["The weighting is hand-designed; the implementation uses equal weights and does not learn retrieval policy."]
+    },
+    {
+      "id": "C4",
+      "type": "memory",
+      "status": "paper-supported",
+      "statement": "Reflection creates higher-level memories by asking the model to form salient questions from recent records, retrieve evidence, and synthesize cited insights.",
+      "scope": "Section 4.2.",
+      "evidence_refs": ["E-reflection"],
+      "caveats": ["Reflection quality depends on the model selecting useful questions and not overgeneralizing from sparse evidence."]
+    },
+    {
+      "id": "C5",
+      "type": "planning",
+      "status": "paper-supported",
+      "statement": "Planning is top-down and recursive: agents create broad daily agendas, decompose them to hour-level and 5-15 minute actions, then re-plan when reactions require it.",
+      "scope": "Section 4.3.",
+      "evidence_refs": ["E-planning"],
+      "caveats": ["Planning is plausible-behavior generation, not optimal planning or verified constraint satisfaction."]
+    },
+    {
+      "id": "C6",
+      "type": "evaluation",
+      "status": "paper-supported",
+      "statement": "In the controlled interview evaluation, the full architecture was ranked most believable and each removal of observation, planning, or reflection degraded performance.",
+      "scope": "Section 6.",
+      "evidence_refs": ["E-controlled-eval"],
+      "caveats": ["The human baseline was a basic crowdworker-authored condition, not expert-authored maximal performance."]
+    },
+    {
+      "id": "C7",
+      "type": "emergence",
+      "status": "paper-supported",
+      "statement": "In the two-day Smallville run, the agents produced information diffusion, relationship formation, and partial coordination around a party seeded by one agent.",
+      "scope": "Section 7.1.",
+      "evidence_refs": ["E-end-to-end"],
+      "caveats": ["These are descriptive outcomes from one simulation setup, not broad statistical guarantees across environments."]
+    },
+    {
+      "id": "C8",
+      "type": "limitation",
+      "status": "paper-supported",
+      "statement": "The paper reports failures from missed retrieval, memory embellishment, location/norm misunderstanding, instruction-tuning artifacts, cost, and possible prompt or memory hacking.",
+      "scope": "Sections 6.5.2, 7.2, and 8.2.",
+      "evidence_refs": ["E-failures"],
+      "caveats": ["The robustness section is partly prospective; the paper calls for future work rather than providing a full adversarial evaluation."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-smallville",
+      "kind": "system_description",
+      "source": "paper",
+      "locator": "Abstract, Introduction, Section 3",
+      "result": "The paper connects the architecture to gpt-3.5-turbo and populates a sandbox environment with 25 agents. Users can observe and interact with agents, and the public repository contains the simulation environment.",
+      "metric": "agents and system setup",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-memory-stream",
+      "kind": "architecture",
+      "source": "paper",
+      "locator": "Sections 4 and 4.1",
+      "result": "The memory stream is described as a database of natural-language records. It stores observations, reflections, and plans, each available for future retrieval and reasoning.",
+      "metric": "memory representation",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-retrieval",
+      "kind": "method",
+      "source": "paper",
+      "locator": "Section 4.1",
+      "result": "Retrieval uses recency over sandbox game hours, importance scored by an LLM on a 1-10 poignancy scale, and relevance via embedding cosine similarity. The scores are normalized and equally weighted in the implementation.",
+      "metric": "retrieval scoring components",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-reflection",
+      "kind": "method",
+      "source": "paper",
+      "locator": "Section 4.2",
+      "result": "Reflections are generated when accumulated importance of recent events exceeds 150. The model sees the 100 most recent records, proposes salient high-level questions, retrieves relevant evidence for each question, and stores generated insights with pointers to supporting records. Agents reflect roughly two or three times per day in the implementation.",
+      "metric": "reflection trigger and workflow",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-planning",
+      "kind": "method",
+      "source": "paper",
+      "locator": "Section 4.3",
+      "result": "Agents generate a broad daily plan, typically divided into five to eight chunks, then recursively decompose it into hour-level and 5-15 minute actions. Plans are stored in memory and may be regenerated after reactions.",
+      "metric": "plan granularity and update mechanism",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-controlled-eval",
+      "kind": "human_evaluation",
+      "source": "paper",
+      "locator": "Section 6",
+      "result": "The study used 100 Prolific evaluators to rank interview answers across five conditions. The full architecture ranked highest; removing reflection, then planning, then observation reduced believability. The paper reports an eight-standard-deviation effect between the full architecture and the no-memory/planning/reflection baseline.",
+      "metric": "TrueSkill-ranked believability",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-end-to-end",
+      "kind": "end_to_end",
+      "source": "paper",
+      "locator": "Section 7.1",
+      "result": "Over two game days, knowledge of Sam's candidacy increased from 1 of 25 agents to 8 of 25, knowledge of Isabella's party increased from 1 of 25 to 13 of 25, network density increased from 0.167 to 0.74, and 5 of 12 invited agents attended the party.",
+      "metric": "information diffusion, graph density, attendance",
+      "claim_refs": ["C7"]
+    },
+    {
+      "id": "E-failures",
+      "kind": "failure_analysis",
+      "source": "paper",
+      "locator": "Sections 6.5.2, 7.2, and 8.2",
+      "result": "The paper describes failures from missed or incomplete memory retrieval, knowledge embellishment, agents choosing implausible locations or ignoring physical norms, overly formal/cooperative dialogue from instruction tuning, thousands of dollars in token cost for the 25-agent two-day run, and unknown robustness to prompt hacking, memory hacking, and hallucination.",
+      "metric": "observed and projected failure modes",
+      "claim_refs": ["C8"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "The durable object is the memory stream: observations, reflections, and plans are all persisted as queryable state.",
+    "Reflection is a compaction layer, not just introspection. It turns raw events into higher-level facts that can guide future behavior.",
+    "Planning and memory should feed each other. Plans become memories, and memories condition plan updates.",
+    "Social agents are distributed systems with lossy communication: information diffusion, relationship formation, and coordination all depend on retrieval quality.",
+    "Evaluation needs both component ablations and long-horizon traces. Interviewing agents exposes memory behavior that a final transcript can hide.",
+    "Agent simulations need provenance and safety policy because false memories, prompt hacking, and tailored persuasion risks are central, not peripheral."
+  ],
+  "caveats": [
+    "The paper optimizes for believability, not factual correctness, task success, or safety.",
+    "The evaluation is small and simulation-specific; the end-to-end results come from one two-day Smallville run.",
+    "The architecture depends on prompts and ChatGPT behavior, not a learned or verified cognitive model.",
+    "Memory retrieval failures and embellishments are explicitly observed.",
+    "The authors report high cost: the 25-agent two-day simulation took multiple days and thousands of dollars in token credits.",
+    "Robustness to prompt hacking, memory hacking, and hallucination is left for future work."
+  ],
+  "related_work": [
+    {
+      "title": "MemGPT",
+      "relation": "connects-to",
+      "note": "Generative Agents defines an influential memory stream for simulations; MemGPT later frames memory as virtual context management.",
+      "url": "https://arxiv.org/abs/2310.08560"
+    },
+    {
+      "title": "CoALA",
+      "relation": "conceptual-map",
+      "note": "CoALA provides a broader cognitive-architecture taxonomy in which Generative Agents is a concrete social-simulation architecture.",
+      "url": "https://arxiv.org/abs/2309.02427"
+    },
+    {
+      "title": "AutoGen",
+      "relation": "parallel",
+      "note": "Both study multi-agent dynamics, but Generative Agents emphasizes simulated social behavior rather than task-oriented agent conversation.",
+      "url": "https://arxiv.org/abs/2308.08155"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A useful local PoC would implement a tiny memory stream with recency/importance/relevance retrieval, periodic reflection, and a two-agent event loop over mocked LLM responses."
+  },
+  "slide_plan": {
+    "title": "Generative Agents",
+    "subtitle": "The memory stream behind Smallville",
+    "sections": [
+      "summary",
+      "problem",
+      "smallville",
+      "memory_stream",
+      "retrieval",
+      "reflection",
+      "planning",
+      "controlled_eval",
+      "end_to_end",
+      "failure_modes",
+      "infra_takeaways",
+      "references"
+    ]
+  }
+}

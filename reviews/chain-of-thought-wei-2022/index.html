@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Chain-of-Thought Prompting Elicits Reasoning in Large Language Models</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/chain-of-thought-wei-2022/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Reasoning, Acting, and Reflection</p>
+        <h1>Chain of Thought</h1>
+        <p class="hero-lede">Chain-of-thought prompting shows that large language models can be induced to solve harder reasoning tasks by generating intermediate natural-language steps before the final answer.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>6</strong><span>Claims</span></div>
+          <div class="metric"><strong>9</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2022 · NeurIPS 2022</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>3</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/chain-of-thought-wei-2022/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2201.11903">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>CoT is the precondition for many agent loops: it turns an LLM call from answer selection into an inspectable intermediate-state update that later systems reuse for planning, tool use, critique, and search.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Large language models scaled well on many NLP tasks but still struggled with arithmetic, commonsense, and symbolic reasoning.</li><li>Rationale-augmented training and finetuning could teach intermediate steps, but required many high-quality rationales.</li><li>Standard few-shot prompting used input-output examples and often failed to improve substantially on reasoning tasks with scale alone.</li></ul>
+      <p><strong>Key gap:</strong> The paper tests whether a small number of natural-language reasoning exemplars can elicit multi-step reasoning from off-the-shelf LMs.</p>
+
+      <h2>Method</h2>
+      <p>Replace ordinary input-output few-shot exemplars with input-rationale-output triples. At test time, let the model generate intermediate reasoning text before the answer, allocating more inference-time tokens to problems that need multi-step reasoning.</p>
+      <ul><li>Manually compose a small set of chain-of-thought exemplars for each task family.</li><li>Prompt off-the-shelf LMs with those exemplars instead of finetuning.</li><li>Decode model completions and evaluate only the final answer against benchmark labels.</li><li>Compare against standard few-shot input-output prompting across arithmetic, commonsense, and symbolic tasks.</li><li>Run ablations that remove natural-language reasoning or move it after the answer.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>CoT prompting requires only few-shot exemplars with intermediate reasoning steps and does not finetune the model.</p>
+  <p><strong>Scope:</strong> Method definition and reproducibility statement.</p>
+  <ul><li><strong>E-method</strong>: The paper defines CoT prompting as few-shot exemplars consisting of input, chain of thought, and output, with eight manually composed math exemplars used across most math benchmarks and four AQuA exemplars from training data.</li><li><strong>E-reproducibility</strong>: The authors state that all experiments use prompting-based inference only, no finetuning was done, exact prompts are provided, GPT-3 API experiments are included, and PaLM 540B inference used TPU v4 4x4x12 with 192 chips / 384 cores.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>On arithmetic reasoning, CoT improves large-model performance substantially and lets PaLM 540B set new state of the art on GSM8K, SVAMP, and MAWPS in the paper's comparison.</p>
+  <p><strong>Scope:</strong> Five math word-problem benchmarks using GPT-3, LaMDA, PaLM, UL2, and Codex models.</p>
+  <ul><li><strong>E-arithmetic-results</strong>: CoT more than doubled GSM8K performance for the largest GPT and PaLM models; PaLM 540B with CoT achieved new state of the art on GSM8K, SVAMP, and MAWPS, while AQuA and ASDiv were within 2% of prior state of the art.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>The paper finds CoT to be an emergent ability of scale: it helps around 100B+ parameter models but not smaller ones.</p>
+  <p><strong>Scope:</strong> Arithmetic and symbolic scaling curves, especially PaLM/LaMDA/GPT model families.</p>
+  <ul><li><strong>E-scale-emergence</strong>: The authors report that CoT does not positively affect smaller models and only yields performance gains for models of roughly 100B parameters; smaller models produced fluent but illogical chains of thought.</li><li><strong>E-symbolic-results</strong>: On last-letter concatenation and coin-flip toy tasks, PaLM 540B with CoT reaches almost 100% in-domain solve rates and shows upward scaling curves on longer out-of-domain sequences, while standard prompting fails on OOD variants.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>CoT also improves several commonsense reasoning tasks, including StrategyQA and sports understanding for PaLM 540B.</p>
+  <p><strong>Scope:</strong> CSQA, StrategyQA, Date Understanding, Sports Understanding, and SayCan evaluations.</p>
+  <ul><li><strong>E-commonsense-results</strong>: For PaLM 540B, CoT improves commonsense evaluations and reaches 75.6% on StrategyQA versus a 69.4% prior supervised best, and 95.4% on Sports Understanding versus an 84% unaided sports enthusiast baseline; gain on CSQA is described as minimal.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>Natural-language intermediate reasoning matters: equation-only, variable-compute-only, and reasoning-after-answer ablations do not match full CoT on GSM8K.</p>
+  <p><strong>Scope:</strong> Ablation study using LaMDA 137B and PaLM 540B, with additional datasets in appendix tables.</p>
+  <ul><li><strong>E-ablation</strong>: Equation-only prompting does not help much for GSM8K, variable-compute-only performs about the same as baseline, and placing reasoning after the answer also performs about the same as baseline.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>CoT traces are useful for inspection but are not guaranteed to be faithful or correct reasoning paths, and serving them is costly because the effect appears at large model scales.</p>
+  <p><strong>Scope:</strong> Manual error analysis and discussion limitations.</p>
+  <ul><li><strong>E-error-analysis</strong>: Among 50 correct LaMDA 137B GSM8K examples, all generated chains were logically and mathematically correct except two coincidental correct answers; among 50 wrong answers, 46% were almost correct with minor mistakes and 54% had major semantic or coherence errors.</li><li><strong>E-limitations</strong>: The paper states that CoT does not settle whether the model is actually reasoning, has no guarantee of correct reasoning paths, can produce wrong paths, and is costly in real applications because it emerges only at large model scales.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>CoT turns reasoning into explicit per-call runtime state: the trace becomes something downstream agents can inspect, critique, route, or continue.</li><li>Inference-time compute is a control knob. Harder tasks can spend more tokens on intermediate reasoning, but this directly affects latency and serving cost.</li><li>Trace text is not a correctness proof. Agent runtimes should pair reasoning traces with executable checks, tool observations, or external verifiers.</li><li>Prompted reasoning quality depends on model scale and exemplar design, so production systems should treat CoT as a capability with evaluations rather than a guaranteed behavior.</li><li>CoT creates the interface later methods extend: self-consistency samples many traces, ReAct interleaves traces with actions, and reflection methods critique traces after failure.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The paper evaluates prompting, not a trained reasoning architecture.</li><li>The strongest results use very large models, including PaLM 540B, which makes cost and access load-bearing.</li><li>The paper uses manually written exemplar rationales and does not eliminate prompt construction effort.</li><li>Reasoning traces can be wrong or coincidentally lead to correct answers.</li><li>Arithmetic and symbolic gains are strongest on tasks where answers are easy to grade; open-ended agent tasks still need external validation.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/chain-of-thought-wei-2022.json.</span>
+  </footer>
+</body>
+</html>

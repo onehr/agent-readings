@@ -1,0 +1,217 @@
+<!-- .slide: class="title-slide apple-title" -->
+
+<div class="slide-frame slide-frame--center">
+  <p class="deck-kicker">agent-readings / Tool Use and Interoperability</p>
+  <h1>Gorilla</h1>
+  <p class="deck-subtitle">API-catalog scale function calling with retrieval-aware training</p>
+
+  <div class="deck-meta-strip">
+    <div class="deck-meta-pill"><strong>2023</strong><span>arXiv 2023; NeurIPS 2024</span></div>
+    <div class="deck-meta-pill"><strong>6</strong><span>claims</span></div>
+    <div class="deck-meta-pill"><strong>7</strong><span>evidence refs</span></div>
+    <div class="deck-meta-pill"><strong>paper-read</strong><span>status</span></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="statement-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">The one sentence</p>
+  <h2>Gorilla turns API use into a retrieval-aware function-calling problem: pick the right API from a large changing catalog, generate a valid call, and avoid hallucinated tools.</h2>
+  <p class="deck-note">Gorilla makes API documentation and catalog freshness part of the agent stack. The model is not only choosing an action; it is choosing from a mutable registry whose entries, arguments, versions, and constraints change over time.</p>
+</div>
+
+---
+
+<!-- .slide: class="problem-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Before this paper</p>
+  <h2>The friction was structural.</h2>
+  <div class="apple-card-grid apple-card-grid--three">
+    <div class="apple-card"><p>Prompted LLMs could call small, well-described tool sets, but the prompt context cannot hold web-scale API catalogs.</p></div>
+<div class="apple-card"><p>State-of-the-art models such as GPT-4 still made wrong API calls or hallucinated nonexistent API usage.</p></div>
+<div class="apple-card"><p>API calls are hard to evaluate with ordinary unit tests because many APIs can be functionally similar and many arguments are optional.</p></div>
+  </div>
+  <div class="deck-callout">
+    <span>Key gap</span>
+    <p>The paper asks how to train and evaluate an LLM that maps natural-language goals to correct API calls across a large, overlapping, frequently updated API corpus.</p>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="idea-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Core idea</p>
+  <h2>Collect API documentation from model hubs, generate instruction/API pairs with self-instruct, finetune a LLaMA-7B model into Gorilla with and without retrieved...</h2>
+  <p class="deck-note">Collect API documentation from model hubs, generate instruction/API pairs with self-instruct, finetune a LLaMA-7B model into Gorilla with and without retrieved documentation, and evaluate generated calls using AST subtree matching plus hallucination/error...</p>
+  <div class="idea-loop" aria-label="Agent loop">
+    <div><strong>Model</strong><span>reason</span></div>
+    <div><strong>Runtime</strong><span>act</span></div>
+    <div><strong>World</strong><span>observe</span></div>
+  </div>
+  <div class="step-strip">
+    <div class="step-item">
+  <span>01</span>
+  <p>Curate API documentation from TorchHub, TensorHub, and HuggingFace.</p>
+</div>
+<div class="step-item">
+  <span>02</span>
+  <p>Generate synthetic user instructions and reference API answers with self-instruct.</p>
+</div>
+<div class="step-item">
+  <span>03</span>
+  <p>Convert each example into a one-turn user/agent instruction-tuning conversation.</p>
+</div>
+<div class="step-item">
+  <span>04</span>
+  <p>Optionally append retrieved API documentation to the user prompt for retriever-aware training.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="grammar-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Action grammar</p>
+  <h2>The agent is an interface contract.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>User instruction: a natural-language request for an ML model or API capability.</p></div>
+<div class="apple-card"><p>API document: a structured record containing domain, provider, API call, arguments, requirements, example code,...</p></div>
+<div class="apple-card"><p>Retriever: BM25, GPT-Index, or oracle retrieval over API documents.</p></div>
+<div class="apple-card"><p>Gorilla response: domain, API provider, API call, explanation, and optional supporting code.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="code-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Executable shape</p>
+  <h2>The mechanism should fit on one screen.</h2>
+
+```python
+api_docs = collect_model_hub_docs()
+examples = self_instruct(api_docs)
+for example in examples:
+    prompt = example.instruction
+    if retriever_aware:
+        prompt += retrieve_oracle_doc(example.api)
+    train_pair = chat(prompt, example.reference_api_call)
+finetune(llama_7b, train_pairs)
+
+query_doc = retrieve(user_query)
+call = gorilla(user_query, query_doc)
+score = ast_subtree_match(call, reference_api_database)
+```
+</div>
+
+---
+
+<!-- .slide: class="proof-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Evidence</p>
+  <h2>The proof objects.</h2>
+  <div class="proof-grid">
+    <div class="proof-card">
+  <span>E-dataset</span>
+  <p>The accepted paper describes 1,645 API calls: 94 from TorchHub, 626 from TensorHub, and 925 from HuggingFace, with 10 generated instructions per API, yielding 16,450...</p>
+</div>
+<div class="proof-card">
+  <span>E-method-rat</span>
+  <p>Gorilla is a retriever-aware finetuned LLaMA-7B model. During RAT, the prompt includes retrieved API documentation, and the model is trained to use relevant documentation or fall...</p>
+</div>
+<div class="proof-card">
+  <span>E-ast</span>
+  <p>Generated API calls are parsed into ASTs and matched against reference API subtrees. A sampled manual check reports 78% AST accuracy, 78% human-evaluated API accuracy, and 72%...</p>
+</div>
+<div class="proof-card">
+  <span>E-main-results</span>
+  <p>In zero-shot mode, Gorilla scores 59.13 TorchHub, 71.68 HuggingFace, and 83.79 TensorHub overall accuracy with hallucination rates 6.98, 10.95, and 5.40. GPT-4 zero-shot scores...</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="claim-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Claim map</p>
+  <h2>What the review actually supports.</h2>
+  <div class="claim-grid">
+    <div class="claim-card">
+  <span>C1 · paper-supported</span>
+  <p>APIBench covers 1,645 ML APIs across TorchHub, TensorHub, and HuggingFace, with 10 generated instructions per API for 16,450 instruction/API pairs.</p>
+  <small>E-dataset</small>
+</div>
+<div class="claim-card">
+  <span>C2 · paper-supported</span>
+  <p>Gorilla is a LLaMA-7B model instruction-finetuned for API calls, with retriever-aware training that teaches it to use or ignore retrieved API documentation.</p>
+  <small>E-method-rat</small>
+</div>
+<div class="claim-card">
+  <span>C3 · paper-supported</span>
+  <p>The paper evaluates API-call correctness with AST subtree matching and defines hallucination as a generated API call that matches no API in the database.</p>
+  <small>E-ast</small>
+</div>
+<div class="claim-card">
+  <span>C4 · paper-supported</span>
+  <p>In zero-shot API generation, Gorilla reports higher overall accuracy and lower hallucination than GPT-4 across TorchHub, HuggingFace, and TensorHub in Table...</p>
+  <small>E-main-results</small>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="takeaway-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Agent infrastructure</p>
+  <h2>What changes if you build systems.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>API catalogs are first-class infrastructure. Agent quality depends on normalized docs, versioning, retriever freshness, and schema fields for...</p></div>
+<div class="apple-card"><p>Function-calling evaluation needs structural checks. AST subtree matching separates invented APIs from wrong-but-existing APIs more cleanly than text...</p></div>
+<div class="apple-card"><p>Retrieval is not automatically helpful. A runtime must measure retriever precision and teach models when to ignore irrelevant retrieved documentation.</p></div>
+<div class="apple-card"><p>Hallucination should be typed. Gorilla distinguishes nonexistent tools from incorrect API choices, which maps naturally to different remediation...</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="caveat-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Caveats</p>
+  <h2>What this does not prove.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>The core benchmark is centered on ML APIs, not arbitrary REST, SaaS, or operating-system APIs.</p></div>
+<div class="apple-card"><p>The main task generates one API call or small code snippet rather than a full multi-step workflow.</p></div>
+<div class="apple-card"><p>Oracle retrieval is an upper bound; BM25 and GPT-Index retrieval can degrade accuracy when irrelevant docs are appended.</p></div>
+<div class="apple-card"><p>AST matching checks structural API-call equivalence and does not prove complete program execution for every output.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="closing-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Run it</p>
+  <h2>No PoC yet.</h2>
+  <p class="deck-note">No PoC yet - contributions welcome. A useful local PoC would build a tiny APIBench-style catalog, generate candidate API calls from natural-language requests, and score them with AST subtree matching.</p>
+  <div class="reference-list">
+    <ul><li>Paper: <a href="https://arxiv.org/abs/2305.15334">Gorilla: Large Language Model Connected with Massive APIs</a></li><li>Project/code: <a href="https://gorilla.cs.berkeley.edu">https://gorilla.cs.berkeley.edu</a></li><li>extends: <a href="https://arxiv.org/abs/2302.04761">Toolformer</a></li><li>precedes: <a href="https://arxiv.org/abs/2307.16789">ToolLLM</a></li><li>connects-to: <a href="https://modelcontextprotocol.io">Model Context Protocol</a></li></ul>
+  </div>
+</div>
+
+Note: This deck is synthesized from `data/reviews/gorilla-patil-2023.json`. Update the review record, then run `bun run build`.

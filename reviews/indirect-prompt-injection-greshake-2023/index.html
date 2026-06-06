@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Not what you've signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/indirect-prompt-injection-greshake-2023/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Security, Safety, and Trust</p>
+        <h1>Indirect Prompt Injection</h1>
+        <p class="hero-lede">Indirect prompt injection lets an attacker hide instructions in content that an LLM application later retrieves, causing the model to treat untrusted data as control input.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>7</strong><span>Claims</span></div>
+          <div class="metric"><strong>7</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2023 · arXiv 2023</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>3</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/indirect-prompt-injection-greshake-2023/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2302.12173">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>For agents, this is the confused-deputy problem in natural language. The model acts with the user's authority while consuming text controlled by other parties.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Early prompt-injection discussions mostly assumed the attacker directly prompts their own model session.</li><li>LLM-integrated applications increasingly retrieve webpages, documents, emails, code, and search results at inference time.</li><li>Agents and application-integrated LLMs can call tools or APIs on behalf of a user.</li><li>Existing input/output filters do not cleanly distinguish untrusted retrieved data from trusted instructions.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks what happens when the attacker is not the user, but controls data that the user's LLM application will later retrieve and process.</p>
+
+      <h2>Method</h2>
+      <p>Model LLM applications as systems that retrieve untrusted text and call tools, classify indirect injection delivery and impacts, then demonstrate attacks against controlled synthetic applications and real-world systems.</p>
+      <ul><li>Define indirect prompt injection as malicious prompt delivery through retrieved external data.</li><li>Map injection methods: passive retrieval, active delivery such as email, user-driven copy/paste, hidden content, encoded payloads, and multi-stage retrieval.</li><li>Map threat classes including data theft, remote control, persistence, worming, fraud, disinformation, and availability attacks.</li><li>Build synthetic LLM applications with tools such as search, view, URL retrieval, email, address book, and memory.</li><li>Test attacks on synthetic applications and black-box real-world systems such as Bing Chat and code-completion contexts.</li><li>Discuss limitations, disclosure, and mitigations while noting that robust defenses remain unresolved.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>LLM-integrated applications blur the line between data and instructions when they retrieve untrusted content into the model context.</p>
+  <p><strong>Scope:</strong> Abstract and Introduction.</p>
+  <ul><li><strong>E-data-instruction</strong>: The authors argue that retrieval-augmented LLM applications blur data and instruction boundaries, making untrusted external text capable of steering model behavior.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>Indirect prompt injection enables remote attackers without direct model access to influence a victim's LLM application by poisoning likely retrieved data.</p>
+  <p><strong>Scope:</strong> Abstract and Section 3.</p>
+  <ul><li><strong>E-indirect-attack</strong>: Adversaries can place prompts in data likely to be retrieved, remotely affecting a victim's application without directly prompting it.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>The attack surface includes passive retrieval, active delivery through channels like email, user-driven delivery, hidden prompts, encoded prompts, and multi-stage payloads.</p>
+  <p><strong>Scope:</strong> Section 3.1 and Section 4.3.</p>
+  <ul><li><strong>E-injection-methods</strong>: The paper describes passive retrieval, active email-like delivery, user-driven injection, hidden prompt content, multi-stage payloads, and Base64/encoded injections.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>Indirect prompt injection can enable remote control, data theft, persistence, worming, social engineering, misinformation, and availability attacks in LLM-integrated systems.</p>
+  <p><strong>Scope:</strong> Abstract, Section 3.2, and repository demonstrations.</p>
+  <ul><li><strong>E-impact-taxonomy</strong>: The paper and repository describe impacts including remote control, leaking user data, persistent compromise, spreading injections, social engineering, code-completion attacks, and availability disruption.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>The paper demonstrates attacks in synthetic GPT-3/GPT-4-style applications and against real-world systems including Bing Chat and code-completion contexts.</p>
+  <p><strong>Scope:</strong> Abstract and Section 4.</p>
+  <ul><li><strong>E-demonstrations</strong>: The authors build synthetic applications with search, view, URL retrieval, email, address book, and memory tools, and test attacks against Bing Chat and code-completion contexts.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>When the LLM controls tool/API calls, retrieved prompts can manipulate not only generated text but also the timing, content, and direction of external API use.</p>
+  <p><strong>Scope:</strong> Abstract and Sections 3-4.</p>
+  <ul><li><strong>E-tool-control</strong>: The authors show that processing retrieved prompts can manipulate application functionality and control whether and how APIs are called.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · paper-supported</h3>
+  <p>The paper argues that effective mitigations were lacking and that RLHF, filtering, LLM supervisors, and retrieved-input scanning are brittle or unresolved defenses.</p>
+  <p><strong>Scope:</strong> Section 5.6.</p>
+  <ul><li><strong>E-mitigations</strong>: The paper discusses RLHF, input/output filtering, retrieved-input filtering, LLM supervisors, and interpretability-style outlier detection, concluding that robust defenses and their resilience to obfuscation require more work.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Treat retrieved content as hostile data, never as authority-bearing instructions.</li><li>A model should not be the only boundary between untrusted text and privileged tools.</li><li>Tool calls need capability scoping, confirmation, policy checks, audit logs, and least privilege independent of prompt intent.</li><li>Memory can make prompt injection persistent; stored notes and retrieved history need the same distrust as webpages or emails.</li><li>Defenses should be architectural: data provenance, content labeling, separate planning/execution authority, sandboxed tools, and explicit user approval for side effects.</li><li>Prompt injection is closer to confused-deputy and capability-security failure than to ordinary bad prompting.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>Many demonstrations are qualitative proof-of-concepts rather than statistically measured benchmark results.</li><li>The real-world systems tested were black boxes and have changed since 2023.</li><li>The paper intentionally avoided seeding public sources with live malicious prompts for ethical reasons.</li><li>Some mitigations and product defenses have improved since publication, but no general clean fix is established by the paper.</li><li>The attack requires delivery: hostile content must be retrieved, included in context, and granted enough influence to affect output or tools.</li><li>Impact depends on connected privileges; read-only summarizers differ from agents that can send email, write memory, or call APIs.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/indirect-prompt-injection-greshake-2023.json.</span>
+  </footer>
+</body>
+</html>

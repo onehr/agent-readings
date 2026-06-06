@@ -1,0 +1,12 @@
+{
+  "name": "agent-readings",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.3.14",
+  "scripts": {
+    "build": "bun scripts/build-index.mjs",
+    "new-review": "bun scripts/new-review.mjs",
+    "preview": "bun scripts/serve.mjs"
+  }
+}

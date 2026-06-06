@@ -1,0 +1,222 @@
+<!-- .slide: class="title-slide apple-title" -->
+
+<div class="slide-frame slide-frame--center">
+  <p class="deck-kicker">agent-readings / Planning and Skill Acquisition</p>
+  <h1>Voyager</h1>
+  <p class="deck-subtitle">A standard library for embodied agents</p>
+
+  <div class="deck-meta-strip">
+    <div class="deck-meta-pill"><strong>2023</strong><span>arXiv 2023; revised 2023</span></div>
+    <div class="deck-meta-pill"><strong>8</strong><span>claims</span></div>
+    <div class="deck-meta-pill"><strong>8</strong><span>evidence refs</span></div>
+    <div class="deck-meta-pill"><strong>paper-read</strong><span>status</span></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="statement-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">The one sentence</p>
+  <h2>Voyager makes agent competence compound by saving successful behaviors as executable code skills and retrieving them for harder tasks.</h2>
+  <p class="deck-note">The paper is the clearest example of agent skill acquisition as standard-library construction: the agent writes executable functions, tests them in the environment, stores successful ones, and later composes them.</p>
+</div>
+
+---
+
+<!-- .slide: class="problem-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Before this paper</p>
+  <h2>The friction was structural.</h2>
+  <div class="apple-card-grid apple-card-grid--three">
+    <div class="apple-card"><p>Minecraft is open-ended and lacks a fixed reward or single end goal.</p></div>
+<div class="apple-card"><p>RL and imitation methods often operate on primitive actions, making systematic exploration and generalization difficult.</p></div>
+<div class="apple-card"><p>LLM agents such as ReAct, Reflexion, and AutoGPT can plan, but do not automatically accumulate reusable embodied skills.</p></div>
+  </div>
+  <div class="deck-callout">
+    <span>Key gap</span>
+    <p>The paper asks how an LLM agent can explore an open-ended world, progressively acquire skills, and reuse those skills in new worlds without gradient updates.</p>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="idea-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Core idea</p>
+  <h2>Let GPT-4 propose a reachable exploration task, generate JavaScript control code, execute it in Minecraft, refine the code from environment and interpreter...</h2>
+  <p class="deck-note">Let GPT-4 propose a reachable exploration task, generate JavaScript control code, execute it in Minecraft, refine the code from environment and interpreter feedback, verify success, then commit the resulting function to a reusable skill library.</p>
+  <div class="idea-loop" aria-label="Agent loop">
+    <div><strong>Model</strong><span>reason</span></div>
+    <div><strong>Runtime</strong><span>act</span></div>
+    <div><strong>World</strong><span>observe</span></div>
+  </div>
+  <div class="step-strip">
+    <div class="step-item">
+  <span>01</span>
+  <p>Start with no handcrafted task sequence beyond the high-level objective of discovering diverse things.</p>
+</div>
+<div class="step-item">
+  <span>02</span>
+  <p>Use the automatic curriculum to select tasks that are challenging but reachable from the current state.</p>
+</div>
+<div class="step-item">
+  <span>03</span>
+  <p>Retrieve related skills and generate executable code over control primitive APIs.</p>
+</div>
+<div class="step-item">
+  <span>04</span>
+  <p>Execute the code and collect Minecraft observations plus interpreter errors.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="grammar-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Action grammar</p>
+  <h2>The agent is an interface contract.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>Curriculum query: generate the next feasible task from current state plus completed and failed tasks.</p></div>
+<div class="apple-card"><p>Skill retrieval: embed task plan and environment feedback, then retrieve the top-5 relevant skills.</p></div>
+<div class="apple-card"><p>Code generation: prompt GPT-4 with APIs, retrieved skills, current state, previous code, feedback, errors, and...</p></div>
+<div class="apple-card"><p>Execution: run the generated program through Mineflayer/MineDojo control APIs.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="code-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Executable shape</p>
+  <h2>The mechanism should fit on one screen.</h2>
+
+```python
+while budget_remaining:
+    task = curriculum.propose(state, completed_tasks, failed_tasks)
+    query = gpt35.summarize_task_and_feedback(task, state)
+    skills = skill_library.top_k(query, k=5)
+
+    code = None
+    for round in range(4):
+        code = gpt4.generate_code(task, state, skills, code, feedback, errors)
+        feedback, errors = minecraft.execute(code)
+        verdict = gpt4.self_verify(task, state, feedback)
+        if verdict.success:
+            description = gpt35.describe_skill(code)
+            skill_library.add(description, code)
+            completed_tasks.append(task)
+            break
+    else:
+        failed_tasks.append(task)
+```
+</div>
+
+---
+
+<!-- .slide: class="proof-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Evidence</p>
+  <h2>The proof objects.</h2>
+  <div class="proof-grid">
+    <div class="proof-card">
+  <span>E-three-modules</span>
+  <p>Voyager is described as the first LLM-powered embodied lifelong learning agent in Minecraft, with an automatic curriculum, an ever-growing executable skill library, and an...</p>
+</div>
+<div class="proof-card">
+  <span>E-curriculum</span>
+  <p>The curriculum prompt uses directives, current inventory/equipment/biome/time/health/hunger/position, completed and failed tasks, and additional GPT-3.5 self-ask/self-answer...</p>
+</div>
+<div class="proof-card">
+  <span>E-skill-library</span>
+  <p>Each skill is executable code for a temporally extended behavior. The library indexes the embedding vector of a generated program description and stores the program itself;...</p>
+</div>
+<div class="proof-card">
+  <span>E-iterative-prompting</span>
+  <p>Each generated program is executed to produce environment feedback and interpreter errors. A GPT-4 self-verifier checks task success and critiques failures. The loop repeats...</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="claim-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Claim map</p>
+  <h2>What the review actually supports.</h2>
+  <div class="claim-grid">
+    <div class="claim-card">
+  <span>C1 · paper-supported</span>
+  <p>Voyager combines three modules: automatic curriculum, an ever-growing executable skill library, and iterative prompting with environment feedback, execution...</p>
+  <small>E-three-modules</small>
+</div>
+<div class="claim-card">
+  <span>C2 · paper-supported</span>
+  <p>The automatic curriculum proposes bottom-up tasks from the agent's current state and exploration progress rather than using a fixed human-written task...</p>
+  <small>E-curriculum</small>
+</div>
+<div class="claim-card">
+  <span>C3 · paper-supported</span>
+  <p>Voyager's skill library stores successful behaviors as executable code indexed by embedded descriptions, then retrieves the top relevant skills for future...</p>
+  <small>E-skill-library</small>
+</div>
+<div class="claim-card">
+  <span>C4 · paper-supported</span>
+  <p>The iterative prompting loop uses executed feedback and errors to refine code, and commits code only after self-verification says the task succeeded.</p>
+  <small>E-iterative-prompting</small>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="takeaway-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Agent infrastructure</p>
+  <h2>What changes if you build systems.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>A useful agent memory can be executable: Voyager's skills are code functions, not prose summaries.</p></div>
+<div class="apple-card"><p>Skill acquisition is a runtime loop: propose task, retrieve skills, execute code, collect errors, verify, then commit.</p></div>
+<div class="apple-card"><p>Curriculum is scheduling. The agent needs a policy for choosing the next task at the edge of its current capability.</p></div>
+<div class="apple-card"><p>Execution feedback is the external signal that makes self-improvement concrete; without running code, the model has no reliable way to know whether a...</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="caveat-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Caveats</p>
+  <h2>What this does not prove.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>The reported system depends on GPT-4 for code generation and self-verification.</p></div>
+<div class="apple-card"><p>The environment uses high-level Mineflayer/MineDojo APIs rather than solving perception or low-level motor control.</p></div>
+<div class="apple-card"><p>Baselines had to be adapted from non-embodied NLP agent methods.</p></div>
+<div class="apple-card"><p>The strongest metrics are Minecraft-specific and may not transfer to physical robotics or arbitrary software tools.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="closing-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Run it</p>
+  <h2>No PoC yet.</h2>
+  <p class="deck-note">No PoC yet - contributions welcome. A compact local PoC would use a toy grid world or file-system task environment, store successful JavaScript/Python functions in a vector-like skill index, and reuse them for harder tasks.</p>
+  <div class="reference-list">
+    <ul><li>Paper: <a href="https://arxiv.org/abs/2305.16291">Voyager: An Open-Ended Embodied Agent with Large Language Models</a></li><li>Project/code: <a href="https://github.com/MineDojo/Voyager">https://github.com/MineDojo/Voyager</a></li><li>baseline: <a href="https://arxiv.org/abs/2210.03629">ReAct</a></li><li>baseline: <a href="https://arxiv.org/abs/2303.11366">Reflexion</a></li><li>parallel: <a href="https://arxiv.org/abs/2310.08560">MemGPT</a></li></ul>
+  </div>
+</div>
+
+Note: This deck is synthesized from `data/reviews/voyager-wang-2023.json`. Update the review record, then run `bun run build`.

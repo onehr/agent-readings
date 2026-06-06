@@ -1,0 +1,216 @@
+<!-- .slide: class="title-slide apple-title" -->
+
+<div class="slide-frame slide-frame--center">
+  <p class="deck-kicker">agent-readings / Evaluation and Benchmarks</p>
+  <h1>OSWorld</h1>
+  <p class="deck-subtitle">Computer-use agents need executable environments</p>
+
+  <div class="deck-meta-strip">
+    <div class="deck-meta-pill"><strong>2024</strong><span>NeurIPS 2024 Datasets and Benchmarks Track; arXiv 2024</span></div>
+    <div class="deck-meta-pill"><strong>7</strong><span>claims</span></div>
+    <div class="deck-meta-pill"><strong>7</strong><span>evidence refs</span></div>
+    <div class="deck-meta-pill"><strong>paper-read</strong><span>status</span></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="statement-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">The one sentence</p>
+  <h2>OSWorld evaluates multimodal computer-use agents inside real desktop environments with task setup, browser/desktop actions, and execution-based grading.</h2>
+  <p class="deck-note">For computer-use agents, OSWorld is a close proxy for production difficulty because the agent must ground pixels/UI state, coordinate applications, mutate files, and survive long-horizon desktop workflows.</p>
+</div>
+
+---
+
+<!-- .slide: class="problem-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Before this paper</p>
+  <h2>The friction was structural.</h2>
+  <div class="apple-card-grid apple-card-grid--three">
+    <div class="apple-card"><p>Many digital-agent benchmarks are static, text-only, web-only, or limited to one application/domain.</p></div>
+<div class="apple-card"><p>GUI agents need to handle visual grounding, OS state, files, browser tabs, desktop apps, and cross-application workflows.</p></div>
+<div class="apple-card"><p>Action matching is too brittle for open-ended computer tasks where many valid paths can reach the target state.</p></div>
+  </div>
+  <div class="deck-callout">
+    <span>Key gap</span>
+    <p>The paper asks how to build a realistic, reproducible benchmark for multimodal agents that use real computer environments rather than simplified interfaces.</p>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="idea-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Core idea</p>
+  <h2>Create a benchmark inside controllable desktop environments, define real-world tasks with setup configuration and execution-based validators, run agents through...</h2>
+  <p class="deck-note">Create a benchmark inside controllable desktop environments, define real-world tasks with setup configuration and execution-based validators, run agents through a standardized computer-control interface, and compare success rates with human performance.</p>
+  <div class="idea-loop" aria-label="Agent loop">
+    <div><strong>Model</strong><span>reason</span></div>
+    <div><strong>Runtime</strong><span>act</span></div>
+    <div><strong>World</strong><span>observe</span></div>
+  </div>
+  <div class="step-strip">
+    <div class="step-item">
+  <span>01</span>
+  <p>Prepare a virtualized desktop environment and load the task-specific initial state.</p>
+</div>
+<div class="step-item">
+  <span>02</span>
+  <p>Give the agent a natural-language instruction and a multimodal computer observation.</p>
+</div>
+<div class="step-item">
+  <span>03</span>
+  <p>Let the agent execute actions against real web and desktop applications over multiple steps.</p>
+</div>
+<div class="step-item">
+  <span>04</span>
+  <p>Collect screenshots, actions, videos, files, and other artifacts during the run.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="grammar-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Action grammar</p>
+  <h2>The agent is an interface contract.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>task instruction: natural-language computer-use objective.</p></div>
+<div class="apple-card"><p>initial state: VM, app, file, account, and OS state configured before execution.</p></div>
+<div class="apple-card"><p>observation: screenshot, accessibility tree, or related UI representation.</p></div>
+<div class="apple-card"><p>action: GUI, keyboard, mouse, browser, file, or code-like computer operation.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="code-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Executable shape</p>
+  <h2>The mechanism should fit on one screen.</h2>
+
+```python
+env = DesktopEnv(provider="vmware_or_docker", task=task_id)
+obs = env.reset(task.initial_state)
+
+for step in range(max_steps):
+    action = agent.act(task.instruction, obs, history)
+    obs = env.step(action)
+    history.append((action, obs))
+
+artifacts = env.collect()
+success = task.validator(env.final_state, artifacts)
+score += int(success)
+```
+</div>
+
+---
+
+<!-- .slide: class="proof-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Evidence</p>
+  <h2>The proof objects.</h2>
+  <div class="proof-grid">
+    <div class="proof-card">
+  <span>E-real-computer-env</span>
+  <p>The paper describes OSWorld as a scalable real computer environment for multimodal agents with task setup, execution-based evaluation, and interactive learning across Ubuntu,...</p>
+</div>
+<div class="proof-card">
+  <span>E-task-count</span>
+  <p>OSWorld contains 369 tasks involving real web and desktop apps, open domains, OS file I/O, and multi-application workflows.</p>
+</div>
+<div class="proof-card">
+  <span>E-setup-eval</span>
+  <p>Each task uses detailed initial state setup and custom execution-based evaluation scripts; the environment infrastructure includes task initialization, agent interaction,...</p>
+</div>
+<div class="proof-card">
+  <span>E-feature-table</span>
+  <p>The project page lists OSWorld as supporting a controllable executable computer environment, multimodal support, cross-app tasks, intermediate initial state, and 134...</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="claim-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Claim map</p>
+  <h2>What the review actually supports.</h2>
+  <div class="claim-grid">
+    <div class="claim-card">
+  <span>C1 · paper-supported</span>
+  <p>OSWorld introduces a scalable real computer environment for multimodal agents across operating systems including Ubuntu, Windows, and macOS.</p>
+  <small>E-real-computer-env</small>
+</div>
+<div class="claim-card">
+  <span>C2 · paper-supported</span>
+  <p>The benchmark contains 369 computer tasks involving real web apps, desktop apps, OS file I/O, and workflows across multiple applications.</p>
+  <small>E-task-count</small>
+</div>
+<div class="claim-card">
+  <span>C3 · paper-supported</span>
+  <p>Each task includes detailed initial-state setup and a custom execution-based evaluation script for reproducible grading.</p>
+  <small>E-setup-eval</small>
+</div>
+<div class="claim-card">
+  <span>C4 · paper-supported</span>
+  <p>OSWorld is designed for multimodal and cross-application computer-use tasks, including intermediate initial states and many execution-based evaluation...</p>
+  <small>E-feature-table</small>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="takeaway-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Agent infrastructure</p>
+  <h2>What changes if you build systems.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>Computer-use evaluation is runtime infrastructure, not just data curation: reset, isolation, credentials, files, GUI state, and validators all matter.</p></div>
+<div class="apple-card"><p>Execution-based validators are the right primitive for open-ended desktop tasks because many action paths can be valid.</p></div>
+<div class="apple-card"><p>Multimodal agents fail on grounding and operational procedures, so benchmark logs must preserve screenshots, actions, videos, and final artifacts.</p></div>
+<div class="apple-card"><p>VM/provider choice affects reproducibility, parallelism, cost, and security; these are benchmark design variables.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="caveat-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Caveats</p>
+  <h2>What this does not prove.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>The benchmark is much heavier to run than text-only or browser-only evaluations.</p></div>
+<div class="apple-card"><p>Some tasks involve credentials or network-sensitive services, and the project notes Google Drive setup issues for 8 tasks.</p></div>
+<div class="apple-card"><p>The reported 12.24% best-model score is historical and not the current leaderboard ceiling.</p></div>
+<div class="apple-card"><p>VM images, provider support, and setup scripts are part of the benchmark surface and can drift over time.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="closing-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Run it</p>
+  <h2>No PoC yet.</h2>
+  <p class="deck-note">No PoC yet - contributions welcome. A minimal PoC could package one desktop task in a disposable container/VM, run a scripted agent action trace, and validate a final file or GUI state.</p>
+  <div class="reference-list">
+    <ul><li>Paper: <a href="https://arxiv.org/abs/2404.07972">OSWorld: Benchmarking Multimodal Agents for Open-Ended Tasks in Real Computer Environments</a></li><li>Project/code: <a href="https://os-world.github.io/">https://os-world.github.io/</a></li><li>predecessor: <a href="https://arxiv.org/abs/2307.13854">WebArena</a></li><li>complement: <a href="https://arxiv.org/abs/2406.12045">tau-bench</a></li><li>runtime_context: <a href="https://www.usenix.org/conference/nsdi20/presentation/agache">Firecracker</a></li></ul>
+  </div>
+</div>
+
+Note: This deck is synthesized from `data/reviews/osworld-xie-2024.json`. Update the review record, then run `bun run build`.

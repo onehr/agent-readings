@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · MetaGPT: Meta Programming for A Multi-Agent Collaborative Framework</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/metagpt-hong-2023/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Multi-Agent Systems</p>
+        <h1>MetaGPT</h1>
+        <p class="hero-lede">MetaGPT makes multi-agent software development work more like an assembly line by encoding SOPs, role handoffs, and structured artifacts.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>8</strong><span>Claims</span></div>
+          <div class="metric"><strong>8</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2023 · arXiv 2023; current arXiv v7 revised 2024</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>3</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/metagpt-hong-2023/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2308.00352">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>MetaGPT is the strongest SOP argument in the reading list. It treats agent orchestration as workflow engineering, where the payloads are PRDs, designs, APIs, tasks, code, tests, and feedback rather than free-form chat.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Role-playing and chat-based multi-agent systems can drift into idle chatter or inconsistent handoffs.</li><li>Naively chaining LLMs can amplify hallucinations across agents.</li><li>Software development requires structured intermediate artifacts, not only conversational agreement.</li><li>Many agent frameworks lacked precompilation execution, PRD generation, technical design, API interface generation, and full role-based task management.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks whether encoding human software-development SOPs into an LLM multi-agent framework can make collaborative code generation more coherent and executable.</p>
+
+      <h2>Method</h2>
+      <p>Model software development as a standardized multi-agent assembly line: each role creates structured outputs, publishes them to a shared pool, downstream roles subscribe to prerequisites, and the Engineer iterates using executable tests and feedback.</p>
+      <ul><li>Define agent profiles with name, role, goal, constraints, skills, and context.</li><li>Run the SOP sequence from requirement analysis through design, task decomposition, code generation, and QA.</li><li>Require structured artifacts at each handoff instead of unconstrained natural-language dialogue.</li><li>Store artifacts in a shared message pool and use subscriptions so agents receive relevant dependencies.</li><li>After initial code generation, execute unit tests or precompilation checks.</li><li>If errors occur, feed execution results, historical messages, PRD, design, and code back to the Engineer for up to three retries.</li><li>Evaluate on HumanEval, MBPP, and SoftwareDev.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>MetaGPT encodes software-development SOPs into prompt sequences and agent workflows to reduce the cascading hallucinations of naive multi-agent chaining.</p>
+  <p><strong>Scope:</strong> Abstract, Introduction, and Section 3.</p>
+  <ul><li><strong>E-sop-framing</strong>: The paper frames cascading hallucination as a problem in naive LLM chaining and proposes SOPs, role specialization, structured outputs, and workflow management as a meta-programming framework.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>The core simulated company uses specialized Product Manager, Architect, Project Manager, Engineer, and QA Engineer roles.</p>
+  <p><strong>Scope:</strong> Section 3.1.</p>
+  <ul><li><strong>E-roles</strong>: MetaGPT defines Product Manager, Architect, Project Manager, Engineer, and QA Engineer roles, each with profile, goal, constraints, context, and skills.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>MetaGPT replaces much unconstrained dialogue with structured documents and diagrams so downstream agents receive standardized handoff artifacts.</p>
+  <p><strong>Scope:</strong> Section 3.2.</p>
+  <ul><li><strong>E-structured-communication</strong>: The paper argues pure natural language can distort information, so agents communicate through role-specific documents and diagrams such as PRDs, system interface designs, sequence flow diagrams, data structures, and API definitions.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>The shared message pool plus role-specific subscriptions is the communication substrate for publishing artifacts and triggering downstream actions.</p>
+  <p><strong>Scope:</strong> Section 3.2.</p>
+  <ul><li><strong>E-message-pool</strong>: Agents publish structured messages into a shared message pool and subscribe to role-relevant information; actions activate after prerequisite dependencies are received.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>Executable feedback improves code quality by having the Engineer execute code and tests, use errors plus historical context, and retry debugging up to a bounded limit.</p>
+  <p><strong>Scope:</strong> Section 3.3 and Section 4.4.</p>
+  <ul><li><strong>E-executable-feedback</strong>: After code generation, the Engineer executes code and test cases, receives test results, debugs with past messages and artifacts, and retries until tests pass or a maximum of three retries is reached. Executable feedback adds 4.2% on HumanEval and 5.4% on MBPP and reduces SoftwareDev human revision cost from 2.25 to 0.83.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>MetaGPT reports 85.9% and 87.7% Pass@1 on HumanEval and MBPP with GPT-4 collaboration.</p>
+  <p><strong>Scope:</strong> Introduction and Section 4.2.</p>
+  <ul><li><strong>E-code-benchmarks</strong>: The paper reports MetaGPT with GPT-4 collaboration achieving 85.9% Pass@1 on HumanEval and 87.7% Pass@1 on MBPP.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · paper-supported</h3>
+  <p>On SoftwareDev, MetaGPT improves executability and reduces human revision cost compared with ChatDev.</p>
+  <p><strong>Scope:</strong> Section 4.2, Table 1.</p>
+  <ul><li><strong>E-softwaredev</strong>: On SoftwareDev, ChatDev scores 2.25 executability with 2.5 human revisions, while MetaGPT scores 3.75 executability with 0.83 revisions. ChatDev uses 248.9 tokens per code line; MetaGPT uses 124.3.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C8 · paper-supported</h3>
+  <p>Role ablations show that adding Product Manager, Architect, and Project Manager roles improves executability and reduces revision burden, while increasing cost.</p>
+  <p><strong>Scope:</strong> Section 4.4, Table 3.</p>
+  <ul><li><strong>E-role-ablation</strong>: Engineer-only has executability 1.0 and 10 revisions. Adding Product Manager gives 2.0 and 6.5 revisions; adding Architect gives 2.5 and 4.0 revisions; adding all Product, Architect, and Project Manager gives executability 4.0 and 2.5 revisions, with expense rising from $0.915 to $1.385.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Multi-agent collaboration needs artifacts, not just messages. PRDs, designs, APIs, tasks, tests, and code are the state transferred between agents.</li><li>SOPs are control planes. They define who acts, what they emit, who consumes it, and when downstream work can start.</li><li>Publish-subscribe beats point-to-point chat for complex workflows because dependencies are explicit and reusable.</li><li>Executable feedback is the load-bearing verifier. Code review by another LLM is weaker than running tests in a sandbox.</li><li>More agents help only when they correspond to real workflow responsibilities and produce useful structured outputs.</li><li>The runtime must record artifacts and provenance so later agents can debug against the PRD, design, task, and previous execution results.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The current arXiv version is v7 from 2024, while the reading-list entry anchors the original 2023 paper.</li><li>MetaGPT focuses on software-development workflows; claims should not be generalized to arbitrary multi-agent systems without evidence.</li><li>The SoftwareDev benchmark is self-generated and only seven representative tasks are used for some comparisons.</li><li>The framework requires safe code execution infrastructure, but the paper does not deeply analyze sandboxing.</li><li>Structured outputs can reduce drift but cannot make hallucinated requirements or designs correct by themselves.</li><li>The open-source project has evolved and moved from the original geekan/MetaGPT URL to FoundationAgents/MetaGPT.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/metagpt-hong-2023.json.</span>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · SWE-bench: Can Language Models Resolve Real-World GitHub Issues?</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/swe-bench-jimenez-2023/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Evaluation and Benchmarks</p>
+        <h1>SWE-bench</h1>
+        <p class="hero-lede">SWE-bench evaluates language models on real GitHub issues by asking them to patch repository snapshots and grading whether the repo's tests pass.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>7</strong><span>Claims</span></div>
+          <div class="metric"><strong>7</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2023 · ICLR 2024; arXiv 2023</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>2</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/swe-bench-jimenez-2023/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2310.06770">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>For agents, SWE-bench moved evaluation from generated snippets to repository-scale work with long context, tool execution, test feedback, and multi-file edits.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Traditional coding benchmarks often use short self-contained problems that can be solved in a few lines.</li><li>Modern coding assistants operate inside large repositories and must understand issue descriptions, dependencies, tests, and multi-file change sets.</li><li>Language models were improving faster than evaluation settings that captured real software-engineering difficulty.</li><li>Agent evaluation needs executable graders rather than only human or LLM judges.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks how to build a realistic, challenging, and automatically verifiable benchmark for repository-scale software issue resolution.</p>
+
+      <h2>Method</h2>
+      <p>Mine GitHub pull requests that resolve issues and add tests, validate them through execution, then evaluate models by applying generated patches and running the associated tests.</p>
+      <ul><li>Select popular Python repositories with substantial test suites.</li><li>Scrape merged pull requests and issue links.</li><li>Filter for PRs that resolve an issue and include test-file changes.</li><li>Apply execution filtering: the test patch must create fail-to-pass tests, and the reference solution must make them pass.</li><li>Construct benchmark inputs from issue text and a codebase snapshot.</li><li>Ask a model or agent to generate a patch.</li><li>Apply the patch with Unix patch tooling.</li><li>Run the repository's relevant tests and count the instance resolved only if the patch applies and tests pass.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>SWE-bench contains 2,294 software-engineering problems from real GitHub issues and pull requests across 12 popular Python repositories.</p>
+  <p><strong>Scope:</strong> Abstract and Section 2.</p>
+  <ul><li><strong>E-dataset-size</strong>: The paper introduces 2,294 task instances drawn from real GitHub issues and corresponding pull requests across 12 popular Python repositories.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>A model is evaluated by generating a patch for a repository snapshot; the patch must apply and pass the task's tests to count as resolved.</p>
+  <p><strong>Scope:</strong> Section 2.2.</p>
+  <ul><li><strong>E-evaluation-contract</strong>: The model receives issue text and a codebase, generates a patch, and the patch is applied and evaluated by running unit/system tests; the metric is percentage resolved.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>Instances are mined through a three-stage pipeline: scraping PRs, filtering for issue-resolving PRs with tests, and execution filtering for fail-to-pass behavior.</p>
+  <p><strong>Scope:</strong> Section 2.1.</p>
+  <ul><li><strong>E-construction</strong>: The pipeline scrapes around 90,000 PRs, filters for issue-resolving PRs with test changes, and uses execution filtering requiring at least one fail-to-pass test and no install/runtime errors.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>SWE-bench tasks require repository-scale reasoning over long inputs and often multi-function or multi-file edits.</p>
+  <p><strong>Scope:</strong> Abstract and Section 2.3.</p>
+  <ul><li><strong>E-repository-scale</strong>: The paper states tasks require understanding changes across functions, classes, and files; issue descriptions average 195 words, codebases contain thousands of files, and reference solutions average 1.7 files, 3.0 functions, and 32.8 changed lines.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>In the original evaluation, the best-performing model, Claude 2 with BM25 retrieval, resolved only 1.96% of issues.</p>
+  <p><strong>Scope:</strong> Abstract and Introduction.</p>
+  <ul><li><strong>E-claude2-result</strong>: The paper reports Claude 2 with BM25 retrieval as the best-performing evaluated system, resolving 1.96% of issues.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>The paper releases SWE-bench-train, a 19,000-instance non-testing dataset from 37 repositories, and SWE-Llama models fine-tuned from CodeLlama.</p>
+  <p><strong>Scope:</strong> Introduction.</p>
+  <ul><li><strong>E-train-data</strong>: The paper releases SWE-bench-train with 19,000 non-testing task instances from 37 repositories and two SWE-Llama fine-tuned models.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · paper-supported</h3>
+  <p>SWE-bench is designed to be continually updatable from new GitHub issues and PRs, helping evaluate tasks created after model training dates.</p>
+  <p><strong>Scope:</strong> Section 2.3.</p>
+  <ul><li><strong>E-updatable</strong>: The authors state the collection process can be applied to new Python repositories and issues, supporting continual updates and evaluations after model training dates.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Executable grading is the benchmark gold standard for coding agents: patches either apply and pass tests or they do not.</li><li>SWE-bench forces the whole agent stack into view: retrieval, code navigation, editing, tool execution, test running, and retry policy.</li><li>A benchmark harness is infrastructure. Environment setup, dependency pinning, patch application, and test selection determine what is actually measured.</li><li>Repository-scale context is a systems problem, not just a model problem; agents must find the few relevant lines among thousands of files.</li><li>The original 1.96% score is a reminder that real issue resolution was far beyond early chat-completion baselines.</li><li>SWE-bench also exposes benchmark-security concerns: because tests are executable, sandboxing and anti-cheating controls matter.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The original paper score is historical; current SWE-bench leaderboard numbers are much higher and should be checked live before citing SOTA.</li><li>Tests are strong but not perfect specifications.</li><li>The benchmark is Python-heavy and repository-selection biased.</li><li>Generated patches can overfit to visible tests or exploit weak harnesses if the benchmark environment is not secured.</li><li>Long-context and retrieval setup materially affect results.</li><li>SWE-bench evaluates coding issue resolution, not general-purpose agent autonomy.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/swe-bench-jimenez-2023.json.</span>
+  </footer>
+</body>
+</html>

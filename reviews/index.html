@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · reviews</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../">Readings</a>
+        <a href="../slides/">Slides</a>
+        <a href="../pocs/">PoCs</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Structured review summary">
+      <div>
+        <p class="eyebrow">Claim/evidence database</p>
+        <h1>Structured Reviews</h1>
+        <p class="hero-lede">Paper reviews stored as schema-compatible records and rendered into readable review pages and slide decks.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="hero-card__top">
+          <span>Reviews</span>
+          <strong>54</strong>
+        </div>
+      </div>
+    </section>
+<div class="deck-grid">
+<a class="deck-card" href="react-yao-2022/">
+  <div>
+    <h3>ReAct: Synergizing Reasoning and Acting in Language Models</h3>
+    <p>ReAct prompts a frozen LLM to interleave natural-language thoughts with task actions and observations, making tool use and environment interaction part of the reasoning loop.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">6 claims</span>
+    <span class="badge badge--ready">6 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="coala-sumers-2023/">
+  <div>
+    <h3>Cognitive Architectures for Language Agents</h3>
+    <p>CoALA turns language agents into a cognitive-architecture design problem by separating memory modules, internal and external actions, and a looping decision procedure.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">6 claims</span>
+    <span class="badge badge--ready">6 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="effective-agents-anthropic-2024/">
+  <div>
+    <h3>Building Effective Agents</h3>
+    <p>Anthropic argues that effective agentic systems usually start with simple LLM calls and only add workflows or autonomous agents when the task's uncertainty justifies the latency, cost, and control tradeoffs.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">6 claims</span>
+    <span class="badge badge--ready">6 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="chain-of-thought-wei-2022/">
+  <div>
+    <h3>Chain-of-Thought Prompting Elicits Reasoning in Large Language Models</h3>
+    <p>Chain-of-thought prompting shows that large language models can be induced to solve harder reasoning tasks by generating intermediate natural-language steps before the final answer.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">6 claims</span>
+    <span class="badge badge--ready">9 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="self-consistency-wang-2022/">
+  <div>
+    <h3>Self-Consistency Improves Chain of Thought Reasoning in Language Models</h3>
+    <p>Self-consistency improves chain-of-thought reasoning by sampling many reasoning paths and choosing the final answer that appears most consistently across them.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">6 claims</span>
+    <span class="badge badge--ready">6 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="tree-of-thoughts-yao-2023/">
+  <div>
+    <h3>Tree of Thoughts: Deliberate Problem Solving with Large Language Models</h3>
+    <p>Tree of Thoughts generalizes chain-of-thought prompting into explicit search over intermediate language states, letting an LLM generate, evaluate, and backtrack among multiple reasoning paths.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">6 claims</span>
+    <span class="badge badge--ready">6 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="reflexion-shinn-2023/">
+  <div>
+    <h3>Reflexion: Language Agents with Verbal Reinforcement Learning</h3>
+    <p>Reflexion teaches an LLM agent across trials by turning task feedback into verbal self-reflections stored in memory, without updating model weights.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">6 claims</span>
+    <span class="badge badge--ready">6 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="self-refine-madaan-2023/">
+  <div>
+    <h3>Self-Refine: Iterative Refinement with Self-Feedback</h3>
+    <p>Self-Refine improves a model's first answer by repeatedly asking the same LLM to critique its output and rewrite it from that feedback.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">6 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="toolformer-schick-2023/">
+  <div>
+    <h3>Toolformer: Language Models Can Teach Themselves to Use Tools</h3>
+    <p>Toolformer teaches a language model to insert and consume API calls by sampling possible calls, executing them, and keeping only those that reduce next-token loss.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">6 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="gorilla-patil-2023/">
+  <div>
+    <h3>Gorilla: Large Language Model Connected with Massive APIs</h3>
+    <p>Gorilla turns API use into a retrieval-aware function-calling problem: pick the right API from a large changing catalog, generate a valid call, and avoid hallucinated tools.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">6 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="toolllm-qin-2023/">
+  <div>
+    <h3>ToolLLM: Facilitating LLMs to Master 16000+ Real-World APIs</h3>
+    <p>ToolLLM scales tool learning from API-call selection to multi-step REST API trajectories over 16,464 real-world APIs.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="hugginggpt-shen-2023/">
+  <div>
+    <h3>HuggingGPT: Solving AI Tasks with ChatGPT and its Friends in Hugging Face</h3>
+    <p>HuggingGPT uses ChatGPT as a controller that plans tasks, selects Hugging Face expert models, executes subtasks, and summarizes the results.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">6 claims</span>
+    <span class="badge badge--ready">6 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="model-context-protocol-anthropic-2024/">
+  <div>
+    <h3>Model Context Protocol</h3>
+    <p>MCP standardizes the protocol surface between AI applications and external context, tools, prompts, and client-mediated capabilities.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="memgpt-packer-2023/">
+  <div>
+    <h3>MemGPT: Towards LLMs as Operating Systems</h3>
+    <p>MemGPT treats the context window as RAM and external stores as disk, then gives the model functions for paging memory in and out.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="generative-agents-park-2023/">
+  <div>
+    <h3>Generative Agents: Interactive Simulacra of Human Behavior</h3>
+    <p>Generative Agents turns an LLM into a persistent social simulator by logging every experience, retrieving relevant memories, reflecting over them, and planning from them.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">8 claims</span>
+    <span class="badge badge--ready">8 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="voyager-wang-2023/">
+  <div>
+    <h3>Voyager: An Open-Ended Embodied Agent with Large Language Models</h3>
+    <p>Voyager makes agent competence compound by saving successful behaviors as executable code skills and retrieving them for harder tasks.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">8 claims</span>
+    <span class="badge badge--ready">8 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="llm-p-liu-2023/">
+  <div>
+    <h3>LLM+P: Empowering Large Language Models with Optimal Planning Proficiency</h3>
+    <p>LLM+P gets reliable plans by making the LLM translate natural language into PDDL and letting a classical planner do the search.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="planning-abilities-valmeekam-2023/">
+  <div>
+    <h3>On the Planning Abilities of Large Language Models: A Critical Investigation</h3>
+    <p>LLMs are weak autonomous planners but useful plan sketchers when an external planner or verifier owns correctness.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">8 claims</span>
+    <span class="badge badge--ready">8 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="autogen-wu-2023/">
+  <div>
+    <h3>AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation</h3>
+    <p>AutoGen turns LLM applications into programmable conversations among agents backed by models, tools, and humans.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="camel-li-2023/">
+  <div>
+    <h3>CAMEL: Communicative Agents for Mind Exploration of Large Language Model Society</h3>
+    <p>CAMEL uses role-conditioned agent conversations to turn a vague idea into multi-turn instruction-following data and task progress.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">8 claims</span>
+    <span class="badge badge--ready">8 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="metagpt-hong-2023/">
+  <div>
+    <h3>MetaGPT: Meta Programming for A Multi-Agent Collaborative Framework</h3>
+    <p>MetaGPT makes multi-agent software development work more like an assembly line by encoding SOPs, role handoffs, and structured artifacts.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">8 claims</span>
+    <span class="badge badge--ready">8 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="multiagent-debate-du-2023/">
+  <div>
+    <h3>Improving Factuality and Reasoning in Language Models through Multiagent Debate</h3>
+    <p>Multiagent Debate improves some reasoning and factuality tasks by making several model instances critique and update each other's answers before taking a final consensus.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">9 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="instructgpt-ouyang-2022/">
+  <div>
+    <h3>Training Language Models to Follow Instructions with Human Feedback</h3>
+    <p>InstructGPT made broad instruction following work by training GPT-3 with demonstrations, human preference rankings, a reward model, and PPO.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="webgpt-nakano-2021/">
+  <div>
+    <h3>WebGPT: Browser-Assisted Question-Answering with Human Feedback</h3>
+    <p>WebGPT trains GPT-3 to answer long-form questions by operating a text browser, collecting citations, and optimizing answer quality with human feedback.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">9 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="dpo-rafailov-2023/">
+  <div>
+    <h3>Direct Preference Optimization</h3>
+    <p>DPO turns preference optimization into a direct classification-style policy loss, removing the explicit reward-model and PPO loop from standard RLHF.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="tulu-3-lambert-2024/">
+  <div>
+    <h3>Tulu 3: Pushing Frontiers in Open Language Model Post-Training</h3>
+    <p>Tulu 3 is an open post-training recipe that combines data curation, SFT, length-normalized DPO, RL with verifiable rewards, decontamination, and staged evaluation.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">12 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="deepseek-r1-deepseek-ai-2025/">
+  <div>
+    <h3>DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning</h3>
+    <p>DeepSeek-R1 shows that large-scale reinforcement learning with verifiable rewards can elicit long-chain reasoning, then packages the result into a stronger cold-start-plus-RL model and distilled smaller models.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">8 claims</span>
+    <span class="badge badge--ready">8 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="reliable-distributed-systems-armstrong-2003/">
+  <div>
+    <h3>Making Reliable Distributed Systems in the Presence of Software Errors</h3>
+    <p>Armstrong's thesis argues that reliable systems can be built from faulty software by isolating concurrent processes, letting failed workers crash, and delegating recovery to explicit supervision hierarchies.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">6 claims</span>
+    <span class="badge badge--ready">6 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="dbos-skiadopoulos-2022/">
+  <div>
+    <h3>DBOS: A DBMS-Oriented Operating System</h3>
+    <p>DBOS argues that a distributed transactional DBMS should be the substrate for cluster operating-system services, so execution state becomes queryable, transactional, and highly available by construction.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="durable-execution-background-2026/">
+  <div>
+    <h3>Durable Execution</h3>
+    <p>Durable execution records workflow progress so long-running code can resume after failures without redoing already completed steps or losing the logical trajectory.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="firecracker-agache-2020/">
+  <div>
+    <h3>Firecracker: Lightweight Virtualization for Serverless Applications</h3>
+    <p>Firecracker makes hardware virtualization viable for dense serverless multi-tenancy by replacing general-purpose QEMU with a small Rust VMM specialized for Linux microVMs.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="gvisor-google-2026/">
+  <div>
+    <h3>gVisor</h3>
+    <p>gVisor is a Linux-compatible userspace application kernel that intercepts container syscalls, implements them in a separate Sentry, and sharply limits direct host-kernel exposure.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="sel4-klein-2009/">
+  <div>
+    <h3>seL4: Formal Verification of an OS Kernel</h3>
+    <p>seL4 proves functional correctness of a complete general-purpose microkernel from abstract specification down to C implementation, showing that a small privileged mediator can be both high-assurance and practical.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">8 claims</span>
+    <span class="badge badge--ready">8 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="webassembly-haas-2017/">
+  <div>
+    <h3>Bringing the Web Up to Speed with WebAssembly</h3>
+    <p>WebAssembly defines a compact, typed, sandboxed low-level code format whose validated modules can run near native speed while receiving authority only through host-provided imports.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="capability-myths-miller-2003/">
+  <div>
+    <h3>Capability Myths Demolished</h3>
+    <p>Capability Myths Demolished argues that object-capability systems are not just ACLs in another notation: they better support least privilege, delegation, confinement, revocation, and confused-deputy avoidance.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="orca-yu-2022/">
+  <div>
+    <h3>Orca: A Distributed Serving System for Transformer-Based Generative Models</h3>
+    <p>Orca reframes LLM serving as token-iteration scheduling: instead of batching full requests until every sequence finishes, it admits, removes, and schedules requests after every generated token.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">6 claims</span>
+    <span class="badge badge--ready">6 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="paged-attention-kwon-2023/">
+  <div>
+    <h3>Efficient Memory Management for LLM Serving with PagedAttention</h3>
+    <p>PagedAttention applies virtual-memory paging to the LLM KV cache so serving systems can batch more requests with far less fragmentation and share prefixes through copy-on-write blocks.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">6 claims</span>
+    <span class="badge badge--ready">6 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="speculative-decoding-leviathan-2022/">
+  <div>
+    <h3>Fast Inference from Transformers via Speculative Decoding</h3>
+    <p>Speculative decoding uses a faster draft model to propose several tokens, then verifies them with the slow target model in parallel so generation accelerates without changing the target distribution.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">6 claims</span>
+    <span class="badge badge--ready">6 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="sglang-zheng-2023/">
+  <div>
+    <h3>SGLang: Efficient Execution of Structured Language Model Programs</h3>
+    <p>SGLang treats multi-call prompting, agent control flow, and structured outputs as language-model programs, then accelerates them with a Python DSL plus runtime optimizations such as RadixAttention and compressed-FSM decoding.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">6 claims</span>
+    <span class="badge badge--ready">6 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="flashattention-dao-2022/">
+  <div>
+    <h3>FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness</h3>
+    <p>FlashAttention makes exact attention fast by tiling the computation so the quadratic attention matrix is never materialized in slow GPU HBM.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="swe-bench-jimenez-2023/">
+  <div>
+    <h3>SWE-bench: Can Language Models Resolve Real-World GitHub Issues?</h3>
+    <p>SWE-bench evaluates language models on real GitHub issues by asking them to patch repository snapshots and grading whether the repo's tests pass.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="webarena-zhou-2023/">
+  <div>
+    <h3>WebArena: A Realistic Web Environment for Building Autonomous Agents</h3>
+    <p>WebArena is a self-hosted web benchmark where agents perform long-horizon tasks across realistic sites and are graded by functional correctness rather than matching reference actions.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">6 claims</span>
+    <span class="badge badge--ready">6 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="gaia-mialon-2023/">
+  <div>
+    <h3>GAIA: A Benchmark for General AI Assistants</h3>
+    <p>GAIA evaluates general AI assistants with concise, factoid real-world questions that are easy for humans but require AI systems to browse, reason, handle multimodal evidence, and use tools accurately.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">6 claims</span>
+    <span class="badge badge--ready">6 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="tau-bench-yao-2024/">
+  <div>
+    <h3>tau-bench: A Benchmark for Tool-Agent-User Interaction in Real-World Domains</h3>
+    <p>tau-bench evaluates whether tool-using agents can converse with simulated users, follow domain policies, update databases correctly, and do so consistently across repeated trials.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="osworld-xie-2024/">
+  <div>
+    <h3>OSWorld: Benchmarking Multimodal Agents for Open-Ended Tasks in Real Computer Environments</h3>
+    <p>OSWorld evaluates multimodal computer-use agents inside real desktop environments with task setup, browser/desktop actions, and execution-based grading.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="agentbench-liu-2023/">
+  <div>
+    <h3>AgentBench: Evaluating LLMs as Agents</h3>
+    <p>AgentBench evaluates LLMs as text-based agents across eight interactive environments spanning code, games, and web tasks.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="rigorous-agentic-benchmarks-zhu-2025/">
+  <div>
+    <h3>Establishing Best Practices for Building Rigorous Agentic Benchmarks</h3>
+    <p>This paper turns agent benchmark quality into a checklist-driven validity problem: task validity, outcome validity, and honest benchmark reporting.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="trusting-trust-thompson-1984/">
+  <div>
+    <h3>Reflections on Trusting Trust</h3>
+    <p>Thompson shows that source review is not enough when the compiler or lower toolchain can hide and reproduce a Trojan across rebuilds.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">6 claims</span>
+    <span class="badge badge--ready">6 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="indirect-prompt-injection-greshake-2023/">
+  <div>
+    <h3>Not what you've signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection</h3>
+    <p>Indirect prompt injection lets an attacker hide instructions in content that an LLM application later retrieves, causing the model to treat untrusted data as control input.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="gcg-zou-2023/">
+  <div>
+    <h3>Universal and Transferable Adversarial Attacks on Aligned Language Models</h3>
+    <p>GCG showed that adversarial suffixes can be automatically optimized on open models and transfer to other aligned LLMs, including black-box systems.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="toolemu-ruan-2023/">
+  <div>
+    <h3>Identifying the Risks of LM Agents with an LM-Emulated Sandbox</h3>
+    <p>ToolEmu uses a language model to emulate tool execution and sandbox states so agent risks can be tested before real tools are wired up.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="llm-agents-survey-xi-2023/">
+  <div>
+    <h3>The Rise and Potential of Large Language Model Based Agents: A Survey</h3>
+    <p>Xi et al. map LLM-based agents around a broad brain-perception-action framework, then survey single-agent, multi-agent, human-agent, and agent-society applications.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="autonomous-agents-survey-wang-2023/">
+  <div>
+    <h3>A Survey on Large Language Model Based Autonomous Agents</h3>
+    <p>Wang et al. organize LLM-based autonomous agents around profile, memory, planning, and action modules, then survey capability acquisition, applications, evaluation, and challenges.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+<a class="deck-card" href="foundation-agents-liu-2025/">
+  <div>
+    <h3>Advances and Challenges in Foundation Agents</h3>
+    <p>This survey reframes agents as foundation-agent systems with brain-inspired modules, self-evolution, multi-agent collaboration, and safety as coequal design axes.</p>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge--ready">7 claims</span>
+    <span class="badge badge--ready">7 evidence refs</span>
+  </div>
+</a>
+</div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/*.json. Do not hand-edit this page.</span>
+  </footer>
+</body>
+</html>

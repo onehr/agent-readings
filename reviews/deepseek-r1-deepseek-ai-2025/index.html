@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/deepseek-r1-deepseek-ai-2025/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Training Agents</p>
+        <h1>DeepSeek-R1</h1>
+        <p class="hero-lede">DeepSeek-R1 shows that large-scale reinforcement learning with verifiable rewards can elicit long-chain reasoning, then packages the result into a stronger cold-start-plus-RL model and distilled smaller models.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>8</strong><span>Claims</span></div>
+          <div class="metric"><strong>8</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2025 · Nature 645, 633-638 (2025); arXiv v2 revised 2026</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>3</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/deepseek-r1-deepseek-ai-2025/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2501.12948">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>For agents, DeepSeek-R1 made verifiable reward reinforcement learning a concrete infrastructure pattern: if correctness can be checked, post-training can optimize trajectories at scale without hand-labeling every reasoning path.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Strong reasoning models relied heavily on supervised demonstrations, preference data, or closed training recipes.</li><li>Open post-training stacks lacked a clear frontier-scale example showing reasoning behavior emerging primarily from automatically checkable rewards.</li><li>Long chain-of-thought models introduced inference-time scaling, but the training recipe for producing them was not broadly visible.</li><li>Agent builders needed evidence for when to use verifiers and reward functions instead of treating reasoning as only prompt engineering.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks whether an LLM can develop stronger reasoning through reinforcement learning against verifiable tasks, and how to turn the emergent but rough behavior into a usable model family.</p>
+
+      <h2>Method</h2>
+      <p>Use verifiable tasks as the reward source for RL, observe what reasoning behaviors emerge without supervised traces, then add cold-start data and staged post-training to improve readability, language control, general capability, and smaller-model transfer.</p>
+      <ul><li>Train R1-Zero by applying GRPO to DeepSeek-V3-Base on reasoning tasks with rule-based accuracy and format rewards.</li><li>Track whether longer reasoning, self-reflection, verification, and strategy adaptation emerge during RL.</li><li>For R1, collect thousands of cold-start examples to make initial reasoning traces more readable and controlled.</li><li>Run reasoning-oriented RL from the cold-start model.</li><li>Use rejection sampling and supervised fine-tuning to broaden the model beyond narrow reasoning tasks.</li><li>Run a final RL stage for helpfulness, harmlessness, and all-scenario alignment.</li><li>Generate 800K training samples from DeepSeek-R1 and distill reasoning behavior into smaller dense Qwen and Llama models.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>DeepSeek-R1-Zero demonstrates that reasoning behaviors can emerge from pure large-scale RL on a base model without supervised fine-tuning as a preliminary step.</p>
+  <p><strong>Scope:</strong> Abstract, Introduction, Section 2.2, and Conclusion.</p>
+  <ul><li><strong>E-r1-zero-emergence</strong>: The paper describes R1-Zero as trained through large-scale RL without preliminary SFT and reports emergent reasoning behaviors such as self-reflection, verification, and dynamic strategy adaptation.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>During R1-Zero training, AIME 2024 pass@1 rises from 15.6% to 71.0%, and majority voting reaches 86.7%.</p>
+  <p><strong>Scope:</strong> Introduction and Section 2.2.4.</p>
+  <ul><li><strong>E-aime-r1-zero</strong>: The paper reports that R1-Zero's AIME 2024 pass@1 increases from 15.6% to 71.0%, and that majority voting improves the score to 86.7%.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>DeepSeek-R1 adds cold-start data and a multi-stage pipeline to fix R1-Zero's practical weaknesses while preserving reasoning RL as the load-bearing mechanism.</p>
+  <p><strong>Scope:</strong> Abstract, Introduction, Section 2.3, and Conclusion.</p>
+  <ul><li><strong>E-r1-pipeline</strong>: DeepSeek-R1 starts from thousands of cold-start examples, then uses reasoning-oriented RL, rejection sampling plus SFT, and a final RL stage for broader helpfulness and harmlessness.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>The paper reports DeepSeek-R1 performance comparable to OpenAI-o1-1217 on reasoning tasks.</p>
+  <p><strong>Scope:</strong> Abstract, evaluation summary, and Conclusion.</p>
+  <ul><li><strong>E-r1-o1-comparable</strong>: The authors summarize DeepSeek-R1 as achieving performance comparable to OpenAI-o1-1217 across a range of reasoning tasks.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>Reasoning behavior transfers to smaller dense models through distillation from DeepSeek-R1 outputs.</p>
+  <p><strong>Scope:</strong> Section 2.4, Section 3.2, and Conclusion.</p>
+  <ul><li><strong>E-distillation</strong>: The paper says DeepSeek-R1 generates 800K samples for student fine-tuning, and reports that DeepSeek-R1-Distill-Qwen-1.5B reaches 28.9% on AIME and 83.9% on MATH, outperforming GPT-4o and Claude-3.5-Sonnet on those math benchmarks.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>The project releases DeepSeek-R1-Zero, DeepSeek-R1, and six distilled dense models spanning 1.5B to 70B parameters.</p>
+  <p><strong>Scope:</strong> Abstract and project repository.</p>
+  <ul><li><strong>E-release</strong>: The paper and repository state that DeepSeek-R1-Zero, DeepSeek-R1, and six dense distilled models based on Qwen and Llama checkpoints are released, covering 1.5B, 7B, 8B, 14B, 32B, and 70B sizes.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · paper-supported</h3>
+  <p>The authors state that DeepSeek-R1 still falls short on function calling, multi-turn interaction, complex role-play, JSON output, language mixing outside Chinese and English, prompt sensitivity, and software-engineering RL efficiency.</p>
+  <p><strong>Scope:</strong> Limitations and Future Work.</p>
+  <ul><li><strong>E-limitations</strong>: The paper lists weaknesses in function calling, multi-turn tasks, complex role-play, JSON output, non-Chinese/non-English language mixing, few-shot prompt sensitivity, and software-engineering RL because long evaluations slow the RL loop.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C8 · paper-supported</h3>
+  <p>The paper reports unsuccessful attempts with process reward models, Monte Carlo tree search, and related search-style methods in their setting.</p>
+  <p><strong>Scope:</strong> Discussion, Section 4.2.</p>
+  <ul><li><strong>E-unsuccessful-attempts</strong>: The discussion identifies process reward models, Monte Carlo tree search, and related search attempts as unsuccessful or insufficient in the authors' experiments.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>DeepSeek-R1 turns verifiers into training infrastructure: the key artifact is not a prompt but a reliable reward path for answer checking.</li><li>R1-Zero is the clean scientific result; R1 is the productizable recipe. Keep those separate when reasoning about what pure RL achieved.</li><li>For agents, RLVR works best where the environment can emit a crisp correctness signal, such as math, code, format, or executable tests.</li><li>Long reasoning traces are a serving concern. Better task success may come with higher token budgets, latency, and scheduler pressure.</li><li>Distillation turns expensive reasoning models into cheaper student policies, but the quality of the generated trajectories becomes part of the training data contract.</li><li>Function calling, JSON output, multi-turn interaction, and software engineering remain weak spots in the paper's own limitation section, so agent builders still need runtime checks.</li><li>Prompt sensitivity matters operationally: the paper recommends zero-shot, direct problem statements because few-shot prompting can degrade performance.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The current arXiv record is v2 revised in January 2026 and also lists a Nature 2025 journal reference; this review treats the arXiv and Nature metadata as the current source record.</li><li>R1-Zero's pure-RL result should not be confused with DeepSeek-R1's final multi-stage recipe.</li><li>Benchmark parity with OpenAI-o1-1217 is scoped to reasoning tasks reported by the paper.</li><li>The evidence is strongest for verifiable reasoning tasks, not open-ended autonomous agents with side effects.</li><li>The authors explicitly report limitations in function calling, multi-turn interaction, JSON output, language mixing, prompt sensitivity, and software-engineering RL.</li><li>The paper's exact training data and infrastructure details are not fully reproducible from the public text alone.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/deepseek-r1-deepseek-ai-2025.json.</span>
+  </footer>
+</body>
+</html>

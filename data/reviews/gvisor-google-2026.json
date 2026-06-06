@@ -1,0 +1,309 @@
+{
+  "schema_version": 1,
+  "slug": "gvisor-google-2026",
+  "review_status": "source-read",
+  "paper": {
+    "title": "gVisor",
+    "authors": [
+      "The gVisor Authors",
+      "Google"
+    ],
+    "year": 2026,
+    "venue": "Project and architecture documentation",
+    "url": "https://gvisor.dev/",
+    "project_url": "https://gvisor.dev/docs/",
+    "arxiv_id": "",
+    "read_sources": [
+      {
+        "kind": "project_page",
+        "url": "https://gvisor.dev/",
+        "note": "Read for current project positioning, use cases, features, container integration, checkpoint/restore, runtime monitoring, and GPU support."
+      },
+      {
+        "kind": "docs",
+        "url": "https://gvisor.dev/docs/",
+        "note": "Read for the definition of gVisor as a userspace application kernel, OCI runtime integration, Sentry and Gofer architecture, compatibility notes, and tradeoffs."
+      },
+      {
+        "kind": "docs",
+        "url": "https://gvisor.dev/docs/architecture_guide/intro/",
+        "note": "Read for security overview, comparison with kernel primitives and VMs, syscall interception, Sentry implementation, platform choices, and non-goals."
+      },
+      {
+        "kind": "docs",
+        "url": "https://gvisor.dev/docs/architecture_guide/security/",
+        "note": "Read for threat model, System API/ABI exposure, defense-in-depth principles, host syscall limits, side-channel caveats, and VM comparison."
+      },
+      {
+        "kind": "docs",
+        "url": "https://gvisor.dev/docs/architecture_guide/platforms/",
+        "note": "Read for systrap, KVM, and ptrace platform tradeoffs and current platform status."
+      },
+      {
+        "kind": "docs",
+        "url": "https://gvisor.dev/docs/architecture_guide/performance/",
+        "note": "Read for the project's performance framing and syscall-heavy workload caveats."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "gVisor is a Linux-compatible userspace application kernel that intercepts container syscalls, implements them in a separate Sentry, and sharply limits direct host-kernel exposure.",
+    "thesis": "The project chooses a third point between containers and VMs: keep container tooling and flexible resource use, but move the kernel API seen by the workload into a memory-safe userspace sandbox.",
+    "why_it_matters": "For agent infrastructure, gVisor is attractive when you want stronger isolation than ordinary containers while retaining Kubernetes/Docker ergonomics and faster/lighter operation than a full microVM boundary."
+  },
+  "problem": {
+    "prior_state": [
+      "Native containers rely on host-kernel security primitives, so untrusted code can still reach a large kernel API surface.",
+      "Rule-based syscall filtering is hard to configure safely for arbitrary or previously unknown applications.",
+      "VMs provide stronger workload isolation but can impose fixed resource overhead, slower startup, and extra proxies or agents for container use.",
+      "Agent-generated and user-uploaded code need defense in depth without necessarily requiring a full VM for every execution."
+    ],
+    "key_gap": "gVisor asks whether a container runtime can reduce host-kernel attack surface by reimplementing the Linux application interface outside the host kernel.",
+    "assumptions": [
+      "Most container workloads can tolerate incomplete Linux API compatibility or occasional per-syscall overhead.",
+      "The Sentry can safely implement enough of Linux in memory-safe Go for the target workloads.",
+      "Host Linux security primitives remain useful as defense in depth around gVisor itself.",
+      "Resource isolation still depends on host mechanisms such as cgroups and network policy."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "application-kernel",
+      "name": "Application kernel",
+      "definition": "A userspace kernel-like component that implements the Linux system API for sandboxed applications."
+    },
+    {
+      "id": "sentry",
+      "name": "Sentry",
+      "definition": "The gVisor application kernel that intercepts system calls/page faults and implements Linux-like kernel behavior for the sandbox."
+    },
+    {
+      "id": "gofer",
+      "name": "Gofer",
+      "definition": "A companion process that mediates filesystem access for the Sentry and container."
+    },
+    {
+      "id": "runsc",
+      "name": "runsc",
+      "definition": "The OCI-compatible runtime used to run containers under gVisor with Docker, Kubernetes, containerd, or OCI bundles."
+    },
+    {
+      "id": "systrap",
+      "name": "Systrap platform",
+      "definition": "The current default platform using seccomp SECCOMP_RET_TRAP to intercept system calls without requiring virtualization support."
+    },
+    {
+      "id": "kvm-platform",
+      "name": "KVM platform",
+      "definition": "A gVisor platform that uses KVM for address-space isolation and page-fault interception while still retaining gVisor's process model."
+    }
+  ],
+  "method": {
+    "core_idea": "Intercept application system calls before they reach the host kernel, implement Linux-like behavior in a Go Sentry, route filesystem access through a Gofer, and restrict the host system calls that gVisor itself can make.",
+    "action_grammar": [
+      "application: normal Linux binary in an OCI container bundle.",
+      "runsc: OCI runtime entrypoint that starts the sandbox.",
+      "Sentry: per-sandbox userspace kernel implementing syscalls, memory, processes, signals, network stack, filesystems, namespaces, and related logic.",
+      "Gofer: process mediating filesystem access over 9P or shared-memory channels.",
+      "platform: interception mechanism such as systrap or KVM.",
+      "host kernel: still used by the Sentry/Gofer through a minimized and filtered API surface.",
+      "host policy: cgroups, networking policy, mount namespaces, seccomp, user namespaces, and other outer controls."
+    ],
+    "steps": [
+      "Start a container through runsc instead of a conventional OCI runtime.",
+      "Create a gVisor sandbox containing a Sentry and one or more Gofer processes.",
+      "Intercept the workload's system calls through systrap, KVM, or another platform.",
+      "Handle supported system calls in the Sentry rather than passing them through to the host kernel.",
+      "Send host filesystem operations that escape internal sandbox state to the Gofer.",
+      "Run the Sentry with a strict seccomp/user/mount namespace profile and minimal host privileges.",
+      "Use cgroups and network policy outside the sandbox for resource and egress controls.",
+      "Accept compatibility or performance losses where gVisor does not implement a feature or where syscall mediation is expensive."
+    ],
+    "pseudocode": "container = oci_bundle(rootfs, config)\nsandbox = runsc.create(container)\n\nsentry = sandbox.start_sentry(platform=\"systrap\")\ngofer = sandbox.start_gofer(rootfs=container.rootfs)\n\nwhile app.running:\n    syscall = platform.intercept(app)\n    if sentry.implements(syscall):\n        result = sentry.handle(syscall, gofer=gofer)\n    else:\n        result = ENOSYS_or_policy_denial\n    platform.return_to_app(result)\n\nhost_enforcement = cgroups + namespaces + seccomp + network_policy"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "architecture",
+      "status": "source-supported",
+      "statement": "gVisor is an application kernel, not a conventional VM or syscall filter, and it implements a Linux-like interface in userspace.",
+      "scope": "What is gVisor and Introduction to gVisor security.",
+      "evidence_refs": ["E-application-kernel"],
+      "caveats": ["It still relies on the host kernel and platform for interception, resource controls, and hardware-side-channel mitigations."]
+    },
+    {
+      "id": "C2",
+      "type": "security",
+      "status": "source-supported",
+      "statement": "gVisor minimizes direct host System API exposure by preventing sandboxed applications from passing system calls directly to the host kernel.",
+      "scope": "Security Model and Intro docs.",
+      "evidence_refs": ["E-no-passthrough"],
+      "caveats": ["Some application operations still cause Sentry or Gofer host calls indirectly."]
+    },
+    {
+      "id": "C3",
+      "type": "implementation",
+      "status": "source-supported",
+      "statement": "The Sentry is a Go userspace kernel that implements system calls, memory management, process management, signals, namespaces, filesystems, and networking behavior needed by applications.",
+      "scope": "What is gVisor and Intro docs.",
+      "evidence_refs": ["E-sentry"],
+      "caveats": ["Any Linux feature not implemented in the Sentry may fail or behave differently from a native container."]
+    },
+    {
+      "id": "C4",
+      "type": "security",
+      "status": "source-supported",
+      "statement": "gVisor's defense-in-depth rules include no direct syscall pass-through, common-functionality-only implementation, minimized host surface for the Sentry, no CGo in the Sentry, and controlled unsafe Go use.",
+      "scope": "Security Model docs.",
+      "evidence_refs": ["E-defense-in-depth"],
+      "caveats": ["These are engineering rules and controls, not formal verification."]
+    },
+    {
+      "id": "C5",
+      "type": "platform",
+      "status": "source-supported",
+      "statement": "gVisor supports multiple interception platforms, with systrap as the current default, KVM for bare-metal performance/isolation tradeoffs, and ptrace deprecated because of high context-switch overhead.",
+      "scope": "Platform Guide.",
+      "evidence_refs": ["E-platforms"],
+      "caveats": ["Platform status is current-documentation state and may change over time."]
+    },
+    {
+      "id": "C6",
+      "type": "tradeoff",
+      "status": "source-supported",
+      "statement": "gVisor aims for lower fixed overhead and better container ergonomics than VMs, but accepts reduced compatibility and higher per-syscall overhead versus native containers.",
+      "scope": "What is gVisor and Intro docs.",
+      "evidence_refs": ["E-tradeoffs"],
+      "caveats": ["Actual performance depends strongly on workload syscall intensity and filesystem/network configuration."]
+    },
+    {
+      "id": "C7",
+      "type": "limitation",
+      "status": "source-supported",
+      "statement": "gVisor does not protect against higher-level stack compromise, hardware side channels, exploits inside the sandboxed workload itself, or resources explicitly exposed to the sandbox.",
+      "scope": "Intro and Security Model docs.",
+      "evidence_refs": ["E-non-goals"],
+      "caveats": ["These limitations are central for agent deployments because prompt injection often abuses allowed capabilities rather than kernel bugs."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-application-kernel",
+      "kind": "docs",
+      "source": "gVisor docs",
+      "locator": "What is gVisor; Introduction to gVisor security",
+      "result": "The docs describe gVisor as an open-source workload isolation solution and application kernel, not a VM hypervisor or syscall filter, written in memory-safe Go and running in userspace.",
+      "metric": "architecture classification",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-no-passthrough",
+      "kind": "security_model",
+      "source": "gVisor Security Model",
+      "locator": "Goals: Limiting Exposure and Principles",
+      "result": "The docs state that applications' direct interactions with the host System API are intercepted by the Sentry, no supported syscall is passed through directly, and applications cannot directly craft host syscall arguments.",
+      "metric": "host System API exposure",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-sentry",
+      "kind": "implementation",
+      "source": "gVisor docs",
+      "locator": "Sentry and How does gVisor provide isolation",
+      "result": "The Sentry is described as implementing syscalls, signal delivery, memory management, page faulting, threading, process management, namespaces, filesystems, and networking, while not allowing the application to directly control host system calls.",
+      "metric": "Sentry responsibilities",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-defense-in-depth",
+      "kind": "security_model",
+      "source": "gVisor Security Model",
+      "locator": "Principles: Defense-in-Depth",
+      "result": "The docs list engineering principles: no direct host syscall pass-through, implement only common functionality, minimize the host surface accessible to the Sentry, isolate unsafe Go code, disallow CGo, restrict imports, fuzz continuously, and triage production crashes.",
+      "metric": "defense-in-depth controls",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-platforms",
+      "kind": "implementation",
+      "source": "gVisor Platform Guide",
+      "locator": "Implementations",
+      "result": "The platform guide says bare-metal deployments generally get best performance from KVM, systrap is better inside VMs or without virtualization support and replaced ptrace as default in mid-2023, while ptrace has high context-switch overhead and is no longer supported.",
+      "metric": "platform tradeoffs",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-tradeoffs",
+      "kind": "tradeoff",
+      "source": "gVisor docs",
+      "locator": "How is this different; What does gVisor do",
+      "result": "The docs describe gVisor as providing many VM-like security benefits with lower resource footprint, fast startup, and userspace flexibility, but at the price of reduced application compatibility and higher per-system-call overhead.",
+      "metric": "compatibility/performance/resource tradeoff",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-non-goals",
+      "kind": "limitation",
+      "source": "gVisor Intro and Security Model docs",
+      "locator": "What does gVisor not protect against; System ABI, Side Channels and Other Vectors",
+      "result": "The docs say gVisor does not protect against higher-level stack exploits before the sandbox runs, Spectre-style side channels, compromise of software inside the sandbox, or access to resources the sandbox is configured to expose.",
+      "metric": "sandbox non-goals",
+      "claim_refs": ["C7"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "gVisor is a strong middle option for local agent tool sandboxes where full microVM startup or fixed resource allocation is too expensive.",
+    "The key architectural point is syscall mediation, not policy text. The agent's code talks to a fake Linux kernel first, not directly to the host kernel.",
+    "Compatibility is a budget. Agent tools that depend on unusual syscalls, ioctls, /proc, /sys, GPU paths, or filesystem behavior need explicit testing under gVisor.",
+    "Host egress and resource controls still live outside the sandbox. Pair gVisor with network policy, cgroups, credentials isolation, and filesystem allowlists.",
+    "Runtime monitoring and checkpoint/restore are agent-relevant because tool execution needs provenance, forensics, and sometimes warm sandbox reuse.",
+    "gVisor does not stop malicious instructions from using allowed APIs. It limits host escape; it does not decide whether the allowed API call should happen."
+  ],
+  "caveats": [
+    "This is a project/docs review, not a peer-reviewed paper entry.",
+    "Documentation reflects current gVisor behavior as of the review date and can drift.",
+    "gVisor is not a VM in the Firecracker sense and should not be presented as one.",
+    "Reduced compatibility and per-syscall overhead are first-order tradeoffs for syscall-heavy workloads.",
+    "The sandbox relies on host kernel, firmware, cgroups, and network policy for several important protections.",
+    "Side channels and higher-layer compromise remain outside gVisor's core protection envelope."
+  ],
+  "related_work": [
+    {
+      "title": "Firecracker",
+      "relation": "contrasts",
+      "note": "Firecracker uses KVM microVMs and a minimal VMM; gVisor uses a userspace application kernel and syscall interception.",
+      "url": "https://www.usenix.org/conference/nsdi20/presentation/agache"
+    },
+    {
+      "title": "WebAssembly",
+      "relation": "alternative_sandbox",
+      "note": "WASM narrows the execution ABI further than gVisor by requiring code to run through a typed bytecode and host imports.",
+      "url": "https://dl.acm.org/doi/10.1145/3062341.3062363"
+    },
+    {
+      "title": "Capability Myths Demolished",
+      "relation": "permission_model",
+      "note": "gVisor reduces host attack surface, while capabilities specify which resources sandboxed code may access in the first place.",
+      "url": "http://srl.cs.jhu.edu/pubs/SRL2003-02.pdf"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A useful PoC could run a small syscall-heavy tool under runc and runsc, then compare denied syscalls, filesystem exposure, startup, and latency."
+  },
+  "slide_plan": {
+    "title": "gVisor",
+    "subtitle": "A userspace kernel for safer containers",
+    "sections": [
+      "summary",
+      "problem",
+      "third_isolation_model",
+      "sentry_and_gofer",
+      "host_api_exposure",
+      "platforms",
+      "agent_sandbox_takeaways",
+      "limitations",
+      "references"
+    ]
+  }
+}

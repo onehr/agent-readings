@@ -1,0 +1,485 @@
+- slug: react-yao-2022
+  title: "ReAct: Synergizing Reasoning and Acting in Language Models"
+  authors: "Yao et al."
+  year: 2022
+  section: "Reasoning, Acting, and Reflection"
+  url: "https://arxiv.org/abs/2210.03629"
+  slides: true
+  poc: false
+
+- slug: coala-sumers-2023
+  title: "Cognitive Architectures for Language Agents"
+  authors: "Sumers et al."
+  year: 2023
+  section: "Start Here"
+  url: "https://arxiv.org/abs/2309.02427"
+  slides: true
+  poc: false
+
+- slug: effective-agents-anthropic-2024
+  title: "Building Effective Agents"
+  authors: "Anthropic"
+  year: 2024
+  section: "Start Here"
+  url: "https://www.anthropic.com/engineering/building-effective-agents"
+  slides: true
+  poc: false
+
+- slug: chain-of-thought-wei-2022
+  title: "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models"
+  authors: "Wei et al."
+  year: 2022
+  section: "Reasoning, Acting, and Reflection"
+  url: "https://arxiv.org/abs/2201.11903"
+  slides: true
+  poc: false
+
+- slug: self-consistency-wang-2022
+  title: "Self-Consistency Improves Chain of Thought Reasoning in Language Models"
+  authors: "Wang et al."
+  year: 2022
+  section: "Reasoning, Acting, and Reflection"
+  url: "https://arxiv.org/abs/2203.11171"
+  slides: true
+  poc: false
+
+- slug: tree-of-thoughts-yao-2023
+  title: "Tree of Thoughts: Deliberate Problem Solving with Large Language Models"
+  authors: "Yao et al."
+  year: 2023
+  section: "Reasoning, Acting, and Reflection"
+  url: "https://arxiv.org/abs/2305.10601"
+  slides: true
+  poc: false
+
+- slug: reflexion-shinn-2023
+  title: "Reflexion: Language Agents with Verbal Reinforcement Learning"
+  authors: "Shinn et al."
+  year: 2023
+  section: "Reasoning, Acting, and Reflection"
+  url: "https://arxiv.org/abs/2303.11366"
+  slides: true
+  poc: false
+
+- slug: self-refine-madaan-2023
+  title: "Self-Refine: Iterative Refinement with Self-Feedback"
+  authors: "Madaan et al."
+  year: 2023
+  section: "Reasoning, Acting, and Reflection"
+  url: "https://arxiv.org/abs/2303.17651"
+  slides: true
+  poc: false
+
+- slug: toolformer-schick-2023
+  title: "Toolformer: Language Models Can Teach Themselves to Use Tools"
+  authors: "Schick et al."
+  year: 2023
+  section: "Tool Use and Interoperability"
+  url: "https://arxiv.org/abs/2302.04761"
+  slides: true
+  poc: false
+
+- slug: gorilla-patil-2023
+  title: "Gorilla: Large Language Model Connected with Massive APIs"
+  authors: "Patil et al."
+  year: 2023
+  section: "Tool Use and Interoperability"
+  url: "https://arxiv.org/abs/2305.15334"
+  slides: true
+  poc: false
+
+- slug: toolllm-qin-2023
+  title: "ToolLLM: Facilitating LLMs to Master 16000+ Real-World APIs"
+  authors: "Qin et al."
+  year: 2023
+  section: "Tool Use and Interoperability"
+  url: "https://arxiv.org/abs/2307.16789"
+  slides: true
+  poc: false
+
+- slug: hugginggpt-shen-2023
+  title: "HuggingGPT: Solving AI Tasks with ChatGPT and its Friends in Hugging Face"
+  authors: "Shen et al."
+  year: 2023
+  section: "Tool Use and Interoperability"
+  url: "https://arxiv.org/abs/2303.17580"
+  slides: true
+  poc: false
+
+- slug: model-context-protocol-anthropic-2024
+  title: "Model Context Protocol"
+  authors: "Anthropic"
+  year: 2024
+  section: "Tool Use and Interoperability"
+  url: "https://modelcontextprotocol.io"
+  slides: true
+  poc: false
+
+- slug: memgpt-packer-2023
+  title: "MemGPT: Towards LLMs as Operating Systems"
+  authors: "Packer et al."
+  year: 2023
+  section: "Memory and State"
+  url: "https://arxiv.org/abs/2310.08560"
+  slides: true
+  poc: false
+
+- slug: generative-agents-park-2023
+  title: "Generative Agents: Interactive Simulacra of Human Behavior"
+  authors: "Park et al."
+  year: 2023
+  section: "Memory and State"
+  url: "https://arxiv.org/abs/2304.03442"
+  slides: true
+  poc: false
+
+- slug: voyager-wang-2023
+  title: "Voyager: An Open-Ended Embodied Agent with Large Language Models"
+  authors: "Wang et al."
+  year: 2023
+  section: "Planning and Skill Acquisition"
+  url: "https://arxiv.org/abs/2305.16291"
+  slides: true
+  poc: false
+
+- slug: llm-p-liu-2023
+  title: "LLM+P: Empowering Large Language Models with Optimal Planning Proficiency"
+  authors: "Liu et al."
+  year: 2023
+  section: "Planning and Skill Acquisition"
+  url: "https://arxiv.org/abs/2304.11477"
+  slides: true
+  poc: false
+
+- slug: planning-abilities-valmeekam-2023
+  title: "On the Planning Abilities of Large Language Models: A Critical Investigation"
+  authors: "Valmeekam et al."
+  year: 2023
+  section: "Planning and Skill Acquisition"
+  url: "https://arxiv.org/abs/2305.15771"
+  slides: true
+  poc: false
+
+- slug: autogen-wu-2023
+  title: "AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation"
+  authors: "Wu et al."
+  year: 2023
+  section: "Multi-Agent Systems"
+  url: "https://arxiv.org/abs/2308.08155"
+  slides: true
+  poc: false
+
+- slug: camel-li-2023
+  title: "CAMEL: Communicative Agents for Mind Exploration of Large Language Model Society"
+  authors: "Li et al."
+  year: 2023
+  section: "Multi-Agent Systems"
+  url: "https://arxiv.org/abs/2303.17760"
+  slides: true
+  poc: false
+
+- slug: metagpt-hong-2023
+  title: "MetaGPT: Meta Programming for A Multi-Agent Collaborative Framework"
+  authors: "Hong et al."
+  year: 2023
+  section: "Multi-Agent Systems"
+  url: "https://arxiv.org/abs/2308.00352"
+  slides: true
+  poc: false
+
+- slug: multiagent-debate-du-2023
+  title: "Improving Factuality and Reasoning in Language Models through Multiagent Debate"
+  authors: "Du et al."
+  year: 2023
+  section: "Multi-Agent Systems"
+  url: "https://arxiv.org/abs/2305.14325"
+  slides: true
+  poc: false
+
+- slug: instructgpt-ouyang-2022
+  title: "Training Language Models to Follow Instructions with Human Feedback"
+  authors: "Ouyang et al."
+  year: 2022
+  section: "Training Agents"
+  url: "https://arxiv.org/abs/2203.02155"
+  slides: true
+  poc: false
+
+- slug: webgpt-nakano-2021
+  title: "WebGPT: Browser-Assisted Question-Answering with Human Feedback"
+  authors: "Nakano et al."
+  year: 2021
+  section: "Training Agents"
+  url: "https://arxiv.org/abs/2112.09332"
+  slides: true
+  poc: false
+
+- slug: dpo-rafailov-2023
+  title: "Direct Preference Optimization"
+  authors: "Rafailov et al."
+  year: 2023
+  section: "Training Agents"
+  url: "https://arxiv.org/abs/2305.18290"
+  slides: true
+  poc: false
+
+- slug: tulu-3-lambert-2024
+  title: "Tulu 3: Pushing Frontiers in Open Language Model Post-Training"
+  authors: "Lambert et al."
+  year: 2024
+  section: "Training Agents"
+  url: "https://arxiv.org/abs/2411.15124"
+  slides: true
+  poc: false
+
+- slug: deepseek-r1-deepseek-ai-2025
+  title: "DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning"
+  authors: "DeepSeek-AI"
+  year: 2025
+  section: "Training Agents"
+  url: "https://arxiv.org/abs/2501.12948"
+  slides: true
+  poc: false
+
+- slug: reliable-distributed-systems-armstrong-2003
+  title: "Making Reliable Distributed Systems in the Presence of Software Errors"
+  authors: "Armstrong"
+  year: 2003
+  section: "The Agent Runtime"
+  url: "https://worrydream.com/refs/Armstrong_2003_-_Making_reliable_distributed_systems_in_the_presence_of_software_errors.pdf"
+  slides: true
+  poc: false
+
+- slug: dbos-skiadopoulos-2022
+  title: "DBOS: A DBMS-Oriented Operating System"
+  authors: "Skiadopoulos et al."
+  year: 2022
+  section: "The Agent Runtime"
+  url: "https://people.eecs.berkeley.edu/~matei/papers/2022/vldb_dbos.pdf"
+  slides: true
+  poc: false
+
+- slug: durable-execution-background-2026
+  title: "Durable Execution"
+  authors: "DBOS, Temporal, and AWS"
+  year: 2026
+  section: "The Agent Runtime"
+  url: "https://docs.dbos.dev/why-dbos"
+  slides: true
+  poc: false
+
+- slug: firecracker-agache-2020
+  title: "Firecracker: Lightweight Virtualization for Serverless Applications"
+  authors: "Agache et al."
+  year: 2020
+  section: "Isolation and Sandboxing"
+  url: "https://www.usenix.org/conference/nsdi20/presentation/agache"
+  slides: true
+  poc: false
+
+- slug: gvisor-google-2026
+  title: "gVisor"
+  authors: "Google"
+  year: 2026
+  section: "Isolation and Sandboxing"
+  url: "https://gvisor.dev/"
+  slides: true
+  poc: false
+
+- slug: sel4-klein-2009
+  title: "seL4: Formal Verification of an OS Kernel"
+  authors: "Klein et al."
+  year: 2009
+  section: "Isolation and Sandboxing"
+  url: "https://sel4.systems/Research/pdfs/sel4-formal-verification-os-kernel.pdf"
+  slides: true
+  poc: false
+
+- slug: webassembly-haas-2017
+  title: "Bringing the Web Up to Speed with WebAssembly"
+  authors: "Haas et al."
+  year: 2017
+  section: "Isolation and Sandboxing"
+  url: "https://research.google/pubs/bringing-the-web-up-to-speed-with-webassembly/"
+  slides: true
+  poc: false
+
+- slug: capability-myths-miller-2003
+  title: "Capability Myths Demolished"
+  authors: "Miller, Yee, and Shapiro"
+  year: 2003
+  section: "Isolation and Sandboxing"
+  url: "https://srl.cs.jhu.edu/pubs/SRL2003-02.pdf"
+  slides: true
+  poc: false
+
+- slug: orca-yu-2022
+  title: "Orca: A Distributed Serving System for Transformer-Based Generative Models"
+  authors: "Yu et al."
+  year: 2022
+  section: "Inference and Serving Infrastructure"
+  url: "https://www.usenix.org/conference/osdi22/presentation/yu"
+  slides: true
+  poc: false
+
+- slug: paged-attention-kwon-2023
+  title: "Efficient Memory Management for LLM Serving with PagedAttention"
+  authors: "Kwon et al."
+  year: 2023
+  section: "Inference and Serving Infrastructure"
+  url: "https://arxiv.org/abs/2309.06180"
+  slides: true
+  poc: false
+
+- slug: speculative-decoding-leviathan-2022
+  title: "Fast Inference from Transformers via Speculative Decoding"
+  authors: "Leviathan et al."
+  year: 2022
+  section: "Inference and Serving Infrastructure"
+  url: "https://arxiv.org/abs/2211.17192"
+  slides: true
+  poc: false
+
+- slug: sglang-zheng-2023
+  title: "SGLang: Efficient Execution of Structured Language Model Programs"
+  authors: "Zheng et al."
+  year: 2023
+  section: "Inference and Serving Infrastructure"
+  url: "https://arxiv.org/abs/2312.07104"
+  slides: true
+  poc: false
+
+- slug: flashattention-dao-2022
+  title: "FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness"
+  authors: "Dao et al."
+  year: 2022
+  section: "Inference and Serving Infrastructure"
+  url: "https://arxiv.org/abs/2205.14135"
+  slides: true
+  poc: false
+
+- slug: swe-bench-jimenez-2023
+  title: "SWE-bench: Can Language Models Resolve Real-World GitHub Issues?"
+  authors: "Jimenez et al."
+  year: 2023
+  section: "Evaluation and Benchmarks"
+  url: "https://arxiv.org/abs/2310.06770"
+  slides: true
+  poc: false
+
+- slug: webarena-zhou-2023
+  title: "WebArena: A Realistic Web Environment for Building Autonomous Agents"
+  authors: "Zhou et al."
+  year: 2023
+  section: "Evaluation and Benchmarks"
+  url: "https://arxiv.org/abs/2307.13854"
+  slides: true
+  poc: false
+
+- slug: gaia-mialon-2023
+  title: "GAIA: A Benchmark for General AI Assistants"
+  authors: "Mialon et al."
+  year: 2023
+  section: "Evaluation and Benchmarks"
+  url: "https://arxiv.org/abs/2311.12983"
+  slides: true
+  poc: false
+
+- slug: tau-bench-yao-2024
+  title: "tau-bench: A Benchmark for Tool-Agent-User Interaction in Real-World Domains"
+  authors: "Yao et al."
+  year: 2024
+  section: "Evaluation and Benchmarks"
+  url: "https://arxiv.org/abs/2406.12045"
+  slides: true
+  poc: false
+
+- slug: osworld-xie-2024
+  title: "OSWorld: Benchmarking Multimodal Agents for Open-Ended Tasks in Real Computer Environments"
+  authors: "Xie et al."
+  year: 2024
+  section: "Evaluation and Benchmarks"
+  url: "https://arxiv.org/abs/2404.07972"
+  slides: true
+  poc: false
+
+- slug: agentbench-liu-2023
+  title: "AgentBench: Evaluating LLMs as Agents"
+  authors: "Liu et al."
+  year: 2023
+  section: "Evaluation and Benchmarks"
+  url: "https://arxiv.org/abs/2308.03688"
+  slides: true
+  poc: false
+
+- slug: rigorous-agentic-benchmarks-zhu-2025
+  title: "Establishing Best Practices for Building Rigorous Agentic Benchmarks"
+  authors: "Zhu et al."
+  year: 2025
+  section: "Evaluation and Benchmarks"
+  url: "https://arxiv.org/abs/2507.02825"
+  slides: true
+  poc: false
+
+- slug: trusting-trust-thompson-1984
+  title: "Reflections on Trusting Trust"
+  authors: "Thompson"
+  year: 1984
+  section: "Security, Safety, and Trust"
+  url: "https://dl.acm.org/doi/10.1145/358198.358210"
+  slides: true
+  poc: false
+
+- slug: indirect-prompt-injection-greshake-2023
+  title: "Not what you've signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection"
+  authors: "Greshake et al."
+  year: 2023
+  section: "Security, Safety, and Trust"
+  url: "https://arxiv.org/abs/2302.12173"
+  slides: true
+  poc: false
+
+- slug: gcg-zou-2023
+  title: "Universal and Transferable Adversarial Attacks on Aligned Language Models"
+  authors: "Zou et al."
+  year: 2023
+  section: "Security, Safety, and Trust"
+  url: "https://arxiv.org/abs/2307.15043"
+  slides: true
+  poc: false
+
+- slug: toolemu-ruan-2023
+  title: "Identifying the Risks of LM Agents with an LM-Emulated Sandbox"
+  authors: "Ruan et al."
+  year: 2023
+  section: "Security, Safety, and Trust"
+  url: "https://arxiv.org/abs/2309.15817"
+  slides: true
+  poc: false
+
+- slug: llm-agents-survey-xi-2023
+  title: "The Rise and Potential of Large Language Model Based Agents: A Survey"
+  authors: "Xi et al."
+  year: 2023
+  section: "Surveys and Perspectives"
+  url: "https://arxiv.org/abs/2309.07864"
+  slides: true
+  poc: false
+
+- slug: autonomous-agents-survey-wang-2023
+  title: "A Survey on Large Language Model Based Autonomous Agents"
+  authors: "Wang et al."
+  year: 2023
+  section: "Surveys and Perspectives"
+  url: "https://arxiv.org/abs/2308.11432"
+  slides: true
+  poc: false
+
+- slug: foundation-agents-liu-2025
+  title: "Advances and Challenges in Foundation Agents"
+  authors: "Liu et al."
+  year: 2025
+  section: "Surveys and Perspectives"
+  url: "https://arxiv.org/abs/2504.01990"
+  slides: true
+  poc: false

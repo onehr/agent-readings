@@ -1,0 +1,319 @@
+{
+  "schema_version": 1,
+  "slug": "sel4-klein-2009",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "seL4: Formal Verification of an OS Kernel",
+    "authors": [
+      "Gerwin Klein",
+      "Kevin Elphinstone",
+      "Gernot Heiser",
+      "June Andronick",
+      "David Cock",
+      "Philip Derrin",
+      "Dhammika Elkaduwe",
+      "Kai Engelhardt",
+      "Rafal Kolanski",
+      "Michael Norrish",
+      "Thomas Sewell",
+      "Harvey Tuch",
+      "Simon Winwood"
+    ],
+    "year": 2009,
+    "venue": "SOSP 2009",
+    "url": "https://sel4.systems/Research/pdfs/sel4-formal-verification-os-kernel.pdf",
+    "project_url": "https://sel4.systems/",
+    "arxiv_id": "",
+    "read_sources": [
+      {
+        "kind": "paper_pdf",
+        "url": "https://sel4.systems/Research/pdfs/sel4-formal-verification-os-kernel.pdf",
+        "note": "Read for kernel model, refinement proof, assumptions, capability system, performance, proof effort, bugs found, proof-maintenance costs, and limitations."
+      },
+      {
+        "kind": "author_page",
+        "url": "https://cgi.cse.unsw.edu.au/~kleing/papers/sosp09.html",
+        "note": "Used to confirm the SOSP 2009 publication page and canonical paper metadata."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "seL4 proves functional correctness of a complete general-purpose microkernel from abstract specification down to C implementation, showing that a small privileged mediator can be both high-assurance and practical.",
+    "thesis": "The result is not that all systems can be proven easily; it is that the right small kernel, designed for verification, can have a machine-checked proof that its C implementation refines its abstract behavior.",
+    "why_it_matters": "For agents, seL4 is the extreme point on the isolation curve: if every effect must pass through a small capability-enforcing chokepoint, that chokepoint is where formal proof has maximum leverage."
+  },
+  "problem": {
+    "prior_state": [
+      "Security and reliability depend on privileged kernel code, but kernel bugs can undermine the whole system.",
+      "Common assurance methods such as testing, static analysis, model checking, or type-safe implementation do not prove full functional correctness of realistic kernels.",
+      "Traditional verified kernels either stopped at models, verified only limited properties, or accepted large performance/simplicity tradeoffs.",
+      "High-assurance separation kernels need both a small trusted computing base and a precise implementation proof."
+    ],
+    "key_gap": "The paper asks whether a realistic, high-performance, general-purpose OS microkernel can be formally verified from high-level specification to C implementation.",
+    "assumptions": [
+      "The compiler, assembly code, boot code, hardware, cache/TLB behavior, and machine-interface assumptions are correct.",
+      "The abstract specification captures the desired behavior.",
+      "The verified target is the ARMv6 implementation described in the paper, with x86 port work separate at the time.",
+      "System security properties above the kernel still require correct user-mode components and system configuration."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "functional-correctness",
+      "name": "Functional correctness",
+      "definition": "The property that the C implementation always behaves according to the abstract kernel specification."
+    },
+    {
+      "id": "refinement",
+      "name": "Refinement",
+      "definition": "A proof relation showing that every behavior of a lower-level implementation is allowed by a higher-level specification."
+    },
+    {
+      "id": "abstract-spec",
+      "name": "Abstract specification",
+      "definition": "The high-level formal model of seL4 behavior against which lower layers are proved."
+    },
+    {
+      "id": "executable-spec",
+      "name": "Executable specification",
+      "definition": "A Haskell-derived detailed model that bridges abstract specification and C implementation."
+    },
+    {
+      "id": "capability",
+      "name": "Capability",
+      "definition": "An unforgeable authority token used by seL4 to authorize access to kernel objects and memory."
+    },
+    {
+      "id": "cnode",
+      "name": "CNode",
+      "definition": "A capability container object used to compose capability address spaces."
+    }
+  ],
+  "method": {
+    "core_idea": "Design a small L4-style microkernel around explicit capabilities, write a high-level abstract spec and a detailed executable spec, implement the kernel in a restricted C subset, and prove refinement between each layer in Isabelle/HOL.",
+    "action_grammar": [
+      "MA: abstract state-machine specification.",
+      "ME: executable specification state machine.",
+      "MC: C implementation translated into the theorem prover.",
+      "refinement theorem: ME refines MA and MC refines ME, therefore MC refines MA.",
+      "kernel transition: specified kernel behavior at increasing detail.",
+      "user transition: nondeterministic model of arbitrary user behavior.",
+      "capability derivation tree: structure used to reason about authorization and safe deletion."
+    ],
+    "steps": [
+      "Define the seL4 programming model: address spaces, threads, IPC, capabilities, CNodes, explicit memory management, and user-mode drivers.",
+      "Create a high-level abstract specification of kernel behavior.",
+      "Build a Haskell prototype/executable specification to connect OS design and proof development.",
+      "Implement the kernel in a C99 subset shaped to be translatable and verifiable.",
+      "Translate the C implementation into Isabelle/HOL with a precise C memory/semantics model.",
+      "Prove that the executable spec refines the abstract spec.",
+      "Prove that the C implementation refines the executable spec.",
+      "Use the transitive refinement theorem to conclude the C implementation refines the abstract kernel behavior."
+    ],
+    "pseudocode": "MA = abstract_specification()\nME = executable_specification()\nMC = translate_c_to_isabelle(sel4_c)\n\nprove Theorem1: refines(ME, MA)\nprove Theorem2: refines(MC, ME)\n\nby_transitivity:\n    prove Theorem3: refines(MC, MA)\n\nfor all user_behaviors in nondeterministic_user_model:\n    every kernel behavior of MC is allowed by MA\n    kernel never crashes or performs undefined/unsafe operations under assumptions"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "theory",
+      "status": "paper-supported",
+      "statement": "The paper presents the first formal proof of functional correctness for a complete general-purpose operating-system kernel.",
+      "scope": "Abstract and Introduction.",
+      "evidence_refs": ["E-first-proof"],
+      "caveats": ["The claim is scoped to functional correctness, not every possible security or side-channel property."]
+    },
+    {
+      "id": "C2",
+      "type": "architecture",
+      "status": "paper-supported",
+      "statement": "seL4 uses a small L4-style microkernel model with address spaces, threads, IPC, and capabilities for authorization.",
+      "scope": "Section 2.1.",
+      "evidence_refs": ["E-programming-model"],
+      "caveats": ["The paper is primarily about verification rather than a full API design treatment."]
+    },
+    {
+      "id": "C3",
+      "type": "theory",
+      "status": "paper-supported",
+      "statement": "The central proof shows ME refines MA and MC refines ME, hence the translated C implementation refines the abstract specification.",
+      "scope": "Section 4.5.",
+      "evidence_refs": ["E-refinement"],
+      "caveats": ["The proof assumes compiler, assembly, hardware, boot, and machine-interface correctness."]
+    },
+    {
+      "id": "C4",
+      "type": "safety",
+      "status": "paper-supported",
+      "statement": "Under the paper's assumptions, the proved kernel cannot crash, access null or misaligned pointers, or perform undefined unsafe behavior, and all kernel API calls terminate.",
+      "scope": "Section 4.5 Assurance.",
+      "evidence_refs": ["E-safety"],
+      "caveats": ["The guarantee is relative to the abstract specification; a wrong specification would still be faithfully implemented."]
+    },
+    {
+      "id": "C5",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "seL4 achieves practical microkernel performance, reporting 224 cycles for one-way IPC in an optimized C path, close to hand-optimized L4 assembly paths on ARM.",
+      "scope": "Section 5.1.",
+      "evidence_refs": ["E-performance"],
+      "caveats": ["The optimized IPC path was not yet in the verified code base at paper time, though the authors say it is within the verifiable C fragment."]
+    },
+    {
+      "id": "C6",
+      "type": "cost",
+      "status": "paper-supported",
+      "statement": "The verification effort was large but concrete: about 200,000 lines of Isabelle script, about 20 person-years total proof effort, and 11 person-years seL4-specific proof effort.",
+      "scope": "Section 5.2.",
+      "evidence_refs": ["E-proof-effort"],
+      "caveats": ["This includes research/tooling cost; the authors estimate a repeated similar verification could be cheaper."]
+    },
+    {
+      "id": "C7",
+      "type": "evaluation",
+      "status": "paper-supported",
+      "statement": "Formal verification found 144 implementation defects and drove 54 further code changes, including bugs that normal testing had missed.",
+      "scope": "Section 5.2.",
+      "evidence_refs": ["E-bugs-found"],
+      "caveats": ["The finding reflects this project's process and does not quantify bug rates for all kernels."]
+    },
+    {
+      "id": "C8",
+      "type": "limitation",
+      "status": "paper-supported",
+      "statement": "Proof maintenance is sensitive to cross-cutting API changes: small local changes can be cheap, while reply capabilities took about one person-year to re-verify.",
+      "scope": "Section 5.3.",
+      "evidence_refs": ["E-proof-maintenance"],
+      "caveats": ["This is a key cost for evolving verified infrastructure."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-first-proof",
+      "kind": "theory",
+      "source": "paper",
+      "locator": "Abstract and Introduction",
+      "result": "The paper states that seL4 is, to the authors' knowledge, the first formal proof of functional correctness of a complete general-purpose OS kernel.",
+      "metric": "functional correctness proof scope",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-programming-model",
+      "kind": "architecture",
+      "source": "paper",
+      "locator": "Section 2.1",
+      "result": "seL4 features virtual address spaces, threads, IPC, capabilities for authorization, CNodes for capability spaces, explicit memory management, and user-mode device drivers.",
+      "metric": "microkernel abstractions",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-refinement",
+      "kind": "proof",
+      "source": "paper",
+      "locator": "Section 4.5, Theorems 1-3",
+      "result": "The proof establishes ME refines MA and MC refines ME; by transitivity, MC refines MA. The user model is nondeterministic and includes benign, buggy, and malicious user behavior.",
+      "metric": "refinement theorem",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-safety",
+      "kind": "proof_result",
+      "source": "paper",
+      "locator": "Section 4.5 Assurance",
+      "result": "The strengthened proof implies the implementation has defined behavior, cannot crash unexpectedly, all kernel assertions hold, the kernel never accesses null or misaligned pointers, and all kernel API calls terminate.",
+      "metric": "execution safety and termination",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-performance",
+      "kind": "benchmark_result",
+      "source": "paper",
+      "locator": "Section 5.1",
+      "result": "The paper reports 224 cycles for one-way IPC in the optimized C path, compared with 206 cycles for an OKL4 hand-crafted assembly path on the same platform and 756 cycles for non-optimized C in that kernel.",
+      "metric": "one-way IPC cycles",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-proof-effort",
+      "kind": "cost",
+      "source": "paper",
+      "locator": "Section 5.2",
+      "result": "The paper reports 200,000 lines of Isabelle script, about 20 person-years total proof effort including research/tooling, and 11 person-years for seL4-specific proof.",
+      "metric": "proof size and person-years",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-bugs-found",
+      "kind": "evaluation",
+      "source": "paper",
+      "locator": "Section 5.2",
+      "result": "Before main verification, student projects and an x86 port found 16 defects; formal verification then uncovered 144 implementation defects and resulted in 54 further code changes to aid proof.",
+      "metric": "defects discovered during verification",
+      "claim_refs": ["C7"]
+    },
+    {
+      "id": "E-proof-maintenance",
+      "kind": "cost",
+      "source": "paper",
+      "locator": "Section 5.3",
+      "result": "The authors report low re-verification effort for local low-level changes, less than one person-week for a small new syscall, 1.5-2 person-years for a large cross-cutting feature set, and about one person-year for reply capabilities despite less than 5% code-size change.",
+      "metric": "proof maintenance cost",
+      "claim_refs": ["C8"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "If an agent's effects pass through one privileged mediator, seL4 shows why that mediator should be small, capability-based, and precisely specified.",
+    "Capabilities are a better mental model than ambient permissions for agent tools: authority should be explicit, scoped, and unforgeable.",
+    "Formal proof is most valuable at the chokepoint. Do not try to prove the whole agent; prove the runtime kernel that grants access to files, network, secrets, and actuators.",
+    "Proof boundaries matter. A verified kernel does not prove the correctness of user code, model outputs, policies, compilers, hardware, or allowed side effects.",
+    "Verified infrastructure is not free to evolve. Runtime APIs should be designed conservatively because cross-cutting changes become proof-maintenance events.",
+    "Testing still matters, but seL4 is a reminder that testing can miss both subtle and simple kernel faults with security consequences."
+  ],
+  "caveats": [
+    "The proof is relative to the abstract specification; if the spec is wrong, the implementation can be correctly wrong.",
+    "The paper assumes correctness of compiler, assembly code, boot code, hardware, cache/TLB behavior, and parts of the machine interface.",
+    "The original verified target is ARMv6; current seL4 project status may include later verification work not covered by this 2009 paper.",
+    "The paper proves functional correctness, not all information-flow, timing-channel, or application-level security properties.",
+    "seL4 is a kernel substrate; an agent sandbox would still need user-mode services, policy, networking, filesystem mediation, and audited capabilities.",
+    "The cost of proof maintenance can be high for conceptually cross-cutting changes."
+  ],
+  "related_work": [
+    {
+      "title": "Capability Myths Demolished",
+      "relation": "authorization_model",
+      "note": "seL4's capability authorization model is a concrete kernel-level version of capability-security principles.",
+      "url": "http://srl.cs.jhu.edu/pubs/SRL2003-02.pdf"
+    },
+    {
+      "title": "Firecracker",
+      "relation": "contrasts",
+      "note": "Firecracker provides practical microVM isolation but does not offer seL4-style formal functional-correctness proof.",
+      "url": "https://www.usenix.org/conference/nsdi20/presentation/agache"
+    },
+    {
+      "title": "gVisor",
+      "relation": "contrasts",
+      "note": "gVisor reduces host-kernel exposure with a userspace kernel; seL4 demonstrates formal proof for the privileged kernel itself.",
+      "url": "https://gvisor.dev/"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A realistic seL4 PoC is too large for this repo, but a small capability-machine model could demonstrate scoped authority and non-forgeability in a toy verifier."
+  },
+  "slide_plan": {
+    "title": "seL4",
+    "subtitle": "A proved kernel boundary",
+    "sections": [
+      "summary",
+      "problem",
+      "microkernel_model",
+      "refinement_proof",
+      "proof_boundary",
+      "performance_and_cost",
+      "bugs_found",
+      "agent_sandbox_takeaways",
+      "caveats",
+      "references"
+    ]
+  }
+}

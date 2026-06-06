@@ -1,0 +1,327 @@
+{
+  "schema_version": 1,
+  "slug": "rigorous-agentic-benchmarks-zhu-2025",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "Establishing Best Practices for Building Rigorous Agentic Benchmarks",
+    "authors": [
+      "Yuxuan Zhu",
+      "Tengjun Jin",
+      "Yada Pruksachatkun",
+      "Andy Zhang",
+      "Shu Liu",
+      "Sasha Cui",
+      "Sayash Kapoor",
+      "Shayne Longpre",
+      "Kevin Meng",
+      "Rebecca Weiss",
+      "Fazl Barez",
+      "Rahul Gupta",
+      "Jwala Dhamala",
+      "Jacob Merizian",
+      "Mario Giulianelli",
+      "Harry Coppock",
+      "Cozmin Ududec",
+      "Jasjeet Sekhon",
+      "Jacob Steinhardt",
+      "Antony Kellermann",
+      "Sarah Schwettmann",
+      "Matei Zaharia",
+      "Ion Stoica",
+      "Percy Liang",
+      "Daniel Kang"
+    ],
+    "year": 2025,
+    "venue": "arXiv 2025",
+    "url": "https://arxiv.org/abs/2507.02825",
+    "project_url": "https://uiuc-kang-lab.github.io/agentic-benchmarks/",
+    "code_url": "https://github.com/uiuc-kang-lab/agentic-benchmarks",
+    "arxiv_id": "2507.02825",
+    "read_sources": [
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2507.02825",
+        "note": "Used for metadata, revision date, abstract, and headline examples/results."
+      },
+      {
+        "kind": "paper_html",
+        "url": "https://ar5iv.labs.arxiv.org/html/2507.02825v5",
+        "note": "Read for the taxonomy, ABC checklist sections, assessed benchmarks, quantitative findings, and CVE-Bench case study."
+      },
+      {
+        "kind": "project_page",
+        "url": "https://uiuc-kang-lab.github.io/agentic-benchmarks/",
+        "note": "Used for checklist framing, assessment table, and recommended best practices."
+      },
+      {
+        "kind": "checklist",
+        "url": "https://uiuc-kang-lab.github.io/agentic-benchmarks/assets/checklist.pdf",
+        "note": "Used to confirm concrete checklist item categories under outcome validity, task validity, and benchmark reporting."
+      },
+      {
+        "kind": "project_repo",
+        "url": "https://github.com/uiuc-kang-lab/agentic-benchmarks",
+        "note": "Used to confirm released assessments and exploit/fix scripts for tau-bench, KernelBench, SWE-Lancer, WebArena, and OSWorld."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "This paper turns agent benchmark quality into a checklist-driven validity problem: task validity, outcome validity, and honest benchmark reporting.",
+    "thesis": "Agentic benchmarks can be wrong even when they are executable; the evaluator must prove that the task tests the intended capability and that the success signal truly means the task was solved.",
+    "why_it_matters": "For agent infrastructure, the paper is a warning that benchmark harnesses are attack surfaces. A weak evaluator measures shortcuts, stale state, leakage, or parser bugs instead of agent capability."
+  },
+  "problem": {
+    "prior_state": [
+      "Agent benchmarks often grade complex multistep outcomes with tests, string matching, LLM judges, or state comparisons.",
+      "Those success signals can be incomplete, brittle, stale, or directly exploitable by agents.",
+      "Leaderboard scores are increasingly used for research and product decisions, so evaluator flaws can misrepresent real capability.",
+      "Most benchmark writeups do not make limitations, uncertainty, trivial baselines, or exploit resistance explicit enough."
+    ],
+    "key_gap": "The paper asks how to systematically design, assess, and report agentic benchmarks so their scores correspond to the intended capability.",
+    "assumptions": [
+      "Agentic benchmark validity has to be checked at the task, environment, tool, evaluator, and reporting layers.",
+      "Outcome-based metrics are useful but insufficient unless their failure modes are audited.",
+      "Some flaws cannot be fully eliminated, so benchmark reporting must quantify and communicate their impact.",
+      "Exploit-style experiments are an appropriate way to test whether benchmarks measure capability or shortcuts."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "task-validity",
+      "name": "Task validity",
+      "definition": "The property that a benchmark task is solvable if and only if the agent possesses the target capability."
+    },
+    {
+      "id": "outcome-validity",
+      "name": "Outcome validity",
+      "definition": "The property that the evaluation result correctly indicates whether the task was actually solved."
+    },
+    {
+      "id": "benchmark-reporting",
+      "name": "Benchmark reporting",
+      "definition": "The transparency layer that documents benchmark limitations, mitigations, uncertainty, baselines, and interpretation guidance."
+    },
+    {
+      "id": "abc",
+      "name": "Agentic Benchmark Checklist",
+      "definition": "A checklist of actionable guidelines for outcome validity, task validity, and benchmark reporting."
+    },
+    {
+      "id": "trivial-agent",
+      "name": "Trivial agent",
+      "definition": "A deliberately weak or shortcut-seeking baseline, such as an agent that does nothing, dumps all possible answers, or tampers with tests."
+    },
+    {
+      "id": "benchmark-exploit",
+      "name": "Benchmark exploit",
+      "definition": "A way to obtain benchmark credit without satisfying the intended task, usually by exploiting evaluator or environment flaws."
+    }
+  ],
+  "method": {
+    "core_idea": "Collect common agentic benchmark failure modes, organize them into an actionable checklist, apply that checklist to popular benchmarks, validate issues with experiments, and show that the checklist can improve a complex benchmark during construction.",
+    "action_grammar": [
+      "agentic task: target capability plus environment and tools.",
+      "task outcome: unstructured result such as text, code, file edits, state changes, or attack effects.",
+      "success signal: string match, unit test, fuzz test, LLM judge, state match, quality metric, or E2E check.",
+      "task validity check: asks whether task setup, tools, environment, and implementation admit shortcuts or impossible cases.",
+      "outcome validity check: asks whether the evaluator distinguishes correct outcomes from invalid or shortcut outcomes.",
+      "reporting check: asks whether benchmark limitations and interpretation guidance are explicit and quantified.",
+      "exploit/fix experiment: empirical test of a suspected flaw and a mitigation."
+    ],
+    "steps": [
+      "Survey agentic benchmark pitfalls, evaluation frameworks, and best practices from software testing and benchmark design.",
+      "Define two core validity criteria: task validity and outcome validity.",
+      "Create ABC with three sections: outcome validity, task validity, and benchmark reporting.",
+      "Apply ABC to selected widely used open-source agentic benchmarks covering software engineering, cybersecurity, assistants, and environment interaction.",
+      "Design experiments to validate identified issues and quantify their effect on reported scores.",
+      "Use CVE-Bench as a case study to show that ABC can reduce performance overestimation during benchmark development.",
+      "Release assessments and reproduction scripts so benchmark audits can be repeated and extended."
+    ],
+    "pseudocode": "for benchmark in selected_agentic_benchmarks:\n    assessment = ABC.apply(benchmark)\n    for issue in assessment.suspected_issues:\n        exploit = design_trivial_or_shortcut_agent(issue)\n        measured = run_benchmark(exploit)\n        impact = compare(measured, intended_success)\n        report(issue, impact)\n\nif benchmark_under_construction:\n    patch = fix_task_or_evaluator(issue)\n    rerun_and_quantify_overestimation_reduction(patch)"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "taxonomy",
+      "status": "paper-supported",
+      "statement": "The paper identifies task validity and outcome validity as the two central threats to rigorous agentic evaluation.",
+      "scope": "Introduction and Section 3.",
+      "evidence_refs": ["E-validity-taxonomy"],
+      "caveats": ["The taxonomy is intentionally broad; individual benchmarks still need domain-specific checks."]
+    },
+    {
+      "id": "C2",
+      "type": "method",
+      "status": "paper-supported",
+      "statement": "ABC organizes best practices into outcome validity, task validity, and benchmark reporting.",
+      "scope": "Section 4 and checklist artifact.",
+      "evidence_refs": ["E-abc-structure"],
+      "caveats": ["A checklist can reveal risks but cannot mechanically guarantee benchmark correctness."]
+    },
+    {
+      "id": "C3",
+      "type": "finding",
+      "status": "paper-supported",
+      "statement": "Applying ABC to ten popular agentic benchmarks found seven with task-validity issues, seven with outcome-validity issues, and all ten with reporting limitations.",
+      "scope": "Section 5.1.",
+      "evidence_refs": ["E-assessment-results"],
+      "caveats": ["The assessed set emphasizes popular/open-source benchmarks and may not represent every private benchmark."]
+    },
+    {
+      "id": "C4",
+      "type": "finding",
+      "status": "paper-supported",
+      "statement": "The paper reports benchmark issues that can under- or overestimate agent performance by up to 100% in relative terms.",
+      "scope": "Abstract and Introduction.",
+      "evidence_refs": ["E-relative-error"],
+      "caveats": ["The maximum relative error depends on the specific benchmark and exploit/failure mode."]
+    },
+    {
+      "id": "C5",
+      "type": "exploit",
+      "status": "paper-supported",
+      "statement": "The paper shows concrete shortcuts, including do-nothing tau-bench success, database-dump tau-bench success, SWE-Lancer test tampering, WebArena string/judge issues, KernelBench fuzzing gaps, and OSWorld stale selector failures.",
+      "scope": "Section 5.2 and project repository.",
+      "evidence_refs": ["E-concrete-issues"],
+      "caveats": ["Some referenced benchmark repositories have since patched or revised specific issues."]
+    },
+    {
+      "id": "C6",
+      "type": "case_study",
+      "status": "paper-supported",
+      "statement": "Applying ABC to CVE-Bench reduced performance overestimation by 33% according to the paper.",
+      "scope": "Abstract and Section 5.3.",
+      "evidence_refs": ["E-cve-bench"],
+      "caveats": ["CVE-Bench is a cybersecurity benchmark, so the exact mitigation pattern may not transfer unchanged to all domains."]
+    },
+    {
+      "id": "C7",
+      "type": "best_practice",
+      "status": "paper-supported",
+      "statement": "The checklist recommends process metrics, evaluated LLM judges, frozen/reproducible environments, ground-truth isolation, trivial baselines, and statistical/interpretation reporting.",
+      "scope": "Section 4 and project page.",
+      "evidence_refs": ["E-best-practices"],
+      "caveats": ["Some practices are expensive and may need sampling or quantified limitation reporting when full guarantees are infeasible."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-validity-taxonomy",
+      "kind": "taxonomy",
+      "source": "paper",
+      "locator": "Introduction and Section 3",
+      "result": "The paper defines outcome validity as whether the evaluation result indicates true task success, and task validity as whether success corresponds to possessing the target capability.",
+      "metric": "validity dimensions",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-abc-structure",
+      "kind": "method",
+      "source": "paper_and_checklist",
+      "locator": "Section 4 and checklist PDF",
+      "result": "ABC is organized into outcome validity, task validity, and benchmark reporting, with checks for string matching, LLM judges, unit/fuzz/E2E testing, state matching, tool versions, environment cleanup, ground-truth isolation, and reporting.",
+      "metric": "checklist sections and items",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-assessment-results",
+      "kind": "assessment",
+      "source": "paper",
+      "locator": "Section 5.1",
+      "result": "Across ten selected open-source agentic benchmarks, the authors find seven violating task validity, seven violating outcome validity, and all ten with benchmark-reporting limitations.",
+      "metric": "count of assessed benchmarks with issues",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-relative-error",
+      "kind": "finding",
+      "source": "paper",
+      "locator": "Abstract and Introduction",
+      "result": "The paper says evaluation issues can cause under- or overestimation of agent performance by up to 100% in relative terms.",
+      "metric": "relative estimation error",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-concrete-issues",
+      "kind": "exploit_analysis",
+      "source": "paper_and_project_repo",
+      "locator": "Section 5.2 and repository README",
+      "result": "Examples include a do-nothing tau-bench agent scoring 38%, database-dump tau-bench shortcut scoring 40%, SWE-Lancer scoring 100% via test tampering, WebArena 1.4-5.2% overestimation, KernelBench 31% overestimation, and OSWorld 28% underestimation from broken website selectors.",
+      "metric": "exploit or misestimation magnitude",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-cve-bench",
+      "kind": "case_study",
+      "source": "paper",
+      "locator": "Abstract and Section 5.3",
+      "result": "Using ABC on CVE-Bench reduced performance overestimation by 33%; specific fixes included correcting a time-based SQL injection evaluator and gating an outbound server shortcut.",
+      "metric": "overestimation reduction",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-best-practices",
+      "kind": "best_practice",
+      "source": "paper_and_project_page",
+      "locator": "Section 4 and project page",
+      "result": "The paper and project page recommend process-based metrics, reproducible LLM-judge evaluation, frozen websites for navigation tasks, verified test quality, environment cleanup, ground-truth isolation, oracle solvers, trivial baselines, confidence intervals, and interpretation guidance.",
+      "metric": "best-practice checklist coverage",
+      "claim_refs": ["C7"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "Benchmark harnesses must be treated like security-sensitive infrastructure because agents can exploit files, state, parsers, tests, judges, and stale websites.",
+    "Outcome validators need adversarial baselines: do-nothing, answer-spamming, database-dumping, and test-tampering agents should fail by construction.",
+    "Task reset and ground-truth isolation are core runtime requirements, not benchmark polish.",
+    "For web and GUI benchmarks, frozen environments matter because live selectors, layouts, URLs, and rate limits drift.",
+    "LLM-as-judge and string matching should be audited with reproducible judge quality checks and adversarial examples.",
+    "Every agent benchmark should report limitations, uncertainty, trivial baselines, and guidance for interpreting scores."
+  ],
+  "caveats": [
+    "ABC is an assessment framework, not a full formal proof of benchmark validity.",
+    "The paper audits selected benchmarks; private or newer benchmarks may have different failure modes.",
+    "Some public benchmark issues cited by the paper or repository may already have been patched.",
+    "The checklist can increase benchmark-building cost because better validators, frozen environments, and oracle solvers require engineering effort.",
+    "A benchmark can satisfy many checklist items and still miss domain-specific flaws.",
+    "The paper's critique is about evaluation validity, not a direct ranking of agent model capability."
+  ],
+  "related_work": [
+    {
+      "title": "SWE-bench",
+      "relation": "evaluated_benchmark",
+      "note": "The paper uses SWE-bench-style unit-test validity concerns as a central example of outcome validity risk.",
+      "url": "https://arxiv.org/abs/2310.06770"
+    },
+    {
+      "title": "tau-bench",
+      "relation": "evaluated_benchmark",
+      "note": "The paper identifies tau-bench shortcuts where trivial or database-dumping agents can receive credit.",
+      "url": "https://arxiv.org/abs/2406.12045"
+    },
+    {
+      "title": "OSWorld",
+      "relation": "evaluated_benchmark",
+      "note": "The paper identifies stale website selectors in OSWorld as a task-validity issue causing underestimation.",
+      "url": "https://arxiv.org/abs/2404.07972"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A useful PoC would implement a tiny state-matching benchmark plus do-nothing and answer-spamming baselines that expose invalid success criteria."
+  },
+  "slide_plan": {
+    "title": "Rigorous Agentic Benchmarks",
+    "subtitle": "If the sandbox is weak, the benchmark is weak",
+    "sections": [
+      "summary",
+      "problem",
+      "task_vs_outcome_validity",
+      "abc_checklist",
+      "concrete_exploits",
+      "cve_bench_case_study",
+      "benchmark_infra_takeaways",
+      "caveats",
+      "references"
+    ]
+  }
+}

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Training Language Models to Follow Instructions with Human Feedback</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/instructgpt-ouyang-2022/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Training Agents</p>
+        <h1>InstructGPT</h1>
+        <p class="hero-lede">InstructGPT made broad instruction following work by training GPT-3 with demonstrations, human preference rankings, a reward model, and PPO.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>7</strong><span>Claims</span></div>
+          <div class="metric"><strong>7</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2022 · NeurIPS 2022</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>4</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/instructgpt-ouyang-2022/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2203.02155">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>This is the baseline recipe for post-training agent models: collect task-facing behavior data, model preferences, optimize against that model, and measure the resulting assistant on user-distribution prompts instead of only academic NLP tasks.</p>
+
+      <h2>Problem</h2>
+      <ul><li>GPT-3-style pretraining optimized next-token prediction, not following user instructions helpfully and safely.</li><li>Prompt engineering could elicit capabilities but did not reliably reduce unhelpful, untruthful, or toxic behavior.</li><li>Public NLP instruction datasets such as FLAN and T0 did not match deployed API prompt distributions.</li><li>Safety and helpfulness judgments are subjective enough that simple automatic metrics were insufficient.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks how to adapt a general pretrained language model to follow broad real user instructions while improving helpfulness, truthfulness, and harmlessness.</p>
+
+      <h2>Method</h2>
+      <p>Start with GPT-3, train an SFT policy on human demonstrations, train a reward model from human-ranked model outputs, then fine-tune the policy with PPO against the reward model while using pretraining-mix updates to reduce regressions.</p>
+      <ul><li>Collect prompts from the API distribution plus labeler-written prompts.</li><li>Have labelers write demonstrations of desired behavior and train SFT models.</li><li>Sample multiple outputs per prompt and have labelers rank the outputs.</li><li>Train a 6B reward model to predict the preferred output from ranking data.</li><li>Optimize the SFT policy with PPO using the reward model as the reward function.</li><li>Add KL regularization and PPO-ptx pretraining mix to reduce reward over-optimization and downstream regressions.</li><li>Evaluate with labeler preference ratings, API-distribution metadata, TruthfulQA, RealToxicityPrompts, bias datasets, and public NLP tasks.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>InstructGPT uses a three-stage RLHF pipeline: SFT on demonstrations, reward modeling from rankings, and PPO against the learned reward model.</p>
+  <p><strong>Scope:</strong> Section 3.1 and Figure 2.</p>
+  <ul><li><strong>E-method</strong>: The paper applies three steps: collect demonstrations and train SFT; collect comparison rankings and train a reward model; optimize the SFT policy with PPO using the reward model as a scalar reward.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>The training data is deployment-shaped: about 13k SFT prompts, 33k RM prompts, and 31k PPO prompts, mostly from a commercial API prompt distribution.</p>
+  <p><strong>Scope:</strong> Section 3.2.</p>
+  <ul><li><strong>E-data</strong>: The paper reports about 13k SFT training prompts, 33k RM training prompts, and 31k PPO training prompts, drawn primarily from API prompts plus labeler-written prompts; the prompt dataset is over 96% English.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>The paper relies on a small, trained contractor pool for demonstrations, rankings, and evaluation, with measured agreement between training and held-out labelers.</p>
+  <p><strong>Scope:</strong> Section 3.3.</p>
+  <ul><li><strong>E-labelers</strong>: About 40 contractors produced demonstrations, comparisons, and evaluations. Training labelers agreed with each other 72.6 +/- 1.5% of the time, and held-out labelers agreed 77.3 +/- 1.3%.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>Human evaluators prefer InstructGPT outputs over GPT-3 outputs on the API prompt distribution, including a 1.3B InstructGPT model over 175B GPT-3.</p>
+  <p><strong>Scope:</strong> Abstract, Figure 1, and main findings.</p>
+  <ul><li><strong>E-preference</strong>: The paper reports that 1.3B InstructGPT outputs are preferred to 175B GPT-3 outputs, and that 175B InstructGPT is preferred to 175B GPT-3 85 +/- 3% of the time and to few-shot prompted 175B GPT-3 71 +/- 4% of the time.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>InstructGPT improves truthfulness and reduces some toxicity relative to GPT-3, while not significantly improving bias benchmarks.</p>
+  <p><strong>Scope:</strong> Main findings and Section 3.5.</p>
+  <ul><li><strong>E-truth-toxicity</strong>: The paper reports better TruthfulQA behavior, hallucination rates of 21% for InstructGPT versus 41% for GPT-3 on closed-domain API tasks, about 25% fewer toxic outputs when prompted to be respectful, and no significant improvement on Winogender or CrowSPairs.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>Mixing pretraining updates into PPO reduces public NLP regressions without sacrificing the labeler-preference gains.</p>
+  <p><strong>Scope:</strong> Main findings and Section 3.4.</p>
+  <ul><li><strong>E-ppo-ptx</strong>: The authors observe public NLP regressions under RLHF and report that PPO-ptx, which mixes pretraining gradients into PPO, greatly reduces those regressions without compromising labeler preference scores.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · paper-supported</h3>
+  <p>The paper is clear that InstructGPT is not fully aligned or fully safe and can become easier to misuse because it follows instructions better.</p>
+  <p><strong>Scope:</strong> Section 5.2, Section 5.3, and OpenAI project page limitations.</p>
+  <ul><li><strong>E-limitations</strong>: The limitations state that labeler preferences are not representative of all affected people, data is mostly English, the models still make up facts and generate toxic or biased outputs, and stronger instruction-following can make misuse easier.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Post-training is infrastructure. Instruction following depends on data pipelines, labeling operations, reward-model training, and eval loops, not just a better prompt.</li><li>Train on the distribution where the agent will run. InstructGPT's advantage comes from API-shaped prompts and human preferences rather than only public NLP task mixtures.</li><li>Preference models are policy surfaces. They encode who labeled, who wrote guidelines, which prompts were collected, and which deployment policies shaped the data.</li><li>Alignment tax is a runtime economics issue: if safety fine-tuning breaks useful capabilities, builders will route around it unless the tax is measured and mitigated.</li><li>Better instruction following increases both usefulness and misuse potential, so agent runtimes still need tool policy, refusal behavior, sandboxing, and monitoring.</li><li>For agents, RLHF is the ancestor of today's trajectory preference and verifiable-reward systems: define the behavior target, collect supervision, optimize, and evaluate on held-out tasks.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The paper does not make models fully aligned or fully safe; it explicitly says simple mistakes, hallucinations, bias, and unsafe content remain.</li><li>Human feedback reflects the selected contractor pool, researcher guidance, customer prompts, and API policies, not all user communities.</li><li>The data is mostly English, so cultural and language generalization are bounded.</li><li>The strongest reported results are preference judgments on the authors' API prompt distribution, which is exactly the point but also limits external generality.</li><li>Reward models can be over-optimized; the paper uses KL penalties and PPO-ptx to control this, not to solve it permanently.</li><li>Instruction following by itself is not an agent safety boundary because it can make harmful instructions easier to carry out.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/instructgpt-ouyang-2022.json.</span>
+  </footer>
+</body>
+</html>

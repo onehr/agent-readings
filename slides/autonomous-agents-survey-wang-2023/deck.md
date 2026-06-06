@@ -1,0 +1,214 @@
+<!-- .slide: class="title-slide apple-title" -->
+
+<div class="slide-frame slide-frame--center">
+  <p class="deck-kicker">agent-readings / Surveys and Perspectives</p>
+  <h1>Autonomous Agents Survey</h1>
+  <p class="deck-subtitle">Profile, memory, planning, action</p>
+
+  <div class="deck-meta-strip">
+    <div class="deck-meta-pill"><strong>2023</strong><span>arXiv 2023</span></div>
+    <div class="deck-meta-pill"><strong>7</strong><span>claims</span></div>
+    <div class="deck-meta-pill"><strong>7</strong><span>evidence refs</span></div>
+    <div class="deck-meta-pill"><strong>paper-read</strong><span>status</span></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="statement-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">The one sentence</p>
+  <h2>Wang et al. organize LLM-based autonomous agents around profile, memory, planning, and action modules, then survey capability acquisition, applications, evaluation, and challenges.</h2>
+  <p class="deck-note">For agent infrastructure, this is a clear pre-runtime map. Each module implies state management, prompt/schema control, tool execution, evaluation hooks, and failure modes.</p>
+</div>
+
+---
+
+<!-- .slide: class="problem-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Before this paper</p>
+  <h2>The friction was structural.</h2>
+  <div class="apple-card-grid apple-card-grid--three">
+    <div class="apple-card"><p>Traditional autonomous agents were often trained with limited knowledge in isolated environments.</p></div>
+<div class="apple-card"><p>LLMs made open-domain autonomous agents plausible, but early systems were proposed independently with inconsistent terminology.</p></div>
+<div class="apple-card"><p>Research on profiles, memory, planning, tools, and evaluation was fragmented across many agent papers.</p></div>
+  </div>
+  <div class="deck-callout">
+    <span>Key gap</span>
+    <p>The survey asks how to systematically summarize LLM-based autonomous agent construction, applications, evaluation strategies, and challenges.</p>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="idea-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Core idea</p>
+  <h2>Survey LLM autonomous agents through three linked taxonomies: construction, applications, and evaluation, with challenges derived from the gaps in those...</h2>
+  <p class="deck-note">Survey LLM autonomous agents through three linked taxonomies: construction, applications, and evaluation, with challenges derived from the gaps in those categories.</p>
+  <div class="idea-loop" aria-label="Agent loop">
+    <div><strong>Model</strong><span>reason</span></div>
+    <div><strong>Runtime</strong><span>act</span></div>
+    <div><strong>World</strong><span>observe</span></div>
+  </div>
+  <div class="step-strip">
+    <div class="step-item">
+  <span>01</span>
+  <p>Define the scope around LLM-based autonomous agents rather than general chat models.</p>
+</div>
+<div class="step-item">
+  <span>02</span>
+  <p>Propose a unified construction framework with profile, memory, planning, and action modules.</p>
+</div>
+<div class="step-item">
+  <span>03</span>
+  <p>Survey memory structures, formats, and operations, including short/long-term memory and database-like stores.</p>
+</div>
+<div class="step-item">
+  <span>04</span>
+  <p>Survey planning methods with and without feedback, including external planners and ReAct-style environment feedback.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="grammar-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Action grammar</p>
+  <h2>The agent is an interface contract.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>profile: handcrafted, LLM-generated, or dataset-aligned role description.</p></div>
+<div class="apple-card"><p>memory: short-term context, long-term vector/database/list stores, reading/writing/reflection operations.</p></div>
+<div class="apple-card"><p>planning: single-path, multi-path, external-planner, or feedback-driven planning.</p></div>
+<div class="apple-card"><p>action: output modality, tool/API use, or embodied action.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="code-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Executable shape</p>
+  <h2>The mechanism should fit on one screen.</h2>
+
+```python
+agent = AutonomousAgent(
+  profile=role_or_population_profile,
+  memory=short_term_context + long_term_store,
+  planner=plan_generator(feedback=True),
+  action=tool_or_environment_interface
+)
+
+agent.capabilities = fine_tuning | prompt_engineering | mechanism_engineering
+evaluation = subjective_judgment + objective_benchmark
+```
+</div>
+
+---
+
+<!-- .slide: class="proof-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Evidence</p>
+  <h2>The proof objects.</h2>
+  <div class="proof-grid">
+    <div class="proof-card">
+  <span>E-framework</span>
+  <p>The paper's unified framework for autonomous agents is composed of profiling, memory, planning, and action modules.</p>
+</div>
+<div class="proof-card">
+  <span>E-profile</span>
+  <p>The survey describes handcrafted profiles, LLM-generated profiles, and dataset-aligned profiles as common ways to specify agent roles.</p>
+</div>
+<div class="proof-card">
+  <span>E-memory</span>
+  <p>Memory is discussed through short/long-term structures, formats including natural language, embeddings, databases, and structured lists, and operations including reading,...</p>
+</div>
+<div class="proof-card">
+  <span>E-planning</span>
+  <p>Planning methods include single-path and multi-path reasoning, external planners such as PDDL-based approaches, and feedback-driven planning such as ReAct-style...</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="claim-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Claim map</p>
+  <h2>What the review actually supports.</h2>
+  <div class="claim-grid">
+    <div class="claim-card">
+  <span>C1 · paper-supported</span>
+  <p>The survey proposes a unified construction framework with profiling, memory, planning, and action modules.</p>
+  <small>E-framework</small>
+</div>
+<div class="claim-card">
+  <span>C2 · paper-supported</span>
+  <p>The profile module can be handcrafted, generated by an LLM, or aligned from real-world datasets.</p>
+  <small>E-profile</small>
+</div>
+<div class="claim-card">
+  <span>C3 · paper-supported</span>
+  <p>The memory module is analyzed through structures, formats, and operations such as reading, writing, and reflection.</p>
+  <small>E-memory</small>
+</div>
+<div class="claim-card">
+  <span>C4 · paper-supported</span>
+  <p>Planning methods are organized into no-feedback strategies, external-planner strategies, and feedback-driven planning from environments, humans, or models.</p>
+  <small>E-planning</small>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="takeaway-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Agent infrastructure</p>
+  <h2>What changes if you build systems.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>This survey gives a clean architecture checklist for reviewing agent papers: profile, memory, planning, action, capability acquisition, and...</p></div>
+<div class="apple-card"><p>Memory formats matter operationally. Natural-language, embedding, database, and structured-list stores expose different retrieval, audit, and mutation...</p></div>
+<div class="apple-card"><p>Planning with feedback is the critical line between static prompt decomposition and real agent control loops.</p></div>
+<div class="apple-card"><p>Profiles should be treated as configuration with provenance, not harmless prompt text, especially in multi-agent simulations.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="caveat-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Caveats</p>
+  <h2>What this does not prove.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>The arXiv paper has later revisions; this review preserves the reading-list year while noting the source is actively maintained.</p></div>
+<div class="apple-card"><p>As a survey, it synthesizes primary papers rather than producing new experimental results.</p></div>
+<div class="apple-card"><p>The taxonomy predates many later agent-runtime, safety, and benchmark papers.</p></div>
+<div class="apple-card"><p>The application survey includes early-stage prototypes and research demonstrations, so maturity varies widely.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="closing-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Run it</p>
+  <h2>No PoC yet.</h2>
+  <p class="deck-note">No PoC yet. A useful PoC would be a tiny inspectable agent skeleton with separate profile, memory, planning, and action modules.</p>
+  <div class="reference-list">
+    <ul><li>Paper: <a href="https://arxiv.org/abs/2308.11432">A Survey on Large Language Model Based Autonomous Agents</a></li><li>Project/code: <a href="https://github.com/Paitesanshi/LLM-Agent-Survey">https://github.com/Paitesanshi/LLM-Agent-Survey</a></li><li>neighboring_survey: <a href="https://arxiv.org/abs/2309.07864">The Rise and Potential of Large Language Model Based Agents</a></li><li>cognitive_architecture: <a href="https://arxiv.org/abs/2309.02427">Cognitive Architectures for Language Agents</a></li><li>planning_with_feedback: <a href="https://arxiv.org/abs/2210.03629">ReAct</a></li></ul>
+  </div>
+</div>
+
+Note: This deck is synthesized from `data/reviews/autonomous-agents-survey-wang-2023.json`. Update the review record, then run `bun run build`.

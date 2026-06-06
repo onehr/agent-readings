@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · HuggingGPT: Solving AI Tasks with ChatGPT and its Friends in Hugging Face</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/hugginggpt-shen-2023/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Tool Use and Interoperability</p>
+        <h1>HuggingGPT</h1>
+        <p class="hero-lede">HuggingGPT uses ChatGPT as a controller that plans tasks, selects Hugging Face expert models, executes subtasks, and summarizes the results.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>6</strong><span>Claims</span></div>
+          <div class="metric"><strong>6</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2023 · NeurIPS 2023</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>3</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/hugginggpt-shen-2023/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2303.17580">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>HuggingGPT is an early clean statement of the controller-plus-experts pattern: the hard infrastructure is not one model call, but task graphs, resource dependencies, model routing, execution endpoints, and result integration.</p>
+
+      <h2>Problem</h2>
+      <ul><li>LLMs such as ChatGPT were strong at text reasoning and interaction but could not directly process many vision, audio, video, or specialized ML tasks.</li><li>ML communities such as Hugging Face hosted many expert models, but those models did not autonomously coordinate to solve complex user requests.</li><li>Complex multimodal requests often decompose into ordered subtasks with dependencies across generated resources.</li><li>Selecting the right expert model from a large model hub is constrained by model descriptions and context length.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks whether an LLM can serve as the controller that plans, routes, executes, and summarizes across many expert models using language descriptions as the shared interface.</p>
+
+      <h2>Method</h2>
+      <p>Parse the user request into a structured task graph, select an expert model for each task from Hugging Face descriptions, execute independent tasks in parallel and dependent tasks in order, then feed structured execution results back to ChatGPT for response generation.</p>
+      <ul><li>Use ChatGPT to parse a user request into task names, ids, dependencies, and modality-specific arguments.</li><li>For each planned task, filter candidate expert models by task type.</li><li>Rank candidate models by Hugging Face downloads and ask ChatGPT to select the most appropriate model from descriptions.</li><li>Execute tasks through selected models, replacing resource placeholders with outputs from prerequisite tasks.</li><li>Run dependency-free tasks in parallel where possible.</li><li>Ask ChatGPT to integrate task plans, assignments, and model outputs into a final user-facing response.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>HuggingGPT organizes model collaboration into four stages: task planning, model selection, task execution, and response generation.</p>
+  <p><strong>Scope:</strong> Abstract, Introduction, Section 3, and Figure 2.</p>
+  <ul><li><strong>E-four-stage</strong>: The paper defines HuggingGPT as an LLM-powered agent where ChatGPT conducts task planning, selects Hugging Face models by descriptions, executes subtasks with selected models, and generates a final response from execution results.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>Task planning represents dependencies explicitly with task ids and resource handles, allowing generated artifacts to flow into later subtasks.</p>
+  <p><strong>Scope:</strong> Section 3.1 and Section 3.3.</p>
+  <ul><li><strong>E-dependencies</strong>: Task plans include task name, id, dependency ids, and arguments. HuggingGPT uses resource placeholders such as &lt;resource&gt;-task_id to pass generated resources between tasks and executes independent tasks in parallel.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>Model selection is driven by natural-language model descriptions, filtered by task type and narrowed by popularity because all candidate models cannot fit in context.</p>
+  <p><strong>Scope:</strong> Section 3.2.</p>
+  <ul><li><strong>E-model-selection</strong>: HuggingGPT gathers model descriptions from the model hub, filters candidates by task type, ranks them by Hugging Face downloads to fit context limits, and asks the LLM to select a model id with a reason.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>In task-planning evaluations, GPT-3.5 substantially outperforms Alpaca-7B and Vicuna-7B across single, sequential, and graph task planning.</p>
+  <p><strong>Scope:</strong> Section 4.3, Tables 3-5.</p>
+  <ul><li><strong>E-planning-eval</strong>: GPT-3.5 gets 52.62 single-task accuracy and 54.45 F1, 0.54 sequential edit distance and 51.92 F1, and 50.48 GPT-4 score and 51.91 F1 for graph tasks. Alpaca-7B and Vicuna-7B are much lower across those tables.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>On a small human-annotated planning dataset, GPT-4 is strongest but still leaves a gap against human annotations, showing planning remains unresolved.</p>
+  <p><strong>Scope:</strong> Section 4.3, Table 6.</p>
+  <ul><li><strong>E-human-planning</strong>: On 46 human-annotated complex examples, GPT-4 reaches 41.36 sequential-task accuracy and 58.33 graph-task accuracy with 49.28 graph F1, while GPT-3.5 reaches 18.18 sequential accuracy and 20.83 graph accuracy.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>HuggingGPT is limited by controller planning quality, multi-call latency, context length for many model descriptions, and LLM output instability.</p>
+  <p><strong>Scope:</strong> Section 5 limitations.</p>
+  <ul><li><strong>E-limitations</strong>: The paper states that generated plans are not guaranteed feasible or optimal, multiple LLM interactions increase time cost, model descriptions stress context length, and uncontrolled LLM generation can fail to conform to instructions or produce incorrect answers.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>A model-routing agent needs a typed task graph, not just a chat transcript.</li><li>Resource handles are the minimal runtime abstraction for passing generated artifacts between model calls.</li><li>Model descriptions are API documentation for model selection; they need curation, ranking, compression, and freshness checks.</li><li>The controller/expert split makes endpoint health, latency, local fallback, and parallel execution core infrastructure concerns.</li><li>Planning quality is measurable and weak: even GPT-4 leaves substantial gaps on human-annotated task graphs.</li><li>HuggingGPT exposes why agent frameworks need structured outputs and validation around every planner and router call.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The paper's strongest claims are mostly architectural and qualitative; it does not provide a large executable benchmark of end-to-end task success.</li><li>Task-planning evaluation ignores task arguments in the main quantitative setup.</li><li>Human-annotated planning evaluation has only 46 complex examples.</li><li>Model selection by downloads is pragmatic but can select popular rather than correct or safe models.</li><li>The workflow depends on ChatGPT as the controller and on availability of Hugging Face or local model endpoints.</li><li>The paper does not solve permissioning, sandboxing, model-output verification, or rollback for side-effecting tool execution.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/hugginggpt-shen-2023.json.</span>
+  </footer>
+</body>
+</html>

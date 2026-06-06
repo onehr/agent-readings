@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Tulu 3</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/highlight/monokai.css" />
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <section data-markdown
+               data-separator="^\n---\n$"
+               data-separator-vertical="^\n--\n$"
+               data-separator-notes="^Note:">
+        <textarea data-template>
+<!-- .slide: class="title-slide apple-title" -->
+
+<div class="slide-frame slide-frame--center">
+  <p class="deck-kicker">agent-readings / Training Agents</p>
+  <h1>Tulu 3</h1>
+  <p class="deck-subtitle">Open post-training as a reproducible stack</p>
+
+  <div class="deck-meta-strip">
+    <div class="deck-meta-pill"><strong>2024</strong><span>arXiv 2024; current v5 revised 2025</span></div>
+    <div class="deck-meta-pill"><strong>7</strong><span>claims</span></div>
+    <div class="deck-meta-pill"><strong>12</strong><span>evidence refs</span></div>
+    <div class="deck-meta-pill"><strong>paper-read</strong><span>status</span></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="statement-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">The one sentence</p>
+  <h2>Tulu 3 is an open post-training recipe that combines data curation, SFT, length-normalized DPO, RL with verifiable rewards, decontamination, and staged evaluation.</h2>
+  <p class="deck-note">For agent training, Tulu 3 is the bridge from RLHF/DPO to verifiable-reward training: it shows how to use exact checks for math and instruction-following, while documenting the operational costs and failure modes of doing that at scale.</p>
+</div>
+
+---
+
+<!-- .slide: class="problem-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Before this paper</p>
+  <h2>The friction was structural.</h2>
+  <div class="apple-card-grid apple-card-grid--three">
+    <div class="apple-card"><p>Open post-training recipes lagged proprietary labs in transparency, scale, and model quality.</p></div>
+<div class="apple-card"><p>Instruction tuning, preference tuning, evaluation, decontamination, and RL were often reported as fragments rather than a reproducible stack.</p></div>
+<div class="apple-card"><p>Open models could overfit popular benchmarks or lack clear unseen evaluations for core capabilities.</p></div>
+  </div>
+  <div class="deck-callout">
+    <span>Key gap</span>
+    <p>The paper asks how to build a fully open, competitive post-training pipeline with released data, code, checkpoints, evaluation tooling, and recipe decisions.</p>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="idea-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Core idea</p>
+  <h2>Build a staged open recipe: curate and decontaminate data around core skills, train SFT checkpoints, generate on-policy preference data and tune with...</h2>
+  <p class="deck-note">Build a staged open recipe: curate and decontaminate data around core skills, train SFT checkpoints, generate on-policy preference data and tune with length-normalized DPO, then run PPO with binary verifiable rewards for math and precise instruction-following...</p>
+  <div class="idea-loop" aria-label="Agent loop">
+    <div><strong>Model</strong><span>reason</span></div>
+    <div><strong>Runtime</strong><span>act</span></div>
+    <div><strong>World</strong><span>observe</span></div>
+  </div>
+  <div class="step-strip">
+    <div class="step-item">
+  <span>01</span>
+  <p>Identify core skills: knowledge recall, reasoning, math, coding, chat, safety, and precise instruction following.</p>
+</div>
+<div class="step-item">
+  <span>02</span>
+  <p>Build development and unseen evaluation suites before finalizing recipes.</p>
+</div>
+<div class="step-item">
+  <span>03</span>
+  <p>Curate public and synthetic instruction data and aggressively decontaminate against evaluations.</p>
+</div>
+<div class="step-item">
+  <span>04</span>
+  <p>Train SFT checkpoints on Llama 3.1 base models.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="grammar-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Action grammar</p>
+  <h2>The agent is an interface contract.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>curate prompts: assemble public and synthetic prompts for target skills.</p></div>
+<div class="apple-card"><p>decontaminate: remove benchmark overlap from open data.</p></div>
+<div class="apple-card"><p>SFT: train on prompt-completion instances.</p></div>
+<div class="apple-card"><p>preference generation: compare Tulu 3 SFT completions with outputs from other models.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="code-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Executable shape</p>
+  <h2>The mechanism should fit on one screen.</h2>
+
+```python
+base = load_llama31(size)
+
+evals = build_eval_suite(dev_tasks, unseen_tasks)
+data = decontaminate(curate_public_and_synthetic_data(), evals)
+
+sft = train_sft(base, data.sft_mix, loss="sum", epochs=2)
+prefs = generate_on_policy_preferences(sft, data.preference_prompts)
+dpo = train_dpo_norm(sft, prefs)
+
+for prompt in data.rlvr_prompts:
+    completion = sample(dpo, prompt)
+    reward = 10 if verifier(prompt, completion) else 0
+    dpo = ppo_update(dpo, reward, kl_to_ref=true)
+
+return evaluate(dpo, evals.dev, evals.unseen)
+```
+</div>
+
+---
+
+<!-- .slide: class="proof-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Evidence</p>
+  <h2>The proof objects.</h2>
+  <div class="proof-grid">
+    <div class="proof-card">
+  <span>E-release</span>
+  <p>The release lists base, SFT, DPO, reward-model, and final checkpoints; training code in open-instruct; evaluation code in olmes; decontamination tooling; preference-data...</p>
+</div>
+<div class="proof-card">
+  <span>E-recipe</span>
+  <p>The recipe starts from Llama 3.1 base models, curates/decontaminates data, trains SFT, runs preference tuning over on-policy data, then applies RLVR for verifiable math and...</p>
+</div>
+<div class="proof-card">
+  <span>E-dpo-ablation</span>
+  <p>Across explored preference-tuning algorithms on an early Tulu 3 checkpoint and UltraFeedback, only length-normalized DPO outperformed the base checkpoint overall; the best listed...</p>
+</div>
+<div class="proof-card">
+  <span>E-rlvr</span>
+  <p>RLVR samples completions, applies a deterministic verifier, gives reward alpha when correct and zero otherwise, and optimizes the policy with PPO plus KL regularization.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="claim-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Claim map</p>
+  <h2>What the review actually supports.</h2>
+  <div class="claim-grid">
+    <div class="claim-card">
+  <span>C1 · paper-supported</span>
+  <p>Tulu 3 releases a complete open stack: model checkpoints, intermediate stages, datasets, training code, evaluation code, decontamination tooling, and a demo.</p>
+  <small>E-release</small>
+</div>
+<div class="claim-card">
+  <span>C2 · paper-supported</span>
+  <p>The Tulu 3 recipe is multi-stage: SFT, preference tuning with length-normalized DPO, then RLVR for selected verifiable skills.</p>
+  <small>E-recipe, E-dpo-ablation, E-rlvr</small>
+</div>
+<div class="claim-card">
+  <span>C3 · paper-supported</span>
+  <p>On the paper's main evaluation suite, Tulu 3 8B and 70B outperform comparable open-weight instruct models at the same size and the 70B model matches or...</p>
+  <small>E-main-results</small>
+</div>
+<div class="claim-card">
+  <span>C4 · paper-supported</span>
+  <p>RLVR provides deterministic binary rewards for math and precise instruction-following, improving targeted test performance but not guaranteeing average...</p>
+  <small>E-rlvr-targeted</small>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="takeaway-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Agent infrastructure</p>
+  <h2>What changes if you build systems.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>Open recipes need artifacts, not just weights. The reusable contribution is data, code, evals, decontamination, intermediate checkpoints, and...</p></div>
+<div class="apple-card"><p>Verifiable rewards are the agent-training hinge: when a task has an executable checker, reward generation moves from human-time to compute-time.</p></div>
+<div class="apple-card"><p>Evaluation should be part of the training loop from day one, with development tasks separated from unseen tasks.</p></div>
+<div class="apple-card"><p>Post-training is a distributed systems problem at scale: rollout engines, learner GPUs, weight sync, stale data, hardware failures, and loss semantics...</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="caveat-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Caveats</p>
+  <h2>What this does not prove.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>The detailed PDF source used here is a v3 mirror, while the current arXiv entry is v5; the arXiv page confirms later 405B results and analyses.</p></div>
+<div class="apple-card"><p>The recipe is complex and resource-intensive, so reproducibility still requires substantial GPU infrastructure.</p></div>
+<div class="apple-card"><p>RLVR only applies cleanly where answer extraction and deterministic verification are reliable.</p></div>
+<div class="apple-card"><p>The paper focuses mostly on English data and evaluations, and lists long-context, multi-turn, and multilinguality as future-work areas.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="closing-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Run it</p>
+  <h2>No PoC yet.</h2>
+  <p class="deck-note">No PoC yet - contributions welcome. A small PoC could run RLVR over arithmetic prompts with a deterministic checker and compare SFT, DPO-style preference tuning, and verifier-reward PPO on a toy model.</p>
+  <div class="reference-list">
+    <ul><li>Paper: <a href="https://arxiv.org/abs/2411.15124">Tulu 3: Pushing Frontiers in Open Language Model Post-Training</a></li><li>Project/code: <a href="https://github.com/allenai/open-instruct">https://github.com/allenai/open-instruct</a></li><li>extends: <a href="https://arxiv.org/abs/2203.02155">InstructGPT</a></li><li>uses: <a href="https://arxiv.org/abs/2305.18290">Direct Preference Optimization</a></li><li>connects: <a href="https://arxiv.org/abs/2501.12948">DeepSeek-R1</a></li></ul>
+  </div>
+</div>
+
+Note: This deck is synthesized from `data/reviews/tulu-3-lambert-2024.json`. Update the review record, then run `bun run build`.
+
+        </textarea>
+      </section>
+    </div>
+  </div>
+  <script type="module" src="../../assets/deck.js"></script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Model Context Protocol</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/model-context-protocol-anthropic-2024/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Tool Use and Interoperability</p>
+        <h1>Model Context Protocol</h1>
+        <p class="hero-lede">MCP standardizes the protocol surface between AI applications and external context, tools, prompts, and client-mediated capabilities.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>7</strong><span>Claims</span></div>
+          <div class="metric"><strong>7</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2024 · Specification and documentation; current protocol revision 2025-06-18</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>source-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>10</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/model-context-protocol-anthropic-2024/">Open deck</a>
+        <a class="button" href="https://modelcontextprotocol.io">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>Agent infrastructure needs an interface contract. MCP gives hosts, clients, and servers a shared JSON-RPC vocabulary for discovery, invocation, context access, user prompts, and permission-sensitive client features.</p>
+
+      <h2>Problem</h2>
+      <ul><li>LLM applications often used bespoke tool schemas, plugin manifests, local subprocess wrappers, or host-specific integration APIs.</li><li>A tool or data connector written for one host did not reliably compose with another host.</li><li>Tool calling, context injection, user prompts, and local filesystem scoping were mixed into application-specific conventions.</li><li>Security-sensitive questions such as user consent, tool invocation, data sharing, and sampling approval were left to each host to solve separately.</li></ul>
+      <p><strong>Key gap:</strong> The protocol asks how AI applications can discover and use external context and capabilities through a common client-server contract without prescribing the application shell or agent algorithm.</p>
+
+      <h2>Method</h2>
+      <p>Split an AI integration into a host, one client connection per server, and server/client capabilities negotiated at initialization; use JSON-RPC methods for listing, retrieving, invoking, and notifying changes.</p>
+      <ul><li>A host application starts or connects to an MCP server through stdio, Streamable HTTP, or another compliant transport.</li><li>The host instantiates an MCP client for that server and negotiates capabilities during initialization.</li><li>The client discovers server-provided resources, prompts, and tools with list methods and pagination where supported.</li><li>The host chooses how to display or insert resources and prompts into the model context.</li><li>When the model chooses a tool, the host/client can present the invocation for user review, then send a tools/call request.</li><li>If supported, the server can ask the client for roots, model sampling, or structured user input, while the host retains permission and UI control.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · spec-supported</h3>
+  <p>MCP defines a host/client/server architecture using JSON-RPC 2.0, stateful connections, and capability negotiation for AI application integrations.</p>
+  <p><strong>Scope:</strong> 2025-06-18 specification overview and architecture docs.</p>
+  <ul><li><strong>E-overview</strong>: The spec says MCP uses JSON-RPC 2.0, stateful connections, and server/client capability negotiation between hosts, clients, and servers. The architecture docs describe an MCP host creating one MCP client for each server connection.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · spec-supported</h3>
+  <p>The server-side interface is organized around resources, prompts, and tools, with different intended controllers: application, user, and model.</p>
+  <p><strong>Scope:</strong> Server feature pages and server concepts docs.</p>
+  <ul><li><strong>E-server-primitives</strong>: Resources expose URI-addressed context and optional templates; prompts expose parameterized messages for explicit user invocation; tools expose named functions with input schemas and result content or structured output.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · spec-supported</h3>
+  <p>The client-side interface adds roots, sampling, and elicitation so servers can request filesystem scope, model generations, and structured user input through the host.</p>
+  <p><strong>Scope:</strong> 2025-06-18 client feature pages.</p>
+  <ul><li><strong>E-client-primitives</strong>: Roots expose filesystem scopes; sampling lets servers request completions through clients; elicitation lets servers request structured user input with JSON schemas. The top-level spec lists all three as client features.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · spec-supported</h3>
+  <p>MCP currently standardizes stdio and Streamable HTTP transports for JSON-RPC messages, while allowing custom transports that preserve lifecycle requirements.</p>
+  <p><strong>Scope:</strong> Transport specification.</p>
+  <ul><li><strong>E-transports</strong>: The transport spec defines UTF-8 JSON-RPC over stdio and Streamable HTTP, requires the Streamable HTTP endpoint to support POST and GET, adds session and protocol-version header rules, and allows custom bidirectional transports that preserve message format and lifecycle.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · spec-supported</h3>
+  <p>MCP includes trust-and-safety guidance for consent, data privacy, tool safety, and sampling control, but the protocol does not enforce those guarantees itself.</p>
+  <p><strong>Scope:</strong> Specification security section and feature pages.</p>
+  <ul><li><strong>E-security-model</strong>: The spec identifies user consent, data privacy, tool safety, and sampling controls as key principles, warns that tools are arbitrary code execution, requires consent before exposing data or invoking tools, and says the protocol itself cannot enforce these principles.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · spec-supported</h3>
+  <p>Authorization is optional and, when used over HTTP transports, is specified as a subset of OAuth-based flows with protected-resource metadata and token handling.</p>
+  <p><strong>Scope:</strong> Authorization specification.</p>
+  <ul><li><strong>E-authorization</strong>: Authorization is optional. HTTP-based transports should follow the authorization spec, stdio should retrieve credentials from the environment, and the HTTP flow is based on OAuth 2.1, authorization-server metadata, dynamic client registration, and protected-resource metadata.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · docs-supported</h3>
+  <p>Roots are a coordination mechanism for intended filesystem scope, not a hard security boundary against malicious server code.</p>
+  <p><strong>Scope:</strong> Client concepts and roots documentation.</p>
+  <ul><li><strong>E-roots-limitation</strong>: The client docs state that roots coordinate server scope but are not a security boundary; they help trusted or vetted servers avoid accidental out-of-scope access but do not stop malicious behavior.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>MCP is the agent-tool driver model: the goal is to make connectors reusable across hosts instead of embedding each tool into one application.</li><li>Server primitives should be stored separately in review data: resources are context, prompts are reusable workflows, and tools are side-effecting functions.</li><li>Client primitives matter because they move sensitive actions back through the host: roots, sampling, and elicitation all require host/user policy decisions.</li><li>The protocol boundary is not the security boundary. Serious agent runtimes still need sandboxing, capability grants, audit logs, and consent UX.</li><li>Tool metadata is untrusted unless the server is trusted; hosts should not let model-visible descriptions become policy.</li><li>Streamable HTTP turns MCP into remote infrastructure, so DNS rebinding, authentication, session IDs, and protocol-version negotiation belong in deployment checklists.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>This is a specification and documentation corpus, not an empirical paper with benchmark results.</li><li>MCP changes over time; this review is anchored to the 2025-06-18 protocol revision while the README entry is dated by the 2024 launch.</li><li>The spec standardizes protocol shape, not context-ranking algorithms, model routing, tool planning, or workflow execution semantics.</li><li>Security outcomes depend on host and client implementation. The spec explicitly notes that MCP itself cannot enforce the security principles.</li><li>Roots are advisory coordination, not a containment boundary.</li><li>Remote MCP servers introduce operational concerns that local stdio integrations can avoid, including authentication, session handling, and DNS-rebinding risk.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/model-context-protocol-anthropic-2024.json.</span>
+  </footer>
+</body>
+</html>

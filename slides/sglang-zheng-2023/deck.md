@@ -1,0 +1,221 @@
+<!-- .slide: class="title-slide apple-title" -->
+
+<div class="slide-frame slide-frame--center">
+  <p class="deck-kicker">agent-readings / Inference and Serving Infrastructure</p>
+  <h1>SGLang</h1>
+  <p class="deck-subtitle">Serving structured LM programs</p>
+
+  <div class="deck-meta-strip">
+    <div class="deck-meta-pill"><strong>2023</strong><span>arXiv 2023, revised 2024</span></div>
+    <div class="deck-meta-pill"><strong>6</strong><span>claims</span></div>
+    <div class="deck-meta-pill"><strong>6</strong><span>evidence refs</span></div>
+    <div class="deck-meta-pill"><strong>paper-read</strong><span>status</span></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="statement-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">The one sentence</p>
+  <h2>SGLang treats multi-call prompting, agent control flow, and structured outputs as language-model programs, then accelerates them with a Python DSL plus runtime optimizations such as RadixAttention and compressed-FSM decoding.</h2>
+  <p class="deck-note">For agents, SGLang is the serving/runtime bridge: it gives a programming surface for LM workflows and a backend that reuses KV state across calls instead of treating each call as an unrelated request.</p>
+</div>
+
+---
+
+<!-- .slide: class="problem-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Before this paper</p>
+  <h2>The friction was structural.</h2>
+  <div class="apple-card-grid apple-card-grid--three">
+    <div class="apple-card"><p>LLM applications increasingly use multiple generation calls, prompting techniques, control flow, tool interaction, and structured inputs/outputs.</p></div>
+<div class="apple-card"><p>Developers often implement LM programs with brittle string manipulation, output parsing, manual parallelism, and ad-hoc synchronization.</p></div>
+<div class="apple-card"><p>General inference engines such as vLLM, TGI, and TensorRT-LLM optimize individual calls without knowing the multi-call program structure.</p></div>
+  </div>
+  <div class="deck-callout">
+    <span>Key gap</span>
+    <p>The paper asks how to both program and efficiently execute structured multi-call LLM workflows rather than isolated model invocations.</p>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="idea-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Core idea</p>
+  <h2>Expose LM-program structure through a Python DSL, represent prompt state as a stream, execute branches asynchronously, retain and index KV cache in a radix tree...</h2>
+  <p class="deck-note">Expose LM-program structure through a Python DSL, represent prompt state as a stream, execute branches asynchronously, retain and index KV cache in a radix tree for prefix reuse, and speed structured decoding with compressed automata.</p>
+  <div class="idea-loop" aria-label="Agent loop">
+    <div><strong>Model</strong><span>reason</span></div>
+    <div><strong>Runtime</strong><span>act</span></div>
+    <div><strong>World</strong><span>observe</span></div>
+  </div>
+  <div class="step-strip">
+    <div class="step-item">
+  <span>01</span>
+  <p>Write the LM workflow as a Python-embedded SGLang program using generation and control-flow primitives.</p>
+</div>
+<div class="step-item">
+  <span>02</span>
+  <p>Interpret the program while maintaining prompt state streams and asynchronous primitive execution.</p>
+</div>
+<div class="step-item">
+  <span>03</span>
+  <p>When a generation call arrives, match its prefix against the RadixAttention tree.</p>
+</div>
+<div class="step-item">
+  <span>04</span>
+  <p>Reuse matching KV-cache blocks and insert newly generated suffixes into the radix tree.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="grammar-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Action grammar</p>
+  <h2>The agent is an interface contract.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>state stream: prompt/conversation state manipulated by SGLang primitives.</p></div>
+<div class="apple-card"><p>gen: generate text into a named field, optionally with stop or regex constraints.</p></div>
+<div class="apple-card"><p>select: choose among candidate strings based on model probabilities.</p></div>
+<div class="apple-card"><p>fork/join: parallelize branches and merge results.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="code-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Executable shape</p>
+  <h2>The mechanism should fit on one screen.</h2>
+
+```python
+@sglang.function
+def agent_judge(s, question, docs):
+    s += system("Answer with evidence.")
+    s += user(question + docs)
+    forks = s.fork(3)
+    for f in forks:
+        f += assistant(gen("analysis", stop="END"))
+    s += assistant(join([f["analysis"] for f in forks]))
+    s += user("Return JSON.")
+    s += assistant(gen("json", regex=answer_schema))
+
+runtime.execute(agent_judge):
+    prefix = state.current_prompt()
+    kv = radix_attention.lookup(prefix)
+    output = decode_with_compressed_fsm(prefix, kv, constraints)
+    radix_attention.insert(prefix + output, kv + output_kv)
+```
+</div>
+
+---
+
+<!-- .slide: class="proof-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Evidence</p>
+  <h2>The proof objects.</h2>
+  <div class="proof-grid">
+    <div class="proof-card">
+  <span>E-lm-programs</span>
+  <p>The paper states LLMs are used for complex tasks requiring multiple generation calls, advanced prompting, control flow, and structured inputs/outputs, and names these workloads...</p>
+</div>
+<div class="proof-card">
+  <span>E-frontend</span>
+  <p>The frontend is a Python-embedded DSL with primitives for generation and parallelism control, including examples using gen, select, fork, and structured regex output.</p>
+</div>
+<div class="proof-card">
+  <span>E-radixattention</span>
+  <p>The runtime maintains an LRU cache of KV cache entries in a radix tree, enabling efficient prefix matching, insertion, eviction, and cache-aware scheduling across calls.</p>
+</div>
+<div class="proof-card">
+  <span>E-compressed-fsm</span>
+  <p>The runtime compiles constraints into a compressed finite-state machine that can collapse multi-token deterministic paths and decode multiple tokens at once.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="claim-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Claim map</p>
+  <h2>What the review actually supports.</h2>
+  <div class="claim-grid">
+    <div class="claim-card">
+  <span>C1 · paper-supported</span>
+  <p>Modern LM applications increasingly require multiple generation calls, control flow, advanced prompting, and structured inputs/outputs.</p>
+  <small>E-lm-programs</small>
+</div>
+<div class="claim-card">
+  <span>C2 · paper-supported</span>
+  <p>SGLang consists of a frontend language and runtime: the frontend simplifies programming with generation and parallelism primitives.</p>
+  <small>E-frontend</small>
+</div>
+<div class="claim-card">
+  <span>C3 · paper-supported</span>
+  <p>RadixAttention reuses KV cache across generation calls by maintaining an LRU cache in a radix tree for efficient matching, insertion, and eviction.</p>
+  <small>E-radixattention</small>
+</div>
+<div class="claim-card">
+  <span>C4 · paper-supported</span>
+  <p>Compressed finite-state machines speed structured output decoding by collapsing deterministic multi-token constraint paths into a single step when possible.</p>
+  <small>E-compressed-fsm</small>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="takeaway-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Agent infrastructure</p>
+  <h2>What changes if you build systems.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>Agent workflows are LM programs. A serving runtime that sees the program can optimize across calls; an HTTP API that sees only isolated prompts...</p></div>
+<div class="apple-card"><p>Prefix sharing is everywhere in agents: system prompts, tool schemas, retrieval context, task state, and branch roots should not be recomputed...</p></div>
+<div class="apple-card"><p>RadixAttention turns prompt structure into a cache key and makes cache reuse a scheduler concern.</p></div>
+<div class="apple-card"><p>Structured output is a serving problem, not just parser cleanup. JSON/tool-call constraints can change decode speed.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="caveat-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Caveats</p>
+  <h2>What this does not prove.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>The paper is an arXiv preprint and was under review in the version read.</p></div>
+<div class="apple-card"><p>The largest speedup depends on workloads with reusable prefixes or structured-output opportunities.</p></div>
+<div class="apple-card"><p>A DSL can simplify some workflows but also adds its own programming model and operational surface.</p></div>
+<div class="apple-card"><p>API speculative execution can spend money or rate limit budget on branches that are not ultimately needed.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="closing-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Run it</p>
+  <h2>No PoC yet.</h2>
+  <p class="deck-note">No PoC yet - contributions welcome. A small PoC could simulate a radix-tree prefix cache across branch-and-merge prompt programs and measure saved prompt-token recomputation.</p>
+  <div class="reference-list">
+    <ul><li>Paper: <a href="https://arxiv.org/abs/2312.07104">SGLang: Efficient Execution of Structured Language Model Programs</a></li><li>Project/code: <a href="https://github.com/sgl-project/sglang">https://github.com/sgl-project/sglang</a></li><li>extends_cache_story: <a href="https://arxiv.org/abs/2309.06180">PagedAttention</a></li><li>workload: <a href="https://arxiv.org/abs/2305.10601">Tree of Thoughts</a></li><li>interfaces: <a href="https://modelcontextprotocol.io">Model Context Protocol</a></li></ul>
+  </div>
+</div>
+
+Note: This deck is synthesized from `data/reviews/sglang-zheng-2023.json`. Update the review record, then run `bun run build`.

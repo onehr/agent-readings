@@ -1,0 +1,294 @@
+{
+  "schema_version": 1,
+  "slug": "swe-bench-jimenez-2023",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "SWE-bench: Can Language Models Resolve Real-World GitHub Issues?",
+    "authors": [
+      "Carlos E. Jimenez",
+      "John Yang",
+      "Alexander Wettig",
+      "Shunyu Yao",
+      "Kexin Pei",
+      "Ofir Press",
+      "Karthik Narasimhan"
+    ],
+    "year": 2023,
+    "venue": "ICLR 2024; arXiv 2023",
+    "url": "https://arxiv.org/abs/2310.06770",
+    "project_url": "https://www.swebench.com",
+    "arxiv_id": "2310.06770",
+    "read_sources": [
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2310.06770",
+        "note": "Used for arXiv metadata, authors, ICLR 2024 note, abstract, public data/code/leaderboard link, and revision history."
+      },
+      {
+        "kind": "paper_pdf",
+        "url": "https://arxiv.org/pdf/2310.06770",
+        "note": "Read for benchmark construction, filtering pipeline, task formulation, test-based evaluation, dataset statistics, model results, and benchmark features."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "SWE-bench evaluates language models on real GitHub issues by asking them to patch repository snapshots and grading whether the repo's tests pass.",
+    "thesis": "The key contribution is the evaluation substrate: real issues, real codebases, real tests, and a patch-application harness that turns coding-agent performance into an executable pass/fail signal.",
+    "why_it_matters": "For agents, SWE-bench moved evaluation from generated snippets to repository-scale work with long context, tool execution, test feedback, and multi-file edits."
+  },
+  "problem": {
+    "prior_state": [
+      "Traditional coding benchmarks often use short self-contained problems that can be solved in a few lines.",
+      "Modern coding assistants operate inside large repositories and must understand issue descriptions, dependencies, tests, and multi-file change sets.",
+      "Language models were improving faster than evaluation settings that captured real software-engineering difficulty.",
+      "Agent evaluation needs executable graders rather than only human or LLM judges."
+    ],
+    "key_gap": "The paper asks how to build a realistic, challenging, and automatically verifiable benchmark for repository-scale software issue resolution.",
+    "assumptions": [
+      "A merged pull request that resolves an issue and contributes tests can define a benchmark instance.",
+      "The repository test suite can serve as an executable verifier for whether a generated patch resolves the issue.",
+      "Python repositories with installable environments and testable issues are a useful starting point.",
+      "Benchmark instances can be mined and refreshed from public GitHub activity."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "task-instance",
+      "name": "Task instance",
+      "definition": "A codebase snapshot, issue description, and test set derived from a real GitHub issue and corresponding merged pull request."
+    },
+    {
+      "id": "generated-patch",
+      "name": "Generated patch",
+      "definition": "A model-produced diff that is applied to the repository snapshot to resolve the issue."
+    },
+    {
+      "id": "fail-to-pass-test",
+      "name": "Fail-to-pass test",
+      "definition": "A test that fails before the reference pull request and passes after the reference solution is applied."
+    },
+    {
+      "id": "resolved",
+      "name": "Resolved",
+      "definition": "The benchmark metric: a generated patch applies cleanly and all relevant tests pass."
+    },
+    {
+      "id": "swe-bench-train",
+      "name": "SWE-bench-train",
+      "definition": "A larger non-test task dataset from 37 repositories used for open model training."
+    },
+    {
+      "id": "repository-scale-editing",
+      "name": "Repository-scale editing",
+      "definition": "Editing code in a full repository where relevant context may span files, classes, functions, and tests."
+    }
+  ],
+  "method": {
+    "core_idea": "Mine GitHub pull requests that resolve issues and add tests, validate them through execution, then evaluate models by applying generated patches and running the associated tests.",
+    "action_grammar": [
+      "issue: user-submitted bug report or feature request.",
+      "base commit: repository snapshot before the fixing pull request.",
+      "reference PR: merged pull request associated with the issue.",
+      "test patch: tests added by the reference PR.",
+      "solution patch: non-test changes made by the reference PR.",
+      "model patch: generated diff to apply to the base codebase.",
+      "test harness: environment that applies patches and runs fail-to-pass plus regression tests."
+    ],
+    "steps": [
+      "Select popular Python repositories with substantial test suites.",
+      "Scrape merged pull requests and issue links.",
+      "Filter for PRs that resolve an issue and include test-file changes.",
+      "Apply execution filtering: the test patch must create fail-to-pass tests, and the reference solution must make them pass.",
+      "Construct benchmark inputs from issue text and a codebase snapshot.",
+      "Ask a model or agent to generate a patch.",
+      "Apply the patch with Unix patch tooling.",
+      "Run the repository's relevant tests and count the instance resolved only if the patch applies and tests pass."
+    ],
+    "pseudocode": "for pr in scraped_pull_requests:\n    if not resolves_issue(pr) or not modifies_tests(pr):\n        continue\n    base = checkout(pr.base_commit)\n    apply(test_patch(pr), base)\n    before = run_tests(base)\n    apply(solution_patch(pr), base)\n    after = run_tests(base)\n    if has_fail_to_pass(before, after) and installs_cleanly(base):\n        add_instance(issue_text(pr), base_commit, test_patch(pr), tests)\n\nfor instance in benchmark:\n    patch = model.generate_patch(instance.issue, instance.codebase)\n    if apply_patch(patch, instance.codebase) and run_tests(instance.codebase):\n        resolved += 1"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "benchmark",
+      "status": "paper-supported",
+      "statement": "SWE-bench contains 2,294 software-engineering problems from real GitHub issues and pull requests across 12 popular Python repositories.",
+      "scope": "Abstract and Section 2.",
+      "evidence_refs": ["E-dataset-size"],
+      "caveats": ["The benchmark is Python-focused and filtered for instances with executable test signals."]
+    },
+    {
+      "id": "C2",
+      "type": "evaluation",
+      "status": "paper-supported",
+      "statement": "A model is evaluated by generating a patch for a repository snapshot; the patch must apply and pass the task's tests to count as resolved.",
+      "scope": "Section 2.2.",
+      "evidence_refs": ["E-evaluation-contract"],
+      "caveats": ["Passing selected tests can miss under-specified behavior or overfit to the tests."]
+    },
+    {
+      "id": "C3",
+      "type": "construction",
+      "status": "paper-supported",
+      "statement": "Instances are mined through a three-stage pipeline: scraping PRs, filtering for issue-resolving PRs with tests, and execution filtering for fail-to-pass behavior.",
+      "scope": "Section 2.1.",
+      "evidence_refs": ["E-construction"],
+      "caveats": ["The mining process inherits GitHub issue/PR noise and project-maintenance biases."]
+    },
+    {
+      "id": "C4",
+      "type": "benchmark_features",
+      "status": "paper-supported",
+      "statement": "SWE-bench tasks require repository-scale reasoning over long inputs and often multi-function or multi-file edits.",
+      "scope": "Abstract and Section 2.3.",
+      "evidence_refs": ["E-repository-scale"],
+      "caveats": ["The issue description plus complete codebase is available in principle, but practical agents must still retrieve the right context."]
+    },
+    {
+      "id": "C5",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "In the original evaluation, the best-performing model, Claude 2 with BM25 retrieval, resolved only 1.96% of issues.",
+      "scope": "Abstract and Introduction.",
+      "evidence_refs": ["E-claude2-result"],
+      "caveats": ["The leaderboard has moved since the original paper; this number is historical paper evidence, not current SOTA."]
+    },
+    {
+      "id": "C6",
+      "type": "training",
+      "status": "paper-supported",
+      "statement": "The paper releases SWE-bench-train, a 19,000-instance non-testing dataset from 37 repositories, and SWE-Llama models fine-tuned from CodeLlama.",
+      "scope": "Introduction.",
+      "evidence_refs": ["E-train-data"],
+      "caveats": ["Fine-tuning data is separate from the benchmark evaluation set."]
+    },
+    {
+      "id": "C7",
+      "type": "evaluation",
+      "status": "paper-supported",
+      "statement": "SWE-bench is designed to be continually updatable from new GitHub issues and PRs, helping evaluate tasks created after model training dates.",
+      "scope": "Section 2.3.",
+      "evidence_refs": ["E-updatable"],
+      "caveats": ["Continual updates require careful contamination and harness maintenance."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-dataset-size",
+      "kind": "benchmark",
+      "source": "paper",
+      "locator": "Abstract and Section 2.1",
+      "result": "The paper introduces 2,294 task instances drawn from real GitHub issues and corresponding pull requests across 12 popular Python repositories.",
+      "metric": "benchmark instance count and repository count",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-evaluation-contract",
+      "kind": "evaluation",
+      "source": "paper",
+      "locator": "Section 2.2",
+      "result": "The model receives issue text and a codebase, generates a patch, and the patch is applied and evaluated by running unit/system tests; the metric is percentage resolved.",
+      "metric": "patch applies and tests pass",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-construction",
+      "kind": "construction",
+      "source": "paper",
+      "locator": "Section 2.1",
+      "result": "The pipeline scrapes around 90,000 PRs, filters for issue-resolving PRs with test changes, and uses execution filtering requiring at least one fail-to-pass test and no install/runtime errors.",
+      "metric": "benchmark mining pipeline",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-repository-scale",
+      "kind": "benchmark_features",
+      "source": "paper",
+      "locator": "Abstract and Section 2.3",
+      "result": "The paper states tasks require understanding changes across functions, classes, and files; issue descriptions average 195 words, codebases contain thousands of files, and reference solutions average 1.7 files, 3.0 functions, and 32.8 changed lines.",
+      "metric": "task complexity and context scope",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-claude2-result",
+      "kind": "benchmark_result",
+      "source": "paper",
+      "locator": "Abstract and Introduction",
+      "result": "The paper reports Claude 2 with BM25 retrieval as the best-performing evaluated system, resolving 1.96% of issues.",
+      "metric": "resolved percentage",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-train-data",
+      "kind": "release",
+      "source": "paper",
+      "locator": "Introduction",
+      "result": "The paper releases SWE-bench-train with 19,000 non-testing task instances from 37 repositories and two SWE-Llama fine-tuned models.",
+      "metric": "training set and model release",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-updatable",
+      "kind": "benchmark_property",
+      "source": "paper",
+      "locator": "Section 2.3",
+      "result": "The authors state the collection process can be applied to new Python repositories and issues, supporting continual updates and evaluations after model training dates.",
+      "metric": "continual benchmark update",
+      "claim_refs": ["C7"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "Executable grading is the benchmark gold standard for coding agents: patches either apply and pass tests or they do not.",
+    "SWE-bench forces the whole agent stack into view: retrieval, code navigation, editing, tool execution, test running, and retry policy.",
+    "A benchmark harness is infrastructure. Environment setup, dependency pinning, patch application, and test selection determine what is actually measured.",
+    "Repository-scale context is a systems problem, not just a model problem; agents must find the few relevant lines among thousands of files.",
+    "The original 1.96% score is a reminder that real issue resolution was far beyond early chat-completion baselines.",
+    "SWE-bench also exposes benchmark-security concerns: because tests are executable, sandboxing and anti-cheating controls matter."
+  ],
+  "caveats": [
+    "The original paper score is historical; current SWE-bench leaderboard numbers are much higher and should be checked live before citing SOTA.",
+    "Tests are strong but not perfect specifications.",
+    "The benchmark is Python-heavy and repository-selection biased.",
+    "Generated patches can overfit to visible tests or exploit weak harnesses if the benchmark environment is not secured.",
+    "Long-context and retrieval setup materially affect results.",
+    "SWE-bench evaluates coding issue resolution, not general-purpose agent autonomy."
+  ],
+  "related_work": [
+    {
+      "title": "Establishing Best Practices for Building Rigorous Agentic Benchmarks",
+      "relation": "hardens",
+      "note": "The benchmark-validity work audits how weak sandboxes and harness leaks can let agents score without solving tasks.",
+      "url": "https://arxiv.org/abs/2507.02825"
+    },
+    {
+      "title": "OSWorld",
+      "relation": "broader_environment",
+      "note": "OSWorld evaluates agents in real computer environments rather than code repositories only.",
+      "url": "https://arxiv.org/abs/2404.07972"
+    },
+    {
+      "title": "WebGPT",
+      "relation": "earlier_agent_training",
+      "note": "WebGPT trains/evaluates browser-assisted QA; SWE-bench shifts to codebase mutation with executable tests.",
+      "url": "https://arxiv.org/abs/2112.09332"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A small PoC could package one miniature repo issue with a failing test and evaluate a generated patch through the same apply-and-test contract."
+  },
+  "slide_plan": {
+    "title": "SWE-bench",
+    "subtitle": "Coding agents graded by real tests",
+    "sections": [
+      "summary",
+      "problem",
+      "benchmark_construction",
+      "evaluation_contract",
+      "repository_scale",
+      "baseline_results",
+      "agent_eval_takeaways",
+      "caveats",
+      "references"
+    ]
+  }
+}

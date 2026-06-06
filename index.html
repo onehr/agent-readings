@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings</title>
+  <link rel="stylesheet" href="assets/theme.css" />
+</head>
+<body class="site-page landing-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="./">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="slides/">Slides</a>
+        <a href="reviews/">Reviews</a>
+        <a href="pocs/">PoCs</a>
+        <a href="README.md">README.md</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero hero--landing" aria-label="Collection summary">
+      <div class="hero-copy">
+        <p class="eyebrow">Agent infrastructure readings</p>
+        <h1>Read papers like systems.</h1>
+        <p class="hero-lede">A curated corpus for LLM agents, runtime design, safety, evaluation, and serving. Each reading becomes a structured claim/evidence review and a hosted slide deck.</p>
+        <div class="hero-actions" aria-label="Primary actions">
+          <a class="button button--primary" href="slides/">Browse decks</a>
+          <a class="button" href="reviews/">Open reviews</a>
+          <a class="button" href="CONTRIBUTING.md">Contribute</a>
+        </div>
+      </div>
+      <aside class="hero-card" aria-label="Repository summary">
+        <div class="hero-card__top">
+          <span>Corpus</span>
+          <strong>54</strong>
+        </div>
+        <div class="metric-grid" aria-label="Repository stats">
+          <div class="metric"><strong>54</strong><span>Reviews</span></div>
+          <div class="metric"><strong>54</strong><span>Decks</span></div>
+          <div class="metric"><strong>0</strong><span>PoCs</span></div>
+        </div>
+        <div class="featured-review">
+          <span>Featured review</span>
+          <h2>ReAct</h2>
+          <p>ReAct prompts a frozen LLM to interleave natural-language thoughts with task actions and observations, making tool use and environment interaction part of the reasoning loop.</p>
+          <div class="hero-card__actions">
+            <a href="slides/react-yao-2022/">Deck</a>
+            <a href="reviews/react-yao-2022/">Review</a>
+          </div>
+        </div>
+      </aside>
+    </section>
+    <section class="quick-links" aria-label="Repository sections">
+      <a class="quick-link" href="slides/">
+        <span>01</span>
+        <strong>Decks</strong>
+        <p>One browser-viewable HTML presentation per reviewed reading.</p>
+      </a>
+      <a class="quick-link" href="reviews/">
+        <span>02</span>
+        <strong>Reviews</strong>
+        <p>Claim/evidence records designed for maintainable synthesis.</p>
+      </a>
+      <a class="quick-link" href="pocs/">
+        <span>03</span>
+        <strong>PoCs</strong>
+        <p>Local-only reproductions when a paper has runnable substance.</p>
+      </a>
+    </section>
+    <section class="landing-layout" aria-label="Reading list and review shortcuts">
+      <article class="readme-panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Canonical index</p>
+            <h2>Reading List</h2>
+          </div>
+          <a href="README.md">README.md</a>
+        </div>
+        <div class="readme readme--landing" data-readme>
+<p>A curated list of papers for understanding LLM agents and the systems that run them. The list is opinionated: it reads agents not as a prompting trick but as a new kind of <strong>long-running, side-effecting, fault-prone distributed program</strong>, and asks what runtime, isolation, memory, and verification substrate such a program actually needs. Where it helps, entries trace modern ideas back to their systems ancestors -- durable workflows, supervision trees, microkernels, capability security -- because most of what is hard about agents was hard about distributed systems first.</p>
+<p>The list is curated and maintained by Haoran Wang. If you think a paper belongs here, please open a pull request. It may take a while to merge -- each entry gets read before it lands.</p>
+<blockquote><p><strong>What's in this repo.</strong> Beyond this list, each reviewed paper gets an AI-assisted slide deck under <a href="./slides"><code>/slides</code></a> that compresses it to its load-bearing ideas, and select papers get a runnable proof-of-concept under <a href="./pocs"><code>/pocs</code></a> that reproduces a key result locally. The reading list is the spine; the decks and PoCs are how you go from &quot;I've heard of this paper&quot; to &quot;I've run the thing.&quot;</p></blockquote>
+<h2>Table of Contents</h2>
+<ol>
+<li><a href="#start-here">Start Here</a></li>
+<li><a href="#reasoning">Reasoning, Acting, and Reflection</a></li>
+<li><a href="#tools">Tool Use and Interoperability</a></li>
+<li><a href="#memory">Memory and State</a></li>
+<li><a href="#planning">Planning and Skill Acquisition</a></li>
+<li><a href="#multi-agent">Multi-Agent Systems</a></li>
+<li><a href="#training">Training Agents</a></li>
+<li><a href="#runtime">The Agent Runtime</a></li>
+<li><a href="#isolation">Isolation and Sandboxing</a></li>
+<li><a href="#serving">Inference and Serving Infrastructure</a></li>
+<li><a href="#eval">Evaluation and Benchmarks</a></li>
+<li><a href="#security">Security, Safety, and Trust</a></li>
+<li><a href="#surveys">Surveys and Perspectives</a></li>
+<li><a href="#external">External Reading Lists</a></li>
+</ol>
+<span id="start-here" class="anchor-target"></span>
+<h2>Start Here</h2>
+<p>If you read nothing else, read these three. They define the vocabulary the rest of the list assumes.</p>
+<ul>
+<li><strong>ReAct: Synergizing Reasoning and Acting in Language Models</strong> (<a href="https://arxiv.org/abs/2210.03629">Yao et al., 2022</a>): The paper that turned a language model into an agent. The insight is almost embarrassingly simple -- interleave <em>thoughts</em> (free-form reasoning) with <em>actions</em> (tool calls) and <em>observations</em> (results) in a single loop -- but it is the loop every agent framework reimplements. Read this first; everything downstream is a variation on it.</li>
+<li><strong>Cognitive Architectures for Language Agents (CoALA)</strong> (<a href="https://arxiv.org/abs/2309.02427">Sumers et al., 2023</a>): A framework paper that gives names to the parts -- working vs. long-term memory, internal vs. external actions, the decision procedure -- and situates LLM agents in the 50-year lineage of cognitive architectures (SOAR, ACT-R). The best map of the territory before you get lost in it.</li>
+<li><strong>Building Effective Agents</strong> (<a href="https://www.anthropic.com/research/building-effective-agents">Anthropic, 2024</a>): Not a paper, but the most useful practitioner taxonomy in circulation. Its load-bearing distinction -- <em>workflows</em> (LLMs orchestrated through fixed code paths) vs. <em>agents</em> (LLMs that direct their own control flow) -- is the line that decides whether you need an orchestration engine or a scheduler. Most production &quot;agents&quot; are workflows, and that's usually correct.</li>
+</ul>
+<span id="reasoning" class="anchor-target"></span>
+<h2>Reasoning, Acting, and Reflection</h2>
+<p>The agent loop is a control problem: how does a model decide what to do next, and how does it recover when it's wrong? This section is the evolution from single-shot prompting to iterative, self-correcting decision-making. The arc is worth noticing -- each paper adds one more feedback path.</p>
+<ul>
+<li><strong>Chain-of-Thought Prompting Elicits Reasoning in Large Language Models</strong> (<a href="https://arxiv.org/abs/2201.11903">Wei et al., 2022</a>): The precondition for everything else. Showing that simply asking the model to &quot;think step by step&quot; unlocks multi-step reasoning is what made acting-on-reasoning viable at all.</li>
+<li><strong>Self-Consistency Improves Chain of Thought Reasoning</strong> (<a href="https://arxiv.org/abs/2203.11171">Wang et al., 2022</a>): Sample many reasoning paths, take the majority answer. The first hint that you can buy reliability with compute at inference time -- a theme that returns in <a href="#serving">serving</a> and <a href="#training">training</a>.</li>
+<li><strong>Tree of Thoughts: Deliberate Problem Solving with Large Language Models</strong> (<a href="https://arxiv.org/abs/2305.10601">Yao et al., 2023</a>): Generalizes the linear chain into a search tree with explicit lookahead and backtracking. Reframes reasoning as classical search, which is the bridge to planning (section 5). The cost -- many model calls per decision -- is exactly the bill the serving stack has to pay.</li>
+<li><strong>Reflexion: Language Agents with Verbal Reinforcement Learning</strong> (<a href="https://arxiv.org/abs/2303.11366">Shinn et al., 2023</a>): Adds an outer loop: after a failed attempt, the agent writes a natural-language critique of itself and retries with that critique in context. &quot;Reinforcement learning&quot; without gradients -- the reward signal is text. Pairs naturally with <a href="#memory">task memory</a>.</li>
+<li><strong>Self-Refine: Iterative Refinement with Self-Feedback</strong> (<a href="https://arxiv.org/abs/2303.17651">Madaan et al., 2023</a>): The same self-critique idea applied within a single task rather than across attempts. Read alongside Reflexion to see the design space of &quot;model grades its own work.&quot; Worth pairing with the skeptics -- there is real evidence that models cannot reliably self-correct reasoning without an external signal, which is why <a href="#training">verifiable rewards</a> and <a href="#eval">executable checks</a> matter.</li>
+</ul>
+<span id="tools" class="anchor-target"></span>
+<h2>Tool Use and Interoperability</h2>
+<p>An agent is only as capable as the actions it can take. This section covers how models learn to call tools, how they're discovered at scale, and -- crucially -- the protocol layer that decides whether tools compose. The systems lesson here is old: the hard part of tool use is not the calling, it's the <em>interface contract</em>.</p>
+<ul>
+<li><strong>Toolformer: Language Models Can Teach Themselves to Use Tools</strong> (<a href="https://arxiv.org/abs/2302.04761">Schick et al., 2023</a>): The model learns <em>where</em> in a generation to insert an API call, self-supervised, by checking whether the call reduces perplexity on the continuation. Elegant, and the conceptual root of native function-calling.</li>
+<li><strong>Gorilla: Large Language Model Connected with Massive APIs</strong> (<a href="https://arxiv.org/abs/2305.15334">Patil et al., 2023</a>): Tool use at the scale of thousands of APIs, with retrieval over an API database and a focus on hallucinated-call detection. The problem it surfaces -- keeping the tool catalog current -- is a live infrastructure problem, not a modeling one.</li>
+<li><strong>ToolLLM: Facilitating LLMs to Master 16000+ Real-World APIs</strong> (<a href="https://arxiv.org/abs/2307.16789">Qin et al., 2023</a>): Scales tool learning further and contributes ToolBench. The interesting move is the decision-tree search over API call sequences -- multi-step tool use is a planning problem.</li>
+<li><strong>HuggingGPT: Solving AI Tasks with ChatGPT and its Friends</strong> (<a href="https://arxiv.org/abs/2303.17580">Shen et al., 2023</a>): An LLM as orchestrator that routes subtasks to specialist models. An early, clean statement of the &quot;controller + worker models&quot; pattern that recurs in <a href="#multi-agent">multi-agent systems</a>.</li>
+<li><strong>Model Context Protocol</strong> (<a href="https://modelcontextprotocol.io">Anthropic, 2024</a>): The interoperability layer the field converged on -- a standard for exposing tools, resources, and prompts to any model over a common transport. MCP is to agent tools roughly what a driver model is to an OS: it's the thing that lets a tool written once work everywhere. Read it as a systems spec, and note where its trust boundaries are thin -- see <a href="#security">security</a>.</li>
+</ul>
+<span id="memory" class="anchor-target"></span>
+<h2>Memory and State</h2>
+<p>A context window is RAM, not disk. An agent that runs for hours needs a memory hierarchy. This section is short because the field is young here -- which is precisely why it's worth your attention.</p>
+<ul>
+<li><strong>MemGPT: Towards LLMs as Operating Systems</strong> (<a href="https://arxiv.org/abs/2310.08560">Packer et al., 2023</a>): Borrows virtual memory directly: treat the context window as fast memory and an external store as slow memory, and let the model page information in and out via function calls. The OS analogy is not a metaphor here -- it's the architecture. Compare the same move in <a href="#serving">PagedAttention</a>, which pages the KV cache.</li>
+<li><strong>Generative Agents: Interactive Simulacra of Human Behavior</strong> (<a href="https://arxiv.org/abs/2304.03442">Park et al., 2023</a>): The &quot;Smallville&quot; paper. Its lasting contribution is the <em>memory stream</em> with retrieval weighted by recency, importance, and relevance, plus periodic <em>reflection</em> that synthesizes raw observations into higher-level beliefs. The most influential design for long-horizon agent memory; also a landmark for <a href="#multi-agent">multi-agent</a> simulation.</li>
+</ul>
+<span id="planning" class="anchor-target"></span>
+<h2>Planning and Skill Acquisition</h2>
+<p>Reasoning decides the next step; planning commits to a sequence; skill acquisition is what lets an agent stop re-deriving the same plan. The throughline: durable, reusable competence is what separates a demo from a system.</p>
+<ul>
+<li><strong>Voyager: An Open-Ended Embodied Agent with Large Language Models</strong> (<a href="https://arxiv.org/abs/2305.16291">Wang et al., 2023</a>): The standout idea is a growing <em>skill library</em> -- the agent writes executable code for behaviors it discovers and retrieves them later, so capability compounds over time. Lifelong learning without fine-tuning. This is closer to &quot;building a standard library&quot; than to &quot;prompting.&quot;</li>
+<li><strong>LLM+P: Empowering Large Language Models with Optimal Planning Proficiency</strong> (<a href="https://arxiv.org/abs/2304.11477">Liu et al., 2023</a>): Translate the problem into PDDL, hand it to a classical planner, translate the plan back. A clean statement of a recurring strategy: don't make the LLM do what a sound solver does better -- make it the <em>translator</em> to the solver. The same instinct underlies <a href="#training">verifiable rewards</a> and formal <a href="#eval">evaluation</a>.</li>
+<li><strong>On the Planning Abilities of LLMs -- A Critical Investigation</strong> (<a href="https://arxiv.org/abs/2305.15771">Valmeekam et al., 2023</a>): The necessary counterweight. Strong empirical evidence that LLMs are weak autonomous planners but useful plan <em>generators</em> inside a verify-and-revise loop. Read it before you trust a benchmark number.</li>
+</ul>
+<span id="multi-agent" class="anchor-target"></span>
+<h2>Multi-Agent Systems</h2>
+<p>When one agent isn't enough, you get a distributed system with non-deterministic nodes that communicate in natural language -- which is to say, all the classic problems plus ambiguity. The promise is decomposition and specialization; the cost is coordination and compounding error.</p>
+<ul>
+<li><strong>AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation</strong> (<a href="https://arxiv.org/abs/2308.08155">Wu et al., 2023</a>): The most widely used framing of multi-agent work as <em>conversation</em> between configurable agents (including human-in-the-loop). A good study of how far you get by making the message bus the primary abstraction.</li>
+<li><strong>CAMEL: Communicative Agents for &quot;Mind&quot; Exploration</strong> (<a href="https://arxiv.org/abs/2303.17760">Li et al., 2023</a>): Role-playing agents (e.g., a &quot;user&quot; and an &quot;assistant&quot;) that cooperate via inception prompting. Notable for showing how multi-agent dialogue becomes a <em>data-generation</em> engine -- a thread that leads straight into <a href="#training">training</a>.</li>
+<li><strong>MetaGPT: Meta Programming for a Multi-Agent Collaborative Framework</strong> (<a href="https://arxiv.org/abs/2308.00352">Hong et al., 2023</a>): Encodes human SOPs (a software company's roles and handoffs) as the coordination structure. The argument -- structure the protocol, not just the prompts -- is the multi-agent version of the workflow-vs-agent distinction in <a href="#start-here">Start Here</a>.</li>
+<li><strong>Improving Factuality and Reasoning in Language Models through Multiagent Debate</strong> (<a href="https://arxiv.org/abs/2305.14325">Du et al., 2023</a>): Several model instances argue and converge. Sometimes it helps, sometimes it's an expensive way to run <a href="#reasoning">self-consistency</a>. Read it to calibrate when &quot;more agents&quot; is real and when it's theater.</li>
+</ul>
+<span id="training" class="anchor-target"></span>
+<h2>Training Agents</h2>
+<p>Prompting gets you a demo; training gets you reliability. This section is the path from human-feedback alignment to the verifiable-reward regime that is reshaping how agents are built -- and the reason &quot;intelligence is getting cheaper&quot; is true in a measurable way.</p>
+<ul>
+<li><strong>Training Language Models to Follow Instructions with Human Feedback (InstructGPT)</strong> (<a href="https://arxiv.org/abs/2203.02155">Ouyang et al., 2022</a>): The RLHF recipe that made instruction-following models work. Foundational, and the baseline every later method is measured against.</li>
+<li><strong>WebGPT: Browser-Assisted Question-Answering with Human Feedback</strong> (<a href="https://arxiv.org/abs/2112.09332">Nakano et al., 2021</a>): Underrated and early -- an LLM trained to operate a text browser to answer questions. The first serious &quot;train the agent to use a real environment&quot; result, predating most of this list.</li>
+<li><strong>Direct Preference Optimization</strong> (<a href="https://arxiv.org/abs/2305.18290">Rafailov et al., 2023</a>): Shows you can optimize the RLHF objective with a simple classification loss and no reward model or RL loop. Mostly a simplification of alignment, but it cleared the deck for the verifiable-reward work that followed.</li>
+<li><strong>Tulu 3: Pushing Frontiers in Open Language Model Post-Training</strong> (<a href="https://arxiv.org/abs/2411.15124">Lambert et al., 2024</a>): Where Reinforcement Learning with Verifiable Rewards (RLVR) is laid out as a recipe -- when correctness is checkable (math, code, format), the reward is the checker, and you need no human in the loop. This is the economic hinge: it converts reward generation from O(human-time) to O(compute).</li>
+<li><strong>DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning</strong> (<a href="https://arxiv.org/abs/2501.12948">DeepSeek-AI, 2025</a>): The result that made verifiable-reward RL impossible to ignore -- strong reasoning emerging largely from RL against automatically checkable rewards. Read it next to Tulu 3 to see the same idea at frontier scale.</li>
+</ul>
+<span id="runtime" class="anchor-target"></span>
+<h2>The Agent Runtime</h2>
+<p>This is the section most agent reading lists skip, and it's the one that decides whether your agent survives a crash, a retry, or a duplicate tool call. An agent is a workflow over unreliable, non-deterministic external calls. That is a <em>solved</em> problem in distributed systems -- the solutions just predate LLMs by decades.</p>
+<ul>
+<li><strong>Making Reliable Distributed Systems in the Presence of Software Errors</strong> (Armstrong, 2003): Joe Armstrong's thesis -- the origin of Erlang/OTP and the <em>supervision tree</em>: isolated processes, &quot;let it crash,&quot; and a hierarchy that restarts failed children to a known-good state. If you squint, a multi-agent system with retries and fallbacks is a supervision tree that hasn't read the literature. The correct ancestor of agent fault-tolerance.</li>
+<li><strong>DBOS: A DBMS-Oriented Operating System</strong> (Skiadopoulos et al., VLDB 2022): Argues for building OS services (scheduling, IPC, state) <em>on top of a database</em>, so that program execution state is queryable, recoverable, and exactly-once by construction. The lineage behind Postgres-backed durable execution. For agents, &quot;every step is a transactional write&quot; is what makes a trajectory replayable.</li>
+<li><strong>Durable Execution</strong> -- <em>background reading, not a single paper</em>: The pattern behind Temporal, AWS Step Functions, and DBOS -- persist each step's result so that on failure the workflow resumes mid-flight rather than restarting. The key constraint is <strong>determinism</strong>: the workflow body must be replayable, which means all non-determinism (model calls, tool I/O, time) has to be captured as recorded steps. This is the single most important idea for anyone building a serious agent runtime, and it's why an agent's spine is a logged, append-only trajectory. Start with the <a href="https://docs.dbos.dev/why-dbos">DBOS docs' comparison to Temporal</a>, then read the DBOS paper above for the systems argument.</li>
+</ul>
+<span id="isolation" class="anchor-target"></span>
+<h2>Isolation and Sandboxing</h2>
+<p>An agent that can run code, browse, and call APIs is, from a security standpoint, untrusted code with network access. The question &quot;what is the agent allowed to do, and how is that enforced?&quot; is the question this section answers, by way of the isolation primitives the cloud already uses. Note how the strength/overhead frontier here mirrors the <a href="#serving">serving</a> cost story.</p>
+<ul>
+<li><strong>Firecracker: Lightweight Virtualization for Serverless Applications</strong> (<a href="https://www.usenix.org/conference/nsdi20/presentation/agache">Agache et al., NSDI 2020</a>): The microVM that powers AWS Lambda -- hardware-virtualization isolation with ~125ms boot and tiny memory overhead, by ruthlessly stripping the device model. The current default answer to &quot;how do I run untrusted agent-generated code with a real security boundary.&quot; Understand <em>why</em> a VM boundary beats a container boundary for multi-tenant untrusted workloads.</li>
+<li><strong>gVisor</strong> (<a href="https://gvisor.dev">Google, project + design docs</a>): A user-space application kernel that intercepts syscalls -- a different point on the curve than Firecracker: less overhead than a VM, stronger isolation than a namespace, at the cost of compatibility and syscall performance. Read it against Firecracker to internalize the isolation/overhead/compatibility trilemma.</li>
+<li><strong>seL4: Formal Verification of an OS Kernel</strong> (Klein et al., SOSP 2009): The first OS kernel with a machine-checked proof of functional correctness. The reason it belongs on an <em>agent</em> list: it is the existence proof that a small, security-critical mediator can be <em>proven</em> to enforce its isolation guarantees. If an agent's effects pass through one chokepoint, that chokepoint is where verification has the highest leverage.</li>
+<li><strong>Bringing the Web Up to Speed with WebAssembly</strong> (Haas et al., PLDI 2017): The formal foundation of WASM -- a portable, sandboxed-by-design bytecode with a typed, capability-shaped import boundary. An increasingly popular substrate for agent tool execution precisely because the host mediates every effect at a single, narrow interface.</li>
+<li><strong>Capability Myths Demolished</strong> (Miller, Yee, Shapiro, 2003): The clearest short treatment of capability-based security and why the ambient-authority model (ACLs) breeds confused-deputy bugs. Directly applicable to agent permissioning: a capability is an unforgeable token that <em>is</em> the authority to act, which is what you want when the actor is a language model.</li>
+</ul>
+<span id="serving" class="anchor-target"></span>
+<h2>Inference and Serving Infrastructure</h2>
+<p>Agents are inference-hungry -- a single task can be hundreds of model calls (see <a href="#reasoning">Tree of Thoughts</a>, <a href="#multi-agent">debate</a>). The economics of agents are the economics of the serving stack. This section is why &quot;intelligence is getting cheaper&quot; is a measurable, engineered fact.</p>
+<ul>
+<li><strong>Orca: A Distributed Serving System for Transformer-Based Generative Models</strong> (<a href="https://www.usenix.org/conference/osdi22/presentation/yu">Yu et al., OSDI 2022</a>): Introduced <em>continuous (iteration-level) batching</em> -- schedule at the granularity of tokens, not requests, so finished sequences leave and new ones join mid-batch. The single biggest throughput win in LLM serving, and the foundation everything below builds on.</li>
+<li><strong>Efficient Memory Management for LLM Serving with PagedAttention (vLLM)</strong> (<a href="https://dl.acm.org/doi/10.1145/3600006.3613165">Kwon et al., SOSP 2023</a>): Applies OS paging to the KV cache: fixed-size blocks, non-contiguous physical layout, near-zero fragmentation, and copy-on-write sharing across sequences. The same virtual-memory move as <a href="#memory">MemGPT</a>, one layer down. This is the paper that made high-throughput serving commodity.</li>
+<li><strong>Fast Inference from Transformers via Speculative Decoding</strong> (<a href="https://arxiv.org/abs/2211.17192">Leviathan et al., 2022</a>): A small draft model proposes tokens; the large model verifies them in parallel. Latency wins with no quality loss -- speculative execution, borrowed from CPUs. Matters for agents because per-step latency compounds over a long loop.</li>
+<li><strong>SGLang: Efficient Execution of Structured Language Model Programs</strong> (<a href="https://arxiv.org/abs/2312.07104">Zheng et al., 2023</a>): RadixAttention for automatic prefix-cache reuse across calls, plus a language for structured generation. Built for exactly the workload agents create -- many calls that share long prefixes (system prompts, tool schemas, history).</li>
+<li><strong>FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness</strong> (<a href="https://arxiv.org/abs/2205.14135">Dao et al., 2022</a>): The kernel underneath all of the above. An IO-aware, exact attention that stops moving the attention matrix to and from HBM. Foundational systems work; read it to understand where the GPU time actually goes.</li>
+</ul>
+<span id="eval" class="anchor-target"></span>
+<h2>Evaluation and Benchmarks</h2>
+<p>You cannot ship what you cannot measure, and agent evaluation is genuinely hard -- the outputs are trajectories with side effects, not strings. This section covers the benchmarks that matter and, just as important, the work showing how easily they're gamed.</p>
+<ul>
+<li><strong>SWE-bench: Can Language Models Resolve Real-World GitHub Issues?</strong> (<a href="https://arxiv.org/abs/2310.06770">Jimenez et al., 2023</a>): Real issues from real repos, graded by whether the repo's own test suite passes. The gold standard because the verifier is <em>executable</em>, not an LLM judge -- which is also why it became the headline number for coding agents. Read with the SWE-bench Verified subset in mind.</li>
+<li><strong>WebArena: A Realistic Web Environment for Building Autonomous Agents</strong> (<a href="https://arxiv.org/abs/2307.13854">Zhou et al., 2023</a>): Self-hosted, fully functional websites (e-commerce, forums, a GitLab clone) with state-based evaluation. The standard for web autonomy, and a good lens on how brittle agents are on long-horizon, multi-page tasks.</li>
+<li><strong>GAIA: A Benchmark for General AI Assistants</strong> (<a href="https://arxiv.org/abs/2311.12983">Mialon et al., 2023</a>): Questions that are easy for humans and hard for models because they require compound tool use and multi-hop reasoning. A clean test of &quot;general assistant&quot; capability.</li>
+<li><strong>tau-bench: A Benchmark for Tool-Agent-User Interaction in Real-World Domains</strong> (<a href="https://arxiv.org/abs/2406.12045">Yao et al., 2024</a>): Adds the two things one-shot benchmarks miss -- a simulated <em>user</em> the agent must converse with, and <em>policy</em> the agent must obey. Its pass^k metric (succeed on the same task k times in a row) surfaces the reliability crisis that single-run numbers hide. The most honest signal for production agents.</li>
+<li><strong>OSWorld: Benchmarking Multimodal Agents for Open-Ended Tasks in Real Computer Environments</strong> (<a href="https://arxiv.org/abs/2404.07972">Xie et al., 2024</a>): Full computer control in real VMs across OSes -- the most infrastructure-heavy benchmark here (it needs KVM), and the most faithful to what &quot;computer-use agent&quot; actually means.</li>
+<li><strong>AgentBench: Evaluating LLMs as Agents</strong> (<a href="https://arxiv.org/abs/2308.03688">Liu et al., 2023</a>): Eight distinct environments in one harness. Useful for the cross-domain finding: a model that tops a coding benchmark can collapse on database or web tasks.</li>
+<li><strong>Establishing Best Practices for Building Rigorous Agentic Benchmarks</strong> (<a href="https://arxiv.org/abs/2507.02825">Zhuge / Kang Lab et al., 2025</a>): The skeptic's entry, and the bridge to <a href="#security">security</a>. Demonstrates that most popular agent benchmarks can be driven to near-perfect scores <em>without solving any task</em> -- by exploiting the grader (overwriting test files, reading gold answers off disk, reaching the network). The lesson is brutal and important: <strong>a benchmark with a weak sandbox is measuring sandbox escapes, not capability.</strong> Evaluation integrity is an isolation problem.</li>
+</ul>
+<span id="security" class="anchor-target"></span>
+<h2>Security, Safety, and Trust</h2>
+<p>An agent takes actions in the world on behalf of a user, driven by text it reads from the world. That is a confused-deputy problem waiting to happen. Trust -- not raw capability -- is the gating factor for autonomy, and this section is the threat model.</p>
+<ul>
+<li><strong>Reflections on Trusting Trust</strong> (Thompson, 1984): Ken Thompson's Turing Award lecture. You cannot trust code you did not build from source you fully audited -- trust has to bottom out somewhere. The oldest paper here and the right frame for the whole section: when the actor is an opaque model, <em>where does your trust actually rest?</em> (A deliberate nod to the database reading list this one is modeled on.)</li>
+<li><strong>Not What You've Signed Up For: Compromising LLM-Integrated Applications with Indirect Prompt Injection</strong> (<a href="https://arxiv.org/abs/2302.12173">Greshake et al., 2023</a>): The defining agent vulnerability. Malicious instructions hidden in <em>retrieved</em> content -- a web page, an email, a tool result -- hijack the agent, because the model cannot reliably separate data from instructions. There is still no clean fix; mitigation is an architecture problem, which is why it leads back to <a href="#isolation">isolation</a> and capabilities.</li>
+<li><strong>Universal and Transferable Adversarial Attacks on Aligned Language Models (GCG)</strong> (<a href="https://arxiv.org/abs/2307.15043">Zou et al., 2023</a>): Automated adversarial suffixes that jailbreak aligned models and transfer across them. The reason &quot;the model is aligned&quot; is not a security boundary you can lean on.</li>
+<li><strong>Identifying the Risks of LM Agents with an LM-Emulated Sandbox (ToolEmu)</strong> (<a href="https://arxiv.org/abs/2309.15817">Ruan et al., 2023</a>): Uses an LLM to <em>emulate</em> tool execution so you can probe an agent's failure modes without real-world side effects. A pragmatic answer to &quot;how do I test for harm before granting real capabilities&quot; -- and a clever inversion of the sandbox idea.</li>
+</ul>
+<span id="surveys" class="anchor-target"></span>
+<h2>Surveys and Perspectives</h2>
+<p>For mapping the field or onboarding someone. Surveys date fast in this area; prefer them as indexes into primary sources rather than as ground truth.</p>
+<ul>
+<li><strong>The Rise and Potential of Large Language Model Based Agents: A Survey</strong> (<a href="https://arxiv.org/abs/2309.07864">Xi et al., 2023</a>): The broad map -- brain/perception/action framing, single- and multi-agent, applications. Good for breadth.</li>
+<li><strong>A Survey on Large Language Model Based Autonomous Agents</strong> (<a href="https://arxiv.org/abs/2308.11432">Wang et al., 2023</a>): Organized around construction (profile, memory, planning, action), with a useful taxonomy. A good complement to CoALA in <a href="#start-here">Start Here</a>.</li>
+<li><strong>Advances and Challenges in Foundation Agents</strong> (<a href="https://arxiv.org/abs/2504.01990">Liu et al., 2025</a>): A recent, ambitious synthesis spanning brain-inspired architecture, self-improvement, collaboration, and safety. Use it to find the 2024-2025 primary work this list hasn't absorbed yet.</li>
+</ul>
+<span id="external" class="anchor-target"></span>
+<h2>External Reading Lists</h2>
+<p>Sibling and complementary lists worth following.</p>
+<ul>
+<li><a href="https://github.com/AmberLJC/LLMSys-PaperList">LLMSys-PaperList</a> -- the deep cut on LLM <em>systems</em> (serving, training, infra). The best companion to sections 8-10 of this list.</li>
+<li><a href="https://github.com/hyp1231/awesome-llm-powered-agent">Awesome LLM-Powered Agent</a> and <a href="https://github.com/WooooDyy/LLM-Agent-Paper-List">LLM-Agent-Paper-List</a> -- broad, actively maintained agent paper collections.</li>
+<li><a href="https://github.com/Asaf-Yehudai/LLM-Agent-Evaluation-Survey">LLM-Agent-Evaluation-Survey</a> -- paper list behind a recent agent-evaluation survey; good for section 11.</li>
+<li><a href="https://github.com/uiuc-kang-lab/agentic-benchmarks">agentic-benchmarks</a> -- the checklist and audit results behind the benchmark-validity work in section 11.</li>
+<li><a href="https://github.com/rxin/db-readings">db-readings</a> -- the database reading list this one is modeled on. Recommended unironically: the agent runtime problems in section 8 are database problems.</li>
+</ul>
+<hr />
+<p><em>Contributions welcome via pull request. Each entry is read before it's merged, so expect a delay. The goal is a list that stays small enough to actually read.</em></p>
+        </div>
+      </article>
+      <aside class="side-rail" aria-label="Shortcuts">
+        <section class="rail-panel">
+          <p class="eyebrow">Start here</p>
+          <div class="rail-links">
+            <a href="slides/">Slides gallery</a>
+            <a href="reviews/">Structured reviews</a>
+            <a href="pocs/">Runnable PoCs</a>
+          </div>
+        </section>
+        <section class="rail-panel rail-panel--note">
+          <p class="eyebrow">Maintainer model</p>
+          <p>The README stays canonical. The generated site turns review records into pages and decks.</p>
+        </section>
+      </aside>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <span>Code and PoCs: MIT. Written content and decks: CC BY 4.0.</span>
+  </footer>
+</body>
+</html>

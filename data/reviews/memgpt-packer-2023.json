@@ -1,0 +1,297 @@
+{
+  "schema_version": 1,
+  "slug": "memgpt-packer-2023",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "MemGPT: Towards LLMs as Operating Systems",
+    "authors": [
+      "Charles Packer",
+      "Sarah Wooders",
+      "Kevin Lin",
+      "Vivian Fang",
+      "Shishir G. Patil",
+      "Ion Stoica",
+      "Joseph E. Gonzalez"
+    ],
+    "year": 2023,
+    "venue": "arXiv 2023; revised 2024",
+    "url": "https://arxiv.org/abs/2310.08560",
+    "project_url": "https://research.memgpt.ai",
+    "arxiv_id": "2310.08560",
+    "read_sources": [
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2310.08560",
+        "note": "Used for arXiv metadata, abstract, authors, revision date, and project/code link."
+      },
+      {
+        "kind": "paper_html",
+        "url": "https://ar5iv.labs.arxiv.org/html/2310.08560",
+        "note": "Read for architecture, memory hierarchy, queue manager, function executor, control flow, and experiment setup."
+      },
+      {
+        "kind": "paper_pdf",
+        "url": "https://arxiv.org/pdf/2310.08560",
+        "note": "Read for table values, figure captions, and PDF-extracted experiment details."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "MemGPT treats the context window as RAM and external stores as disk, then gives the model functions for paging memory in and out.",
+    "thesis": "Long-running agents need virtual context management: a memory hierarchy, pressure signals, explicit storage functions, and event-driven control flow around a fixed-context LLM.",
+    "why_it_matters": "The paper turns memory from a retrieval add-on into runtime state. For agent infrastructure, the key move is that memory operations become logged, inspectable actions with their own policy and failure modes."
+  },
+  "problem": {
+    "prior_state": [
+      "Fixed context windows limit long conversations and document analysis.",
+      "Blindly extending context is expensive because attention cost grows quadratically and long-context models may still fail to use middle context reliably.",
+      "Naive summarization loses details that a later agent step may need.",
+      "Retrieval-augmented generation typically retrieves into context but does not let the model manage a persistent memory hierarchy over time."
+    ],
+    "key_gap": "The paper asks how to make a fixed-context model behave as if it had larger, persistent memory without retraining the model or increasing the context window.",
+    "assumptions": [
+      "The underlying model can follow function schemas reliably enough to edit, search, and paginate memory.",
+      "External stores can be exposed through safe and useful memory-management functions.",
+      "A model can learn useful memory policy from prompts, system messages, tool feedback, and token-pressure warnings.",
+      "LLM judges and similarity metrics are sufficient for the paper's conversational and document-analysis evaluations."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "virtual-context",
+      "name": "Virtual context management",
+      "definition": "An OS-inspired technique that gives a fixed-context LLM the appearance of larger memory by moving information between the prompt and external stores."
+    },
+    {
+      "id": "main-context",
+      "name": "Main context",
+      "definition": "The LLM prompt tokens, split into system instructions, writable working context, and a FIFO queue of messages and memory events."
+    },
+    {
+      "id": "external-context",
+      "name": "External context",
+      "definition": "Information stored outside the current prompt, including recall storage for message history and archival storage for arbitrary-length text objects."
+    },
+    {
+      "id": "memory-pressure",
+      "name": "Memory pressure",
+      "definition": "System alerts inserted near context limits so the model can save important information before messages are flushed from the FIFO queue."
+    },
+    {
+      "id": "function-chaining",
+      "name": "Function chaining",
+      "definition": "A control-flow mechanism where a model can request another immediate inference after a memory function call, enabling multi-step search before replying to the user."
+    }
+  ],
+  "method": {
+    "core_idea": "Wrap a fixed-context LLM in an OS-like runtime that stores prompt-resident state in main context, out-of-context state in recall and archival storage, and exposes memory-management functions the model can call.",
+    "action_grammar": [
+      "Incoming event: user message, system message, timed event, document upload, or memory-pressure alert.",
+      "Main context: system instructions, working context, and FIFO queue are concatenated into the prompt.",
+      "Memory warning: queue manager warns the model before context overflow.",
+      "Memory edit: the model writes durable facts to working context or archival storage.",
+      "Memory search: the model queries recall or archival storage and pages results into the FIFO queue.",
+      "Function result: the runtime feeds successful results or errors back into the prompt.",
+      "Heartbeat: the model requests another inference immediately after a function call.",
+      "Yield: the model returns control until the next external event."
+    ],
+    "steps": [
+      "Store static instructions, writable working memory, and recent events in main context.",
+      "Append user and model messages to recall storage so evicted history remains queryable.",
+      "Store long documents or important facts in archival storage, implemented in experiments with PostgreSQL, pgvector, and HNSW indexing.",
+      "Insert memory-pressure warnings before context overflow so the model can preserve useful information.",
+      "Flush old FIFO messages when needed, keeping a recursive summary plus durable recall storage.",
+      "Parse model outputs as memory functions, execute them, feed results/errors back, and optionally continue via function chaining.",
+      "Evaluate the same runtime in multi-session chat, document QA, and nested key-value retrieval."
+    ],
+    "pseudocode": "for event in event_stream:\n    queue.append(render(event))\n    recall_storage.write(event)\n\n    if prompt_tokens(queue, working_context) > warning_threshold:\n        queue.append(system_memory_pressure_warning())\n\n    while true:\n        output = llm(system_instructions, working_context, queue)\n        if output.is_memory_function():\n            result = execute_memory_function(output)\n            queue.append(result)\n            if output.request_heartbeat:\n                continue\n        else:\n            recall_storage.write(output)\n            send_to_user(output)\n        break\n\n    if prompt_tokens(queue, working_context) > flush_threshold:\n        evicted = queue.flush_old_messages()\n        recall_storage.write(evicted)\n        queue.summary = summarize(queue.summary, evicted)"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "architecture",
+      "status": "paper-supported",
+      "statement": "MemGPT frames the context window as main memory and external stores as disk-like memory, with the model responsible for moving information between tiers through function calls.",
+      "scope": "Introduction and Section 2.",
+      "evidence_refs": ["E-memory-hierarchy"],
+      "caveats": ["The OS analogy is implemented through prompts and function calls, not through a verified memory manager."]
+    },
+    {
+      "id": "C2",
+      "type": "runtime",
+      "status": "paper-supported",
+      "statement": "The runtime separates system instructions, writable working context, FIFO queue, recall storage, and archival storage, and uses memory-pressure warnings plus flushing to control overflow.",
+      "scope": "Sections 2.1 and 2.2.",
+      "evidence_refs": ["E-main-external-context"],
+      "caveats": ["The warning and flush thresholds are policy choices; the paper gives examples such as 70% warning and 100% flush."]
+    },
+    {
+      "id": "C3",
+      "type": "runtime",
+      "status": "paper-supported",
+      "statement": "MemGPT makes memory management event-driven and supports function chaining so the model can run multi-step memory searches before yielding control.",
+      "scope": "Sections 2.3 and 2.4.",
+      "evidence_refs": ["E-control-flow"],
+      "caveats": ["This depends on the model producing valid function calls and stopping at the right time."]
+    },
+    {
+      "id": "C4",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "On deep memory retrieval over Multi-Session Chat, MemGPT substantially improves accuracy and ROUGE-L over fixed-context baselines for GPT-3.5, GPT-4, and GPT-4 Turbo.",
+      "scope": "Section 3.1.1, Table 2.",
+      "evidence_refs": ["E-dmr"],
+      "caveats": ["The task uses generated question-answer pairs and an LLM judge, so it is not a purely human-labeled or executable evaluation."]
+    },
+    {
+      "id": "C5",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "On document QA, MemGPT uses archival vector search to page through more documents than fit in prompt context, but performance remains tied to retrieval quality and model function-calling ability.",
+      "scope": "Section 3.2.1 and Figure 5.",
+      "evidence_refs": ["E-document-qa"],
+      "caveats": ["The document-QA evaluation uses only 50 sampled NaturalQuestions-Open questions and an LLM judge."]
+    },
+    {
+      "id": "C6",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "On nested key-value retrieval, fixed-context baselines fail as nesting grows, while MemGPT with GPT-4 remains effective by chaining repeated memory queries.",
+      "scope": "Section 3.2.2 and Figure 7.",
+      "evidence_refs": ["E-nested-kv"],
+      "caveats": ["MemGPT with GPT-3.5 and GPT-4 Turbo still drops off at deeper nesting because they fail to perform enough lookups."]
+    },
+    {
+      "id": "C7",
+      "type": "limitation",
+      "status": "paper-supported",
+      "statement": "The approach is bottlenecked by the base model's ability to call functions, manage search depth, and continue paging when the needed evidence has not yet been retrieved.",
+      "scope": "Sections 3.2.1 and 3.2.2.",
+      "evidence_refs": ["E-model-dependence"],
+      "caveats": ["The paper evaluates a small set of OpenAI model endpoints and does not isolate every memory-policy failure mode."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-memory-hierarchy",
+      "kind": "architecture",
+      "source": "paper",
+      "locator": "Abstract, Introduction, Section 2",
+      "result": "The paper proposes virtual context management: main context holds prompt-resident state, external context holds out-of-context data, and the LLM uses functions to retrieve, write, and evict memory across tiers.",
+      "metric": "architecture definition",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-main-external-context",
+      "kind": "runtime_design",
+      "source": "paper",
+      "locator": "Sections 2.1 and 2.2",
+      "result": "Main context is split into system instructions, writable working context, and a FIFO queue. The queue manager writes messages to recall storage, warns near context overflow, flushes messages at the flush threshold, preserves a recursive summary, and keeps evicted messages in recall storage.",
+      "metric": "memory tiers and queue policy",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-control-flow",
+      "kind": "runtime_design",
+      "source": "paper",
+      "locator": "Sections 2.3 and 2.4",
+      "result": "The function executor parses model outputs as memory function calls, feeds results and runtime errors back into context, and supports immediate follow-up inference through a heartbeat flag or yielding until the next event.",
+      "metric": "control-flow mechanism",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-dmr",
+      "kind": "result_table",
+      "source": "paper",
+      "locator": "Section 3.1.1, Table 2",
+      "result": "DMR accuracy and ROUGE-L improve from GPT-3.5 Turbo 38.7% / 0.394 to MemGPT 66.9% / 0.629, GPT-4 32.1% / 0.296 to MemGPT 92.5% / 0.814, and GPT-4 Turbo 35.3% / 0.359 to MemGPT 93.4% / 0.827.",
+      "metric": "accuracy and ROUGE-L recall",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-document-qa",
+      "kind": "experiment",
+      "source": "paper",
+      "locator": "Section 3.2.1, Figure 5",
+      "result": "The document-QA setup loads a late-2018 Wikipedia dump into archival storage, uses OpenAI text-embedding-ada-002 embeddings with PostgreSQL, pgvector, and HNSW, samples 50 NaturalQuestions-Open questions, and shows MemGPT paging through retrieval results while fixed-context baselines are capped by the documents placed in prompt context.",
+      "metric": "document QA setup and qualitative result trend",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-nested-kv",
+      "kind": "experiment",
+      "source": "paper",
+      "locator": "Section 3.2.2, Figure 7",
+      "result": "Nested KV uses 140 UUID key-value pairs, varies nesting from 0 to 4, and samples 30 orderings. GPT-3.5 reaches 0% accuracy at 1 nesting level; GPT-4 and GPT-4 Turbo reach 0% by 3 nesting levels; MemGPT with GPT-4 remains unaffected by nesting depth in the paper's description.",
+      "metric": "nested lookup accuracy trend",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-model-dependence",
+      "kind": "limitation",
+      "source": "paper",
+      "locator": "Sections 3.2.1 and 3.2.2",
+      "result": "The authors report degraded document-QA performance with GPT-3.5 because of limited function-calling ability, note that MemGPT may stop paging before exhausting retrieval results, and observe that MemGPT with GPT-3.5 and GPT-4 Turbo drops off in nested KV because the model fails to perform enough lookups.",
+      "metric": "failure-mode observations",
+      "claim_refs": ["C7"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "A context window is main memory, not durable memory. Persistent agent state needs explicit storage tiers and movement rules.",
+    "Memory actions should be first-class runtime events: search, write, flush, summarize, page, and heartbeat all need logs and policy.",
+    "Memory pressure is a useful control signal. Long-running agents should know before context eviction happens, not after facts disappear.",
+    "The memory manager is only as reliable as the base model's function-calling and stopping behavior.",
+    "RAG is not enough for long-horizon agents. The model also needs control over when to retrieve, how many pages to inspect, and when to save new state.",
+    "External memory creates infrastructure obligations: database schema, vector indexes, pagination, provenance, compaction, and access control."
+  ],
+  "caveats": [
+    "The paper's memory policy is prompt- and model-driven rather than formally specified or verified.",
+    "Several evaluations rely on LLM judges or similarity metrics, not executable ground truth.",
+    "The document-QA experiment uses a small sample of 50 questions.",
+    "Performance depends strongly on model function-calling quality; GPT-3.5 is notably weaker in the paper's experiments.",
+    "MemGPT can stop searching before reaching the needed evidence, so the illusion of infinite context is bounded by search policy.",
+    "The paper does not deeply address privacy, access control, retention policy, or deletion semantics for long-term user memory."
+  ],
+  "related_work": [
+    {
+      "title": "Generative Agents",
+      "relation": "extends",
+      "note": "Both papers make memory central to agents; MemGPT focuses on OS-style virtual context and memory operations.",
+      "url": "https://arxiv.org/abs/2304.03442"
+    },
+    {
+      "title": "PagedAttention",
+      "relation": "analogy",
+      "note": "Both use OS paging ideas, but MemGPT pages semantic context while PagedAttention pages KV-cache memory for serving.",
+      "url": "https://dl.acm.org/doi/10.1145/3600006.3613165"
+    },
+    {
+      "title": "ReAct",
+      "relation": "builds-on",
+      "note": "MemGPT uses tool/function calls as actions, but the actions manipulate memory rather than only the external environment.",
+      "url": "https://arxiv.org/abs/2210.03629"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A compact PoC would wrap a small local LLM or mock policy with a FIFO queue, recall log, vector-like archival search, memory-pressure warnings, and heartbeat-based multi-step lookup."
+  },
+  "slide_plan": {
+    "title": "MemGPT",
+    "subtitle": "Virtual memory for fixed-context agents",
+    "sections": [
+      "summary",
+      "problem",
+      "virtual_context",
+      "memory_hierarchy",
+      "queue_manager",
+      "function_executor",
+      "dmr_results",
+      "document_qa",
+      "nested_kv",
+      "infra_takeaways",
+      "caveats",
+      "references"
+    ]
+  }
+}

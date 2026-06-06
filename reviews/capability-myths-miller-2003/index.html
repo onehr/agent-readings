@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Capability Myths Demolished</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/capability-myths-miller-2003/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Isolation and Sandboxing</p>
+        <h1>Capability Myths Demolished</h1>
+        <p class="hero-lede">Capability Myths Demolished argues that object-capability systems are not just ACLs in another notation: they better support least privilege, delegation, confinement, revocation, and confused-deputy avoidance.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>7</strong><span>Claims</span></div>
+          <div class="metric"><strong>7</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2003 · Technical report / USENIX submission</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>3</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/capability-myths-miller-2003/">Open deck</a>
+        <a class="button" href="https://srl.cs.jhu.edu/pubs/SRL2003-02.pdf">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>For agents, capabilities are the permission model that sandboxing needs: an agent should not merely be 'running in a box'; it should hold only the specific authority tokens needed for the next action.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Access-control-list systems bind authority to subjects, identities, and objects, often relying on ambient authority.</li><li>Capability systems were frequently dismissed through three myths: equivalence with ACLs, inability to enforce confinement, and inability to revoke access.</li><li>Different papers used different meanings of capability, creating confusion between access-matrix rows, key-like capabilities, and object capabilities.</li><li>Least privilege and confused-deputy avoidance were hard to express cleanly in ambient-authority systems.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks whether common objections to capability systems are valid once the object-capability model is distinguished from weaker or misleading capability interpretations.</p>
+
+      <h2>Method</h2>
+      <p>Compare ACLs-as-columns, capabilities-as-rows, capabilities-as-keys, and object capabilities through concrete security properties, then show that the myths disappear under the object-capability model.</p>
+      <ul><li>State the equivalence, confinement, and irrevocability myths.</li><li>Distinguish four models: ACLs as columns, capabilities as rows, capabilities as keys, and object capabilities.</li><li>Define security properties that separate the models rather than collapsing them into an access matrix.</li><li>Show why the ACL/capability equivalence comparison misses designation, delegation, and least-privilege behavior.</li><li>Analyze confinement in object-capability systems by controlling initial references and communication paths.</li><li>Analyze revocation patterns using indirection, membranes, and forwarders.</li><li>Connect object capabilities to least privilege and confused-deputy avoidance.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>The paper identifies three common capability myths: ACL/capability equivalence, inability to enforce confinement, and inability to revoke capability-based access.</p>
+  <p><strong>Scope:</strong> Abstract and Introduction.</p>
+  <ul><li><strong>E-three-myths</strong>: The paper explicitly names the Equivalence Myth, Confinement Myth, and Irrevocability Myth as common misconceptions about capability systems.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>Confusion comes from treating different capability models as equivalent: rows in an access matrix, keys, and object capabilities have different security properties.</p>
+  <p><strong>Scope:</strong> Introduction and model comparison sections.</p>
+  <ul><li><strong>E-models</strong>: The authors compare ACLs-as-columns with capabilities-as-rows, capabilities-as-keys, and object capabilities, arguing that many misconceptions arise from switching among these models.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>Object-capability systems provide better support for least privilege than ACL systems because authority is passed explicitly as needed rather than drawn from ambient subject identity.</p>
+  <p><strong>Scope:</strong> Abstract and equivalence-myth discussion.</p>
+  <ul><li><strong>E-least-privilege</strong>: The paper argues that pure capability systems have significant advantages over ACL systems for least-privilege operation because programs can be given only the specific references they need.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>Object capabilities help avoid confused deputy vulnerabilities by binding designation and authority in the same reference.</p>
+  <p><strong>Scope:</strong> Abstract and confused deputy discussion.</p>
+  <ul><li><strong>E-confused-deputy</strong>: The authors connect object capabilities to confused-deputy avoidance by showing that authority follows explicit references rather than ambient identity-based authority.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>Capability systems can enforce confinement when the object-capability communication graph and initial references are controlled.</p>
+  <p><strong>Scope:</strong> Confinement myth section.</p>
+  <ul><li><strong>E-confinement</strong>: The paper argues that object-capability systems can enforce confinement by controlling the communication graph and the references initially provided to confined objects.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>Capability-based access can be revoked through established patterns such as indirection, forwarders, membranes, or revocable references.</p>
+  <p><strong>Scope:</strong> Irrevocability myth section.</p>
+  <ul><li><strong>E-revocation</strong>: The paper describes capability revocation through indirection and related object-capability patterns, contradicting the claim that capability access cannot be revoked.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · paper-supported</h3>
+  <p>The paper's practical recommendation is not to add ambient ACL checks to capabilities, but to use a pure object-capability model with clear reference-passing rules.</p>
+  <p><strong>Scope:</strong> Discussion and conclusion.</p>
+  <ul><li><strong>E-pure-ocap</strong>: The authors argue that object capabilities, when treated as a coherent model rather than rows in an access matrix, offer useful security properties without bolting on ambient ACL-style checks.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>An agent permission should be an object it holds, not a row in a global ACL checked against the agent's broad identity.</li><li>Tool calls should receive attenuated capabilities: read this file, post to this endpoint, spend up to this amount, for this run id.</li><li>Revocation requires indirection. If an agent receives a raw credential, later policy changes may be too late.</li><li>Capabilities reduce confused-deputy risk because the tool must be invoked with the specific authority for the specific resource, not ambient user power.</li><li>A sandbox without capabilities is incomplete: it limits escape, but it does not model which allowed effects should be possible.</li><li>For LLM agents, capability passing also gives an audit trail: every side effect can name the authority object that authorized it.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The paper is conceptual and model-driven, not an empirical benchmark.</li><li>Object-capability reasoning assumes references are unforgeable and communication paths are controlled.</li><li>Capabilities do not eliminate all covert channels or all logic bugs.</li><li>Revocation must be designed before direct authority leaks; after a raw capability is copied, revocation can be difficult.</li><li>Many production systems are hybrids, so importing the paper's conclusions requires identifying which properties the hybrid preserves.</li><li>Agent prompt injection can still persuade a model to use capabilities it legitimately holds unless policy checks constrain when they may be exercised.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/capability-myths-miller-2003.json.</span>
+  </footer>
+</body>
+</html>

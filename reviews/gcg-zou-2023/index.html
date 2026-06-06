@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Universal and Transferable Adversarial Attacks on Aligned Language Models</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/gcg-zou-2023/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Security, Safety, and Trust</p>
+        <h1>GCG Attacks</h1>
+        <p class="hero-lede">GCG showed that adversarial suffixes can be automatically optimized on open models and transfer to other aligned LLMs, including black-box systems.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>7</strong><span>Claims</span></div>
+          <div class="metric"><strong>7</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2023 · arXiv 2023</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>4</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/gcg-zou-2023/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2307.15043">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>For agents, this means model refusal is not a hard security boundary. Tool authority, sandboxing, policy checks, and output controls must not rely solely on the model staying aligned under adversarial input.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Manual jailbreaks existed but required human ingenuity and were often brittle or patchable.</li><li>Automatic adversarial prompt generation had limited success against aligned chat models.</li><li>LLM inputs are discrete tokens, making direct gradient-based optimization harder than image perturbation.</li><li>Safety-aligned models often refuse direct harmful requests, creating an apparent but unproven boundary.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks whether adversarial prompts for aligned LLMs can be generated automatically, made universal across many requests, and transferred to other models.</p>
+
+      <h2>Method</h2>
+      <p>Search over suffix tokens on surrogate open models to maximize a refusal-bypassing objective, then evaluate whether the resulting suffixes work across prompts, models, and black-box public interfaces.</p>
+      <ul><li>Define harmful-string and harmful-behavior evaluation settings in AdvBench.</li><li>Optimize suffixes against open surrogate models using a combined greedy and gradient-guided discrete search.</li><li>Scale from single behavior/model attacks to universal suffixes over multiple behaviors.</li><li>Optimize across multiple surrogate models to improve transfer.</li><li>Evaluate attack success on held-out behaviors, open-source models, and black-box public model interfaces.</li><li>Compare against prior automatic prompt-generation baselines such as PEZ, GBDA, and AutoPrompt.</li><li>Disclose findings to affected model providers before publication.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>GCG combines gradient-guided token candidate selection with greedy evaluation to optimize discrete adversarial suffixes.</p>
+  <p><strong>Scope:</strong> Section 2.2.</p>
+  <ul><li><strong>E-gcg-method</strong>: The paper defines Greedy Coordinate Gradient as using token-level gradients to identify promising replacements and exact forward evaluation to choose greedy suffix updates.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>The paper extends suffix optimization to universal multi-prompt and multi-model attacks.</p>
+  <p><strong>Scope:</strong> Section 2.3.</p>
+  <ul><li><strong>E-universal-method</strong>: The paper optimizes one suffix over multiple prompts and aggregates losses/gradients across multiple models to improve universality and transfer.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>AdvBench evaluates both harmful strings and harmful behaviors, with attack success rate as the primary metric.</p>
+  <p><strong>Scope:</strong> Section 3.</p>
+  <ul><li><strong>E-advbench</strong>: AdvBench contains harmful-string and harmful-behavior settings and uses attack success rate to evaluate exact target strings or attempted compliance with harmful instructions.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>On single-model experiments, GCG substantially outperforms prior automatic prompt-generation baselines such as PEZ, GBDA, and AutoPrompt.</p>
+  <p><strong>Scope:</strong> Section 3.1.</p>
+  <ul><li><strong>E-single-model-results</strong>: GCG achieves strong results in single-model attacks, including 88% harmful-string success on Vicuna-7B and higher held-out behavior success than AutoPrompt on LLaMA-2-7B-Chat in the reported setup.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>A universal suffix optimized on surrogate open models transfers to multiple open-source and proprietary target models.</p>
+  <p><strong>Scope:</strong> Abstract and Section 3.2.</p>
+  <ul><li><strong>E-transfer-results</strong>: Prompts optimized on Vicuna/Guanaco variants transfer to open and proprietary models; the paper reports ensemble ASR of 86.6% on GPT-3.5, 46.9% on GPT-4, 47.9% on Claude 1, 2.1% on Claude 2, and 66.0% on PaLM-2 over 388 behaviors.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>The results show that aligned LLMs should not be treated as adversarially robust by default.</p>
+  <p><strong>Scope:</strong> Introduction and conclusion framing.</p>
+  <ul><li><strong>E-alignment-robustness</strong>: The authors frame the attack as evidence that models aligned to refuse harmful requests are not necessarily adversarially aligned against optimized inputs.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · inference</h3>
+  <p>For tool-using agents, adversarial prompt robustness matters because successful jailbreaks can interact with tool permissions and side effects.</p>
+  <p><strong>Scope:</strong> Application to agent infrastructure.</p>
+  <ul><li><strong>E-agent-implication</strong>: If a model controls tools or agent actions, adversarially induced compliance can become a tool-use or side-effect risk unless authority is enforced outside the model.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Do not use model refusal as the only security boundary for a tool-using agent.</li><li>Adversarial prompt testing should be part of agent evaluation, especially before granting tools, memory writes, or external side effects.</li><li>Transfer attacks mean closed-source or black-box deployment does not eliminate risk if similar open models can be used as surrogates.</li><li>Safety filters should be layered with capability scoping, sandboxing, output validation, policy enforcement, and human approval for sensitive actions.</li><li>A benchmark that only tests direct benign prompts will miss adversarially optimized prompt behavior.</li><li>For production agents, prompt robustness belongs in the same risk register as sandbox escapes, prompt injection, and supply-chain compromise.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The paper intentionally studies objectionable-content elicitation, not every possible alignment objective.</li><li>Attack success depends on model version, interface, decoding parameters, and provider patches; reported numbers are historical.</li><li>The review intentionally omits attack strings and runnable optimization details.</li><li>Harmful-behavior evaluation involves human judgment about attempted compliance.</li><li>Newer defenses and newer attacks have appeared since 2023; this paper is foundational rather than current-state complete.</li><li>Model-level robustness is only one layer of agent security; tool and runtime containment still matter even for robust models.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/gcg-zou-2023.json.</span>
+  </footer>
+</body>
+</html>

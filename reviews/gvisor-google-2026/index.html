@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · gVisor</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/gvisor-google-2026/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Isolation and Sandboxing</p>
+        <h1>gVisor</h1>
+        <p class="hero-lede">gVisor is a Linux-compatible userspace application kernel that intercepts container syscalls, implements them in a separate Sentry, and sharply limits direct host-kernel exposure.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>7</strong><span>Claims</span></div>
+          <div class="metric"><strong>7</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2026 · Project and architecture documentation</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>source-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>6</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/gvisor-google-2026/">Open deck</a>
+        <a class="button" href="https://gvisor.dev/">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>For agent infrastructure, gVisor is attractive when you want stronger isolation than ordinary containers while retaining Kubernetes/Docker ergonomics and faster/lighter operation than a full microVM boundary.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Native containers rely on host-kernel security primitives, so untrusted code can still reach a large kernel API surface.</li><li>Rule-based syscall filtering is hard to configure safely for arbitrary or previously unknown applications.</li><li>VMs provide stronger workload isolation but can impose fixed resource overhead, slower startup, and extra proxies or agents for container use.</li><li>Agent-generated and user-uploaded code need defense in depth without necessarily requiring a full VM for every execution.</li></ul>
+      <p><strong>Key gap:</strong> gVisor asks whether a container runtime can reduce host-kernel attack surface by reimplementing the Linux application interface outside the host kernel.</p>
+
+      <h2>Method</h2>
+      <p>Intercept application system calls before they reach the host kernel, implement Linux-like behavior in a Go Sentry, route filesystem access through a Gofer, and restrict the host system calls that gVisor itself can make.</p>
+      <ul><li>Start a container through runsc instead of a conventional OCI runtime.</li><li>Create a gVisor sandbox containing a Sentry and one or more Gofer processes.</li><li>Intercept the workload's system calls through systrap, KVM, or another platform.</li><li>Handle supported system calls in the Sentry rather than passing them through to the host kernel.</li><li>Send host filesystem operations that escape internal sandbox state to the Gofer.</li><li>Run the Sentry with a strict seccomp/user/mount namespace profile and minimal host privileges.</li><li>Use cgroups and network policy outside the sandbox for resource and egress controls.</li><li>Accept compatibility or performance losses where gVisor does not implement a feature or where syscall mediation is expensive.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · source-supported</h3>
+  <p>gVisor is an application kernel, not a conventional VM or syscall filter, and it implements a Linux-like interface in userspace.</p>
+  <p><strong>Scope:</strong> What is gVisor and Introduction to gVisor security.</p>
+  <ul><li><strong>E-application-kernel</strong>: The docs describe gVisor as an open-source workload isolation solution and application kernel, not a VM hypervisor or syscall filter, written in memory-safe Go and running in userspace.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · source-supported</h3>
+  <p>gVisor minimizes direct host System API exposure by preventing sandboxed applications from passing system calls directly to the host kernel.</p>
+  <p><strong>Scope:</strong> Security Model and Intro docs.</p>
+  <ul><li><strong>E-no-passthrough</strong>: The docs state that applications' direct interactions with the host System API are intercepted by the Sentry, no supported syscall is passed through directly, and applications cannot directly craft host syscall arguments.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · source-supported</h3>
+  <p>The Sentry is a Go userspace kernel that implements system calls, memory management, process management, signals, namespaces, filesystems, and networking behavior needed by applications.</p>
+  <p><strong>Scope:</strong> What is gVisor and Intro docs.</p>
+  <ul><li><strong>E-sentry</strong>: The Sentry is described as implementing syscalls, signal delivery, memory management, page faulting, threading, process management, namespaces, filesystems, and networking, while not allowing the application to directly control host system calls.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · source-supported</h3>
+  <p>gVisor's defense-in-depth rules include no direct syscall pass-through, common-functionality-only implementation, minimized host surface for the Sentry, no CGo in the Sentry, and controlled unsafe Go use.</p>
+  <p><strong>Scope:</strong> Security Model docs.</p>
+  <ul><li><strong>E-defense-in-depth</strong>: The docs list engineering principles: no direct host syscall pass-through, implement only common functionality, minimize the host surface accessible to the Sentry, isolate unsafe Go code, disallow CGo, restrict imports, fuzz continuously, and triage production crashes.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · source-supported</h3>
+  <p>gVisor supports multiple interception platforms, with systrap as the current default, KVM for bare-metal performance/isolation tradeoffs, and ptrace deprecated because of high context-switch overhead.</p>
+  <p><strong>Scope:</strong> Platform Guide.</p>
+  <ul><li><strong>E-platforms</strong>: The platform guide says bare-metal deployments generally get best performance from KVM, systrap is better inside VMs or without virtualization support and replaced ptrace as default in mid-2023, while ptrace has high context-switch overhead and is no longer supported.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · source-supported</h3>
+  <p>gVisor aims for lower fixed overhead and better container ergonomics than VMs, but accepts reduced compatibility and higher per-syscall overhead versus native containers.</p>
+  <p><strong>Scope:</strong> What is gVisor and Intro docs.</p>
+  <ul><li><strong>E-tradeoffs</strong>: The docs describe gVisor as providing many VM-like security benefits with lower resource footprint, fast startup, and userspace flexibility, but at the price of reduced application compatibility and higher per-system-call overhead.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · source-supported</h3>
+  <p>gVisor does not protect against higher-level stack compromise, hardware side channels, exploits inside the sandboxed workload itself, or resources explicitly exposed to the sandbox.</p>
+  <p><strong>Scope:</strong> Intro and Security Model docs.</p>
+  <ul><li><strong>E-non-goals</strong>: The docs say gVisor does not protect against higher-level stack exploits before the sandbox runs, Spectre-style side channels, compromise of software inside the sandbox, or access to resources the sandbox is configured to expose.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>gVisor is a strong middle option for local agent tool sandboxes where full microVM startup or fixed resource allocation is too expensive.</li><li>The key architectural point is syscall mediation, not policy text. The agent's code talks to a fake Linux kernel first, not directly to the host kernel.</li><li>Compatibility is a budget. Agent tools that depend on unusual syscalls, ioctls, /proc, /sys, GPU paths, or filesystem behavior need explicit testing under gVisor.</li><li>Host egress and resource controls still live outside the sandbox. Pair gVisor with network policy, cgroups, credentials isolation, and filesystem allowlists.</li><li>Runtime monitoring and checkpoint/restore are agent-relevant because tool execution needs provenance, forensics, and sometimes warm sandbox reuse.</li><li>gVisor does not stop malicious instructions from using allowed APIs. It limits host escape; it does not decide whether the allowed API call should happen.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>This is a project/docs review, not a peer-reviewed paper entry.</li><li>Documentation reflects current gVisor behavior as of the review date and can drift.</li><li>gVisor is not a VM in the Firecracker sense and should not be presented as one.</li><li>Reduced compatibility and per-syscall overhead are first-order tradeoffs for syscall-heavy workloads.</li><li>The sandbox relies on host kernel, firmware, cgroups, and network policy for several important protections.</li><li>Side channels and higher-layer compromise remain outside gVisor's core protection envelope.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/gvisor-google-2026.json.</span>
+  </footer>
+</body>
+</html>

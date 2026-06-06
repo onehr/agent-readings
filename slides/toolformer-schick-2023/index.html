@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Toolformer</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/highlight/monokai.css" />
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <section data-markdown
+               data-separator="^\n---\n$"
+               data-separator-vertical="^\n--\n$"
+               data-separator-notes="^Note:">
+        <textarea data-template>
+<!-- .slide: class="title-slide apple-title" -->
+
+<div class="slide-frame slide-frame--center">
+  <p class="deck-kicker">agent-readings / Tool Use and Interoperability</p>
+  <h1>Toolformer</h1>
+  <p class="deck-subtitle">Self-supervised API calls inside the token stream</p>
+
+  <div class="deck-meta-strip">
+    <div class="deck-meta-pill"><strong>2023</strong><span>NeurIPS 2023</span></div>
+    <div class="deck-meta-pill"><strong>6</strong><span>claims</span></div>
+    <div class="deck-meta-pill"><strong>7</strong><span>evidence refs</span></div>
+    <div class="deck-meta-pill"><strong>paper-read</strong><span>status</span></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="statement-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">The one sentence</p>
+  <h2>Toolformer teaches a language model to insert and consume API calls by sampling possible calls, executing them, and keeping only those that reduce next-token loss.</h2>
+  <p class="deck-note">Toolformer is the bridge from hand-written tool-use prompts to tool-use data pipelines: APIs become textual actions, execution results become training signals, and tool invocation becomes part of the language model's decoding loop.</p>
+</div>
+
+---
+
+<!-- .slide: class="problem-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Before this paper</p>
+  <h2>The friction was structural.</h2>
+  <div class="apple-card-grid apple-card-grid--three">
+    <div class="apple-card"><p>Large language models could follow instructions and solve many text tasks, but still struggled with arithmetic, factual lookup, translation, and temporal awareness.</p></div>
+<div class="apple-card"><p>Earlier tool-use approaches often depended on human annotations or task-specific prompting where the user already knew which tool should be used.</p></div>
+<div class="apple-card"><p>A general-purpose tool-using LM needs to decide when to call a tool, which tool to call, what arguments to pass, and how to use the result without losing ordinary...</p></div>
+  </div>
+  <div class="deck-callout">
+    <span>Key gap</span>
+    <p>The paper asks whether a frozen pretrained LM can bootstrap its own tool-use training data from a few demonstrations per API plus a self-supervised usefulness filter.</p>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="idea-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Core idea</p>
+  <h2>Prompt the base LM with a few examples for each API, sample candidate call positions and calls over plain text, execute the calls, filter out calls whose...</h2>
+  <p class="deck-note">Prompt the base LM with a few examples for each API, sample candidate call positions and calls over plain text, execute the calls, filter out calls whose results do not reduce future-token loss, interleave surviving calls into the text, and finetune the LM on...</p>
+  <div class="idea-loop" aria-label="Agent loop">
+    <div><strong>Model</strong><span>reason</span></div>
+    <div><strong>Runtime</strong><span>act</span></div>
+    <div><strong>World</strong><span>observe</span></div>
+  </div>
+  <div class="step-strip">
+    <div class="step-item">
+  <span>01</span>
+  <p>Write a handful of demonstrations for each tool.</p>
+</div>
+<div class="step-item">
+  <span>02</span>
+  <p>Use the pretrained LM to annotate plain language-modeling text with candidate API calls.</p>
+</div>
+<div class="step-item">
+  <span>03</span>
+  <p>Execute each candidate API call to obtain a text response.</p>
+</div>
+<div class="step-item">
+  <span>04</span>
+  <p>Keep only calls where the response lowers weighted next-token loss by the filtering threshold.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="grammar-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Action grammar</p>
+  <h2>The agent is an interface contract.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>API call: a textual tuple containing an API name and input argument.</p></div>
+<div class="apple-card"><p>API result: a single text sequence returned by the external tool.</p></div>
+<div class="apple-card"><p>Candidate sampler: the base LM prompted to propose where and how to call an API.</p></div>
+<div class="apple-card"><p>Usefulness filter: a weighted loss comparison over future tokens with and without the API result.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="code-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Executable shape</p>
+  <h2>The mechanism should fit on one screen.</h2>
+
+```python
+augmented = []
+for text in corpus:
+    candidates = sample_api_calls(model, text, tool_prompts)
+    kept = []
+    for call in candidates:
+        result = execute(call)
+        if loss_with_result(model, text, call, result) < loss_without_result(model, text, call):
+            kept.append((call, result))
+    augmented.append(interleave(text, kept))
+finetune(model, augmented)
+```
+</div>
+
+---
+
+<!-- .slide: class="proof-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Evidence</p>
+  <h2>The proof objects.</h2>
+  <div class="proof-grid">
+    <div class="proof-card">
+  <span>E-method</span>
+  <p>The paper describes using a handful of demonstrations to prompt an LM to propose API calls over a language-modeling corpus, executing those calls, filtering them by usefulness,...</p>
+</div>
+<div class="proof-card">
+  <span>E-loss-filter</span>
+  <p>A candidate API call is kept only if adding both the call and its result lowers weighted cross-entropy loss over future tokens by at least the threshold, compared with no call or...</p>
+</div>
+<div class="proof-card">
+  <span>E-runtime</span>
+  <p>During decoding, the system proceeds normally until the model produces the API response marker; decoding is interrupted, the API is called, the response and closing marker are...</p>
+</div>
+<div class="proof-card">
+  <span>E-lama</span>
+  <p>On LAMA subsets, Toolformer scores 33.8 on SQuAD, 11.5 on Google-RE, and 53.5 on T-REx, compared with GPT-J + CC at 19.2, 5.6, and 33.2 and GPT-3 175B at 26.8, 7.0, and 39.8.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="claim-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Claim map</p>
+  <h2>What the review actually supports.</h2>
+  <div class="claim-grid">
+    <div class="claim-card">
+  <span>C1 · paper-supported</span>
+  <p>Toolformer learns tool use self-supervised from a few demonstrations per API by generating, executing, filtering, and finetuning on API calls inserted into...</p>
+  <small>E-method</small>
+</div>
+<div class="claim-card">
+  <span>C2 · paper-supported</span>
+  <p>The central filtering criterion is whether providing the API result lowers weighted loss on future tokens compared with no call or a call without the result.</p>
+  <small>E-loss-filter</small>
+</div>
+<div class="claim-card">
+  <span>C3 · paper-supported</span>
+  <p>Toolformer represents calls and responses as text in the model stream and uses inference-time decoding hooks to execute tools when the model emits the API...</p>
+  <small>E-runtime</small>
+</div>
+<div class="claim-card">
+  <span>C4 · paper-supported</span>
+  <p>A 6.7B-parameter GPT-J Toolformer improves zero-shot factual lookup and math results over same-size baselines and often beats much larger OPT 66B and GPT-3...</p>
+  <small>E-lama, E-math</small>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="takeaway-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Agent infrastructure</p>
+  <h2>What changes if you build systems.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>Tool use begins with a protocol: every tool must have a textual call format, a textual result format, and examples showing intended use.</p></div>
+<div class="apple-card"><p>The loss filter is an early form of execution-derived supervision: a runtime can log which calls actually reduce uncertainty or improve downstream...</p></div>
+<div class="apple-card"><p>Tool invocation needs an execution boundary in decoding. The model can propose calls, but infrastructure must pause, authorize, execute, insert...</p></div>
+<div class="apple-card"><p>The paper's single-call setup is not enough for agent workflows; multi-step plans require trajectories, dependency tracking, and loop prevention.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="caveat-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Caveats</p>
+  <h2>What this does not prove.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>Toolformer is finetuned for a fixed set of tools, not a dynamic tool-discovery protocol.</p></div>
+<div class="apple-card"><p>The method needs executable tools during data generation and inference.</p></div>
+<div class="apple-card"><p>The paper's main downstream setup permits at most one API call per input.</p></div>
+<div class="apple-card"><p>Loss reduction is a local proxy for usefulness and does not encode user authorization, safety, or side-effect policy.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="closing-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Run it</p>
+  <h2>No PoC yet.</h2>
+  <p class="deck-note">No PoC yet - contributions welcome. A useful local PoC would annotate a small text corpus with calculator calls, filter calls by next-token loss using a local model, and compare generated answers with and without tool execution.</p>
+  <div class="reference-list">
+    <ul><li>Paper: <a href="https://arxiv.org/abs/2302.04761">Toolformer: Language Models Can Teach Themselves to Use Tools</a></li><li>contrasts: <a href="https://arxiv.org/abs/2210.03629">ReAct</a></li><li>precedes: <a href="https://arxiv.org/abs/2305.15334">Gorilla</a></li><li>precedes: <a href="https://arxiv.org/abs/2307.16789">ToolLLM</a></li></ul>
+  </div>
+</div>
+
+Note: This deck is synthesized from `data/reviews/toolformer-schick-2023.json`. Update the review record, then run `bun run build`.
+
+        </textarea>
+      </section>
+    </div>
+  </div>
+  <script type="module" src="../../assets/deck.js"></script>
+</body>
+</html>

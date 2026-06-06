@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Cognitive Architectures for Language Agents</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/coala-sumers-2023/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Start Here</p>
+        <h1>CoALA</h1>
+        <p class="hero-lede">CoALA turns language agents into a cognitive-architecture design problem by separating memory modules, internal and external actions, and a looping decision procedure.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>6</strong><span>Claims</span></div>
+          <div class="metric"><strong>6</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2023 · Transactions on Machine Learning Research, 2024</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>2</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/coala-sumers-2023/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2309.02427">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>For agent infrastructure, CoALA names the runtime pieces that need explicit interfaces: working state, long-term stores, tool/environment grounding, retrieval, reasoning, learning, and the top-level decision loop.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Early language agents often placed an LLM directly in a feedback loop with an external environment.</li><li>Newer agents added reasoning, planning, reflection, retrieval, and memory, but papers used inconsistent names for similar mechanisms.</li><li>Traditional cognitive architectures had mature notions of working memory, long-term memory, grounding, learning, and decision cycles, but required hand-specified symbolic rules.</li></ul>
+      <p><strong>Key gap:</strong> The paper addresses the lack of a systematic framework for comparing existing language agents and planning new ones at the architectural level.</p>
+
+      <h2>Method</h2>
+      <p>Map language agents onto a cognitive architecture: keep active state in working memory, persist experience and knowledge in long-term memories, expose grounding/retrieval/reasoning/learning as actions, and run a repeated decision cycle that plans before executing environment or memory-changing actions.</p>
+      <ul><li>Frame LLM calls and prompt chains as production-like operations over text.</li><li>Import cognitive-architecture concepts to define memory modules and action types.</li><li>Classify recent agents by their long-term memory, external grounding, internal actions, and decision-making procedure.</li><li>Use the classification to identify reusable abstractions and underexplored design directions.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>CoALA organizes language agents around three architectural dimensions: information storage, action space, and decision-making procedure.</p>
+  <p><strong>Scope:</strong> Framework definition in the introduction and Section 4.</p>
+  <ul><li><strong>E-framework-definition</strong>: The paper states that CoALA organizes agents by information storage, action space, and decision-making procedure, then develops those concepts in Section 4.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>The framework separates working memory from long-term episodic, semantic, and procedural memory.</p>
+  <p><strong>Scope:</strong> Memory taxonomy in Section 4.1.</p>
+  <ul><li><strong>E-memory-taxonomy</strong>: CoALA defines short-term working memory and long-term episodic, semantic, and procedural memories. Working memory persists active state across LLM calls and connects LLM prompts, long-term memory, and grounding interfaces.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>CoALA divides agent actions into external grounding actions and internal retrieval, reasoning, and learning actions.</p>
+  <p><strong>Scope:</strong> Action-space definition in Section 4 and Figure 5.</p>
+  <ul><li><strong>E-action-taxonomy</strong>: The paper separates external grounding actions from internal memory actions, and decomposes internal actions into retrieval, reasoning, and learning.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>The top-level agent controller is modeled as a repeated decision cycle with planning and execution stages.</p>
+  <p><strong>Scope:</strong> Decision-making procedure in Sections 4.6 and Figure 4B.</p>
+  <ul><li><strong>E-decision-cycle</strong>: The decision procedure repeatedly uses reasoning and retrieval to propose, evaluate, and select alternatives during planning, then executes a grounding or learning action and loops after observation.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>CoALA can express a range of existing agents, including SayCan, ReAct, Voyager, Generative Agents, and Tree of Thoughts, by comparing their memory, grounding, internal actions, and decision-making.</p>
+  <p><strong>Scope:</strong> Case studies and Table 2.</p>
+  <ul><li><strong>E-case-studies</strong>: Table 2 casts SayCan, ReAct, Voyager, Generative Agents, and Tree of Thoughts into the CoALA dimensions, showing differences in long-term memory, external grounding, internal actions, and decision-making.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>The paper argues for modular, reusable language-agent abstractions such as Memory, Action, and Agent classes to reduce technical debt and improve compatibility.</p>
+  <p><strong>Scope:</strong> Actionable insights in Section 6.</p>
+  <ul><li><strong>E-actionable-insights</strong>: The paper recommends systematic modular design, argues for standardized abstractions analogous to MDP/Gym concepts in reinforcement learning, and suggests company-wide agent libraries for reuse and testing.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Treat agent memory as typed runtime state, not only prompt text: working, episodic, semantic, and procedural stores have different persistence and mutation semantics.</li><li>Separate internal actions from external side effects. Retrieval, reasoning, and learning should be inspectable runtime operations before a grounding action touches the world.</li><li>The decision loop is the agent's main procedure, so production runtimes need explicit scheduling, observation capture, action parsing, and replay boundaries.</li><li>Procedural memory is broader than model weights: prompts, parsers, code skills, retrieval procedures, and learning policies can all become mutable agent state.</li><li>The framework is useful as a schema for reviews because it forces each paper to say which memory, action, and decision components it actually changes.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>CoALA is primarily a conceptual framework and survey, not a new empirical agent with benchmark results.</li><li>The framework does not by itself solve safety, permissions, persistence, or exactly-once execution for side-effecting agents.</li><li>The paper's categories are intentionally broad, so implementations still need concrete interface contracts and failure handling.</li><li>Autonomous updates to source code, retrieval, learning, or decision-making are flagged as risky and underexplored.</li><li>The paper assumes text is the dominant internal representation, while multimodal and embodied settings may require richer state.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/coala-sumers-2023.json.</span>
+  </footer>
+</body>
+</html>

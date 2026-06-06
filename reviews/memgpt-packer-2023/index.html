@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · MemGPT: Towards LLMs as Operating Systems</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/memgpt-packer-2023/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Memory and State</p>
+        <h1>MemGPT</h1>
+        <p class="hero-lede">MemGPT treats the context window as RAM and external stores as disk, then gives the model functions for paging memory in and out.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>7</strong><span>Claims</span></div>
+          <div class="metric"><strong>7</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2023 · arXiv 2023; revised 2024</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>3</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/memgpt-packer-2023/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2310.08560">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>The paper turns memory from a retrieval add-on into runtime state. For agent infrastructure, the key move is that memory operations become logged, inspectable actions with their own policy and failure modes.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Fixed context windows limit long conversations and document analysis.</li><li>Blindly extending context is expensive because attention cost grows quadratically and long-context models may still fail to use middle context reliably.</li><li>Naive summarization loses details that a later agent step may need.</li><li>Retrieval-augmented generation typically retrieves into context but does not let the model manage a persistent memory hierarchy over time.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks how to make a fixed-context model behave as if it had larger, persistent memory without retraining the model or increasing the context window.</p>
+
+      <h2>Method</h2>
+      <p>Wrap a fixed-context LLM in an OS-like runtime that stores prompt-resident state in main context, out-of-context state in recall and archival storage, and exposes memory-management functions the model can call.</p>
+      <ul><li>Store static instructions, writable working memory, and recent events in main context.</li><li>Append user and model messages to recall storage so evicted history remains queryable.</li><li>Store long documents or important facts in archival storage, implemented in experiments with PostgreSQL, pgvector, and HNSW indexing.</li><li>Insert memory-pressure warnings before context overflow so the model can preserve useful information.</li><li>Flush old FIFO messages when needed, keeping a recursive summary plus durable recall storage.</li><li>Parse model outputs as memory functions, execute them, feed results/errors back, and optionally continue via function chaining.</li><li>Evaluate the same runtime in multi-session chat, document QA, and nested key-value retrieval.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>MemGPT frames the context window as main memory and external stores as disk-like memory, with the model responsible for moving information between tiers through function calls.</p>
+  <p><strong>Scope:</strong> Introduction and Section 2.</p>
+  <ul><li><strong>E-memory-hierarchy</strong>: The paper proposes virtual context management: main context holds prompt-resident state, external context holds out-of-context data, and the LLM uses functions to retrieve, write, and evict memory across tiers.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>The runtime separates system instructions, writable working context, FIFO queue, recall storage, and archival storage, and uses memory-pressure warnings plus flushing to control overflow.</p>
+  <p><strong>Scope:</strong> Sections 2.1 and 2.2.</p>
+  <ul><li><strong>E-main-external-context</strong>: Main context is split into system instructions, writable working context, and a FIFO queue. The queue manager writes messages to recall storage, warns near context overflow, flushes messages at the flush threshold, preserves a recursive summary, and keeps evicted messages in recall storage.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>MemGPT makes memory management event-driven and supports function chaining so the model can run multi-step memory searches before yielding control.</p>
+  <p><strong>Scope:</strong> Sections 2.3 and 2.4.</p>
+  <ul><li><strong>E-control-flow</strong>: The function executor parses model outputs as memory function calls, feeds results and runtime errors back into context, and supports immediate follow-up inference through a heartbeat flag or yielding until the next event.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>On deep memory retrieval over Multi-Session Chat, MemGPT substantially improves accuracy and ROUGE-L over fixed-context baselines for GPT-3.5, GPT-4, and GPT-4 Turbo.</p>
+  <p><strong>Scope:</strong> Section 3.1.1, Table 2.</p>
+  <ul><li><strong>E-dmr</strong>: DMR accuracy and ROUGE-L improve from GPT-3.5 Turbo 38.7% / 0.394 to MemGPT 66.9% / 0.629, GPT-4 32.1% / 0.296 to MemGPT 92.5% / 0.814, and GPT-4 Turbo 35.3% / 0.359 to MemGPT 93.4% / 0.827.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>On document QA, MemGPT uses archival vector search to page through more documents than fit in prompt context, but performance remains tied to retrieval quality and model function-calling ability.</p>
+  <p><strong>Scope:</strong> Section 3.2.1 and Figure 5.</p>
+  <ul><li><strong>E-document-qa</strong>: The document-QA setup loads a late-2018 Wikipedia dump into archival storage, uses OpenAI text-embedding-ada-002 embeddings with PostgreSQL, pgvector, and HNSW, samples 50 NaturalQuestions-Open questions, and shows MemGPT paging through retrieval results while fixed-context baselines are capped by the documents placed in prompt context.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>On nested key-value retrieval, fixed-context baselines fail as nesting grows, while MemGPT with GPT-4 remains effective by chaining repeated memory queries.</p>
+  <p><strong>Scope:</strong> Section 3.2.2 and Figure 7.</p>
+  <ul><li><strong>E-nested-kv</strong>: Nested KV uses 140 UUID key-value pairs, varies nesting from 0 to 4, and samples 30 orderings. GPT-3.5 reaches 0% accuracy at 1 nesting level; GPT-4 and GPT-4 Turbo reach 0% by 3 nesting levels; MemGPT with GPT-4 remains unaffected by nesting depth in the paper's description.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · paper-supported</h3>
+  <p>The approach is bottlenecked by the base model's ability to call functions, manage search depth, and continue paging when the needed evidence has not yet been retrieved.</p>
+  <p><strong>Scope:</strong> Sections 3.2.1 and 3.2.2.</p>
+  <ul><li><strong>E-model-dependence</strong>: The authors report degraded document-QA performance with GPT-3.5 because of limited function-calling ability, note that MemGPT may stop paging before exhausting retrieval results, and observe that MemGPT with GPT-3.5 and GPT-4 Turbo drops off in nested KV because the model fails to perform enough lookups.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>A context window is main memory, not durable memory. Persistent agent state needs explicit storage tiers and movement rules.</li><li>Memory actions should be first-class runtime events: search, write, flush, summarize, page, and heartbeat all need logs and policy.</li><li>Memory pressure is a useful control signal. Long-running agents should know before context eviction happens, not after facts disappear.</li><li>The memory manager is only as reliable as the base model's function-calling and stopping behavior.</li><li>RAG is not enough for long-horizon agents. The model also needs control over when to retrieve, how many pages to inspect, and when to save new state.</li><li>External memory creates infrastructure obligations: database schema, vector indexes, pagination, provenance, compaction, and access control.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The paper's memory policy is prompt- and model-driven rather than formally specified or verified.</li><li>Several evaluations rely on LLM judges or similarity metrics, not executable ground truth.</li><li>The document-QA experiment uses a small sample of 50 questions.</li><li>Performance depends strongly on model function-calling quality; GPT-3.5 is notably weaker in the paper's experiments.</li><li>MemGPT can stop searching before reaching the needed evidence, so the illusion of infinite context is bounded by search policy.</li><li>The paper does not deeply address privacy, access control, retention policy, or deletion semantics for long-term user memory.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/memgpt-packer-2023.json.</span>
+  </footer>
+</body>
+</html>

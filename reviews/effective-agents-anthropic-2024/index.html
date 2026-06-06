@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Building Effective Agents</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/effective-agents-anthropic-2024/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Start Here</p>
+        <h1>Building Effective Agents</h1>
+        <p class="hero-lede">Anthropic argues that effective agentic systems usually start with simple LLM calls and only add workflows or autonomous agents when the task's uncertainty justifies the latency, cost, and control tradeoffs.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>6</strong><span>Claims</span></div>
+          <div class="metric"><strong>6</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2024 · Anthropic Engineering</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>source-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>1</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/effective-agents-anthropic-2024/">Open deck</a>
+        <a class="button" href="https://www.anthropic.com/engineering/building-effective-agents">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>The article gives a practical runtime taxonomy: augmented LLM, fixed workflow, and autonomous agent are different control surfaces with different debugging, cost, and trust requirements.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Teams often use the word agent for both fixed workflows and open-ended autonomous systems.</li><li>Frameworks can make agentic systems quick to start but can obscure prompts, responses, and tool behavior.</li><li>Complex multi-step systems can add latency, cost, and compounding errors when a simpler LLM call would suffice.</li></ul>
+      <p><strong>Key gap:</strong> The article addresses the missing practitioner taxonomy for deciding when to use a direct LLM call, a predefined workflow, or a model-directed agent.</p>
+
+      <h2>Method</h2>
+      <p>Use the simplest control pattern that satisfies the task. Start with a direct augmented LLM call, move to fixed workflows when decomposition is predictable, and reserve autonomous agents for open-ended tasks where the model must choose steps and tools over many turns.</p>
+      <ul><li>Find the simplest solution, often a single LLM call with retrieval or examples.</li><li>If a task decomposes cleanly, implement a fixed workflow with checks or routing.</li><li>If subtasks cannot be predicted in advance, let an orchestrator or agent dynamically decompose the task.</li><li>For autonomous agents, keep environment feedback, sandbox testing, guardrails, and stopping conditions explicit.</li><li>Design and test tools as carefully as user-facing interfaces.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · source-supported</h3>
+  <p>The article distinguishes workflows from agents by whether code paths are predefined or dynamically directed by the LLM.</p>
+  <p><strong>Scope:</strong> Anthropic's definitions in the 'What are agents?' section.</p>
+  <ul><li><strong>E-workflow-agent-distinction</strong>: The article defines workflows as systems where LLMs and tools are orchestrated through predefined code paths, and agents as systems where LLMs dynamically direct their own process and tool usage.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · source-supported</h3>
+  <p>Anthropic recommends starting with the simplest LLM application and adding agentic complexity only when it demonstrably improves outcomes.</p>
+  <p><strong>Scope:</strong> Guidance in 'When (and when not) to use agents' and the summary.</p>
+  <ul><li><strong>E-simplicity-guidance</strong>: The article recommends finding the simplest solution possible, says agentic systems trade latency and cost for task performance, and summarizes the rule as starting simple and adding multi-step systems only when simpler solutions fall short.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · source-supported</h3>
+  <p>The augmented LLM is treated as the foundational building block for agentic systems, with retrieval, tools, and memory exposed through clear interfaces.</p>
+  <p><strong>Scope:</strong> Building block section of the article.</p>
+  <ul><li><strong>E-augmented-llm</strong>: The article identifies an LLM with retrieval, tools, and memory as the basic building block, and stresses tailoring those capabilities plus documenting interfaces for model use.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · source-supported</h3>
+  <p>The article names five common workflow patterns: prompt chaining, routing, parallelization, orchestrator-workers, and evaluator-optimizer.</p>
+  <p><strong>Scope:</strong> Workflow sections before the autonomous agents section.</p>
+  <ul><li><strong>E-workflow-patterns</strong>: The article describes prompt chaining, routing, parallelization, orchestrator-workers, and evaluator-optimizer workflows, including when each is useful.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · source-supported</h3>
+  <p>Autonomous agents should receive ground-truth environment feedback at each step, include human checkpoints or blocker escalation where useful, and use stopping conditions to maintain control.</p>
+  <p><strong>Scope:</strong> Agents section of the article.</p>
+  <ul><li><strong>E-agent-loop</strong>: The article describes agents that plan and operate independently, use tool or code-execution results as ground truth, can pause for human feedback, and should include stopping conditions. It also warns about higher cost and compounding errors.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · source-supported</h3>
+  <p>Tool definitions deserve prompt-engineering effort: formats, parameters, examples, edge cases, and tests should be optimized for model use.</p>
+  <p><strong>Scope:</strong> Appendix 2 on prompt engineering tools.</p>
+  <ul><li><strong>E-tool-interface</strong>: The article says tool definitions need as much prompt-engineering attention as prompts, recommends natural formats with low overhead, examples and clear boundaries, testing model tool use, and notes an absolute-filepath tool change that improved reliability in their coding agent.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Separate workflows from agents in the runtime API. Fixed code paths and model-directed control flow need different observability and safety expectations.</li><li>Treat complexity as a cost: every extra loop, branch, worker, or evaluator should have an evaluation reason to exist.</li><li>The augmented LLM is the reusable substrate; retrieval, memory, and tools should be documented as model-facing capabilities, not hidden implementation details.</li><li>Agent loops need environment observations, human checkpoints, sandbox tests, guardrails, and stopping conditions as first-class runtime concepts.</li><li>Agent-computer interfaces are infrastructure. Tool schemas, parameter names, path conventions, output formats, and examples can materially change reliability.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>This is a practitioner article based on Anthropic and customer experience, not a peer-reviewed research paper.</li><li>The framework and model examples can age as Anthropic products and agent frameworks change.</li><li>The article gives patterns and fit conditions, but not quantitative benchmark results for each pattern.</li><li>The advice is oriented toward LLM application builders and does not fully specify security boundaries for high-risk tool use.</li><li>Some tool-design examples are Anthropic-specific, though the interface lessons generalize.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/effective-agents-anthropic-2024.json.</span>
+  </footer>
+</body>
+</html>

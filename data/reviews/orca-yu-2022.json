@@ -1,0 +1,275 @@
+{
+  "schema_version": 1,
+  "slug": "orca-yu-2022",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "Orca: A Distributed Serving System for Transformer-Based Generative Models",
+    "authors": [
+      "Gyeong-In Yu",
+      "Joo Seong Jeong",
+      "Geon-Woo Kim",
+      "Soojeong Kim",
+      "Byung-Gon Chun"
+    ],
+    "year": 2022,
+    "venue": "OSDI 2022",
+    "url": "https://www.usenix.org/conference/osdi22/presentation/yu",
+    "project_url": "",
+    "arxiv_id": "",
+    "read_sources": [
+      {
+        "kind": "conference_page",
+        "url": "https://www.usenix.org/conference/osdi22/presentation/yu",
+        "note": "Used for OSDI 2022 publication metadata and open-access paper link."
+      },
+      {
+        "kind": "paper_pdf",
+        "url": "https://www.usenix.org/system/files/osdi22-yu.pdf",
+        "note": "Read for autoregressive serving problem, iteration-level scheduling, selective batching, model-parallel execution, memory scheduling, pipelining, and evaluation."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "Orca reframes LLM serving as token-iteration scheduling: instead of batching full requests until every sequence finishes, it admits, removes, and schedules requests after every generated token.",
+    "thesis": "The central systems insight is that autoregressive generation has a loop; serving systems should schedule that loop at iteration granularity and selectively batch only the tensor operations that still benefit from batching.",
+    "why_it_matters": "Agents create many short and long generations with unpredictable lengths. Orca is the first paper in this list that makes inference serving feel like a scheduler problem rather than only a model-kernel problem."
+  },
+  "problem": {
+    "prior_state": [
+      "Existing inference servers such as Triton/TensorFlow Serving were designed around request-level batching.",
+      "Autoregressive Transformer generation runs one model iteration per output token.",
+      "Requests in a batch can need different output lengths, so short requests wait for longer ones and new arrivals wait for the whole batch to finish.",
+      "Naively changing the batch after each token breaks simple batched execution because attention tensors have variable shapes across sequence lengths."
+    ],
+    "key_gap": "The paper asks how to keep batching efficient while allowing the serving system to make scheduling decisions after every generation iteration.",
+    "assumptions": [
+      "The target workload is Transformer-based autoregressive generation.",
+      "Requests have variable output lengths and arrive online.",
+      "Large models may require model parallelism across multiple GPUs.",
+      "KV/attention state is maintained across iterations to avoid recomputing prefixes.",
+      "Latency and throughput must be optimized together rather than separately."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "iteration-level-scheduling",
+      "name": "Iteration-level scheduling",
+      "definition": "A serving mechanism that invokes the execution engine for one generation iteration and lets the scheduler update the batch after each token."
+    },
+    {
+      "id": "selective-batching",
+      "name": "Selective batching",
+      "definition": "Batching only the Transformer operations that benefit from batching while executing attention separately when sequence lengths differ."
+    },
+    {
+      "id": "initiation-phase",
+      "name": "Initiation phase",
+      "definition": "The first generation iteration that processes the full input prompt and produces the first output token."
+    },
+    {
+      "id": "increment-phase",
+      "name": "Increment phase",
+      "definition": "Subsequent generation iterations that consume one generated token and cached KV state to produce the next token."
+    },
+    {
+      "id": "kv-cache",
+      "name": "KV cache",
+      "definition": "Per-layer attention key/value tensors stored across iterations to avoid recomputing previous tokens."
+    },
+    {
+      "id": "model-parallelism",
+      "name": "Model parallelism",
+      "definition": "Splitting model layers or tensor operations across workers/GPUs so very large models can be served."
+    }
+  ],
+  "method": {
+    "core_idea": "Run one token iteration at a time, update request membership after each iteration, selectively batch parameter-heavy operations while handling attention's variable-length state separately, and coordinate model-parallel workers with memory-aware scheduling.",
+    "action_grammar": [
+      "request queue: incoming generation requests waiting for admission.",
+      "active batch: requests selected for the next generation iteration.",
+      "iteration: one model execution that emits one next token per active request.",
+      "finished request: request that emitted EOS or hit a length limit.",
+      "attention state: per-request KV cache whose size grows with generated tokens.",
+      "selective batched op: operation like linear/MLP where batching reuses loaded model parameters.",
+      "non-batched attention: attention over per-request variable-length state."
+    ],
+    "steps": [
+      "Admit an initial batch of requests.",
+      "Invoke the model execution engine for one iteration rather than the whole request.",
+      "After the iteration returns, immediately return finished requests to clients.",
+      "Admit newly arrived requests into free batch slots before the next iteration.",
+      "Apply batching to parameter-heavy operations such as linear layers and MLPs.",
+      "Handle attention separately where per-request tensor shapes differ.",
+      "Track KV memory growth so the scheduler does not admit more requests than memory can support.",
+      "Use intra-layer/inter-layer model parallelism and pipelining for large models."
+    ],
+    "pseudocode": "active = []\nwhile serving:\n    active += admit_requests(queue, available_memory, max_batch)\n\n    outputs, kv_updates = model.run_one_iteration(active, selective_batching=True)\n\n    for req, token in outputs:\n        req.append(token)\n        if token == EOS or req.length_limit_reached():\n            return_to_client(req)\n            free_kv_cache(req)\n            active.remove(req)\n\n    update_memory_accounting(kv_updates)\n    rebalance_or_pipeline_workers_if_needed()"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "architecture",
+      "status": "paper-supported",
+      "statement": "Autoregressive generation breaks request-level batching because each request can require a different number of model iterations.",
+      "scope": "Abstract and Section 1.",
+      "evidence_refs": ["E-request-batching-problem"],
+      "caveats": ["The issue is specific to multi-iteration generative workloads, not one-shot inference models."]
+    },
+    {
+      "id": "C2",
+      "type": "method",
+      "status": "paper-supported",
+      "statement": "Iteration-level scheduling lets newly arrived requests wait only for one model iteration and lets completed requests return immediately after their final token.",
+      "scope": "Abstract and Section 1.",
+      "evidence_refs": ["E-iteration-scheduling"],
+      "caveats": ["Scheduler decisions still must respect KV-cache memory and model-parallel execution constraints."]
+    },
+    {
+      "id": "C3",
+      "type": "method",
+      "status": "paper-supported",
+      "statement": "Selective batching batches only selected operations and handles attention differently because attention tensors have variable shapes as sequence lengths diverge.",
+      "scope": "Abstract and Section 1.",
+      "evidence_refs": ["E-selective-batching"],
+      "caveats": ["This design predates later KV-cache paging systems such as vLLM/PagedAttention."]
+    },
+    {
+      "id": "C4",
+      "type": "systems",
+      "status": "paper-supported",
+      "statement": "Orca includes distributed serving support for models with hundreds of billions of parameters through intra-layer and inter-layer model parallelism.",
+      "scope": "Section 1 and system design sections.",
+      "evidence_refs": ["E-distributed-serving"],
+      "caveats": ["The implementation and evaluation focus on GPT-style language models."]
+    },
+    {
+      "id": "C5",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "On GPT-3-style models up to 341B parameters, Orca reports up to 36.9x throughput improvement over FasterTransformer at the same latency level.",
+      "scope": "Abstract and Section 1.",
+      "evidence_refs": ["E-throughput"],
+      "caveats": ["The result compares against the evaluated FasterTransformer/Triton-style baseline and workload assumptions."]
+    },
+    {
+      "id": "C6",
+      "type": "limitation",
+      "status": "paper-supported",
+      "statement": "Orca still treats KV-cache memory as a central scheduling constraint because attention state grows with generated sequence length.",
+      "scope": "Sections 1-3 and memory design.",
+      "evidence_refs": ["E-kv-growth"],
+      "caveats": ["PagedAttention later tackles KV-cache fragmentation and sharing more directly."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-request-batching-problem",
+      "kind": "problem",
+      "source": "paper",
+      "locator": "Abstract and Section 1",
+      "result": "The paper explains that existing request-level serving systems cannot change a batch until all requests in the batch finish, so short requests wait for long ones and new arrivals wait for the current batch.",
+      "metric": "request-level batching inefficiency",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-iteration-scheduling",
+      "kind": "method",
+      "source": "paper",
+      "locator": "Abstract and Section 1",
+      "result": "Orca invokes the engine to run one model iteration on the batch, then checks completion and admits new requests after every iteration.",
+      "metric": "scheduler granularity",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-selective-batching",
+      "kind": "method",
+      "source": "paper",
+      "locator": "Abstract and Section 1",
+      "result": "Selective batching applies batching only to selected operations, while attention is processed per request because its tensor shapes depend on already processed tokens and it has no model parameters to amortize.",
+      "metric": "operation-level batching policy",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-distributed-serving",
+      "kind": "systems",
+      "source": "paper",
+      "locator": "Section 1",
+      "result": "The paper states Orca adopts intra-layer and inter-layer model parallelism and adds scheduling, memory management, and pipelined execution for large-scale models.",
+      "metric": "distributed model serving support",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-throughput",
+      "kind": "benchmark_result",
+      "source": "paper",
+      "locator": "Abstract and Section 1",
+      "result": "The evaluation on GPT-3 175B and additional GPT-3-style models up to 341B reports 36.9x throughput improvement at the same latency level compared with NVIDIA FasterTransformer.",
+      "metric": "throughput at same latency",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-kv-growth",
+      "kind": "systems_constraint",
+      "source": "paper",
+      "locator": "Section 2 and design sections",
+      "result": "The paper describes Transformer key/value state as growing with the number of processed tokens, requiring the scheduler to consider memory while requests continue generating.",
+      "metric": "KV cache growth",
+      "claim_refs": ["C6"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "LLM serving for agents is scheduling, not just kernels: every agent step consumes a variable number of token iterations.",
+    "Iteration-level scheduling is the ancestor of modern continuous batching. Agents need it because task lengths are unpredictable.",
+    "Short generations should not wait behind long generations from the same batch; the scheduler must retire completed sequences immediately.",
+    "Admission control must account for KV-cache growth, not just current batch size.",
+    "Serving optimizations change product behavior indirectly: lower per-step latency and higher throughput determine whether multi-call agent loops feel usable.",
+    "Orca makes a useful separation between parameter-heavy operations worth batching and state-heavy attention operations that need different treatment."
+  ],
+  "caveats": [
+    "The evaluation is on GPT-style language models, not every generative model domain.",
+    "The main comparison is against the evaluated FasterTransformer baseline from the paper era.",
+    "The paper predates PagedAttention/vLLM and modern production serving engines.",
+    "Selective batching handles variable-length attention, but does not fully solve KV-cache memory fragmentation and sharing.",
+    "Serving throughput gains do not guarantee semantic reliability for agents; they make retries, self-consistency, search, and multi-step workflows cheaper."
+  ],
+  "related_work": [
+    {
+      "title": "PagedAttention",
+      "relation": "successor",
+      "note": "PagedAttention/vLLM builds on continuous batching workloads but focuses on KV-cache memory management and sharing.",
+      "url": "https://arxiv.org/abs/2309.06180"
+    },
+    {
+      "title": "Tree of Thoughts",
+      "relation": "demand_driver",
+      "note": "Search-style reasoning makes many model calls; Orca-style serving is what pays that inference bill efficiently.",
+      "url": "https://arxiv.org/abs/2305.10601"
+    },
+    {
+      "title": "Speculative Decoding",
+      "relation": "latency_optimization",
+      "note": "Orca improves scheduling and batching; speculative decoding reduces serial target-model steps per generated token span.",
+      "url": "https://arxiv.org/abs/2211.17192"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A simple PoC could simulate request-level versus iteration-level batching with variable output lengths and compare queueing latency."
+  },
+  "slide_plan": {
+    "title": "Orca",
+    "subtitle": "Token-iteration scheduling for LLM serving",
+    "sections": [
+      "summary",
+      "problem",
+      "request_level_batching",
+      "iteration_level_scheduling",
+      "selective_batching",
+      "distributed_serving",
+      "results",
+      "agent_serving_takeaways",
+      "caveats",
+      "references"
+    ]
+  }
+}

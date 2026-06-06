@@ -1,0 +1,268 @@
+{
+  "schema_version": 1,
+  "slug": "trusting-trust-thompson-1984",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "Reflections on Trusting Trust",
+    "authors": ["Ken Thompson"],
+    "year": 1984,
+    "venue": "Communications of the ACM 27(8); Turing Award Lecture",
+    "url": "https://dl.acm.org/doi/10.1145/358198.358210",
+    "read_sources": [
+      {
+        "kind": "bibliography",
+        "url": "https://dl.acm.org/doi/10.1145/358198.358210",
+        "note": "Used for DOI and canonical publication target."
+      },
+      {
+        "kind": "public_reprint",
+        "url": "https://cacm.acm.org/research/reflections-on-trusting-trust/",
+        "note": "Used to confirm CACM publication context and title metadata."
+      },
+      {
+        "kind": "full_text_reprint",
+        "url": "https://adrianopol.github.io/articles/1984-08-01_ken-thompson_reflections-on-trusting-trust.html",
+        "note": "Read for the three-stage argument: self-reproducing programs, compiler self-training, persistent compiler/login Trojan, and the moral about source-level trust."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "Thompson shows that source review is not enough when the compiler or lower toolchain can hide and reproduce a Trojan across rebuilds.",
+    "thesis": "Trust is recursive: a program's apparent source can be clean while the tool that produces it silently installs behavior and preserves that behavior in future tool builds.",
+    "why_it_matters": "For agents, the lecture is the right security frame: if an agent's actions depend on opaque models, tools, sandboxes, or evaluators, the visible transcript is not the whole trust boundary."
+  },
+  "problem": {
+    "prior_state": [
+      "Security review often focuses on the visible source code of the program being run.",
+      "Compilers, loaders, assemblers, and other lower-level program-handling tools are frequently treated as trusted infrastructure.",
+      "A malicious transformation can be inserted below the source layer and survive source cleanup.",
+      "The deeper the compromised layer, the harder the compromise is to detect."
+    ],
+    "key_gap": "The lecture asks whether one can trust a claim that a program is free of Trojan horses when the program was produced by tools that may themselves be compromised.",
+    "assumptions": [
+      "A compiler can recognize source patterns and deliberately miscompile them.",
+      "A self-hosting compiler can learn and preserve behavior across recompilation.",
+      "Reviewers may inspect source but not the actual semantics produced by an untrusted toolchain.",
+      "Security depends on trusted people and trusted provenance as well as technical checks."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "self-reproducing-program",
+      "name": "Self-reproducing program",
+      "definition": "A program that outputs a copy of its own source and can carry arbitrary reproduced payload."
+    },
+    {
+      "id": "self-hosting-compiler",
+      "name": "Self-hosting compiler",
+      "definition": "A compiler written in the language it compiles, creating a recursive build dependency."
+    },
+    {
+      "id": "compiler-training",
+      "name": "Compiler training",
+      "definition": "Thompson's term for teaching a compiler a behavior once so future source forms can rely on it."
+    },
+    {
+      "id": "trojan-compiler",
+      "name": "Trojan compiler",
+      "definition": "A compiler binary that inserts hidden behavior when compiling matching source patterns."
+    },
+    {
+      "id": "source-level-verification-limit",
+      "name": "Source-level verification limit",
+      "definition": "The fact that source inspection cannot prove absence of behavior introduced by untrusted lower-level tools."
+    },
+    {
+      "id": "trust-root",
+      "name": "Trust root",
+      "definition": "The people, tools, binaries, hardware, or procedures that a system must ultimately rely on."
+    }
+  ],
+  "method": {
+    "core_idea": "Demonstrate a staged attack: build a self-reproducing payload, teach a compiler new behavior, then use a compiler Trojan that backdoors login and reinserts itself into future compiler binaries even after source cleanup.",
+    "action_grammar": [
+      "source program: visible text inspected by developers.",
+      "compiler binary: executable tool that transforms source into machine code.",
+      "pattern match: compiler recognition of a target source fragment.",
+      "miscompile: deliberate replacement of expected compiled output with malicious output.",
+      "payload: hidden code inserted into a target program or compiler.",
+      "self-reinsertion: compiling a clean compiler source with a compromised compiler produces a compromised compiler binary.",
+      "trust root: the layer that must be believed because it is not independently verified."
+    ],
+    "steps": [
+      "Show a self-reproducing C program that can emit source containing arbitrary extra baggage.",
+      "Show how a self-hosting C compiler can be taught a new escape sequence through an intermediate numeric definition.",
+      "Modify the compiler so it recognizes source for a login program and inserts a password-bypass Trojan.",
+      "Add a second compiler-recognition rule that inserts both the login Trojan and the compiler-reproducing Trojan when compiling the compiler itself.",
+      "Install the compromised compiler binary, then remove malicious source.",
+      "Observe that future builds from clean compiler source still regenerate the compromised compiler and backdoored login."
+    ],
+    "pseudocode": "compile(source):\n    if matches_login_program(source):\n        emit(login_with_extra_password())\n        return\n    if matches_compiler_source(source):\n        emit(compiler_with_login_trojan_and_self_reinsertion())\n        return\n    emit(normal_compile(source))\n\n# After installation, the source can be clean; the binary keeps the payload alive."
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "security",
+      "status": "source-supported",
+      "statement": "A self-reproducing program can carry arbitrary extra payload along with its main algorithm.",
+      "scope": "Stage I.",
+      "evidence_refs": ["E-self-reproduction"],
+      "caveats": ["The concrete example is pedagogical, not an exploit by itself."]
+    },
+    {
+      "id": "C2",
+      "type": "security",
+      "status": "source-supported",
+      "statement": "A self-hosting compiler can preserve learned behavior across recompilation, creating a recursive trust dependency.",
+      "scope": "Stage II.",
+      "evidence_refs": ["E-compiler-training"],
+      "caveats": ["The example uses the C compiler and escape sequences, but the concept applies more broadly to program-handling tools."]
+    },
+    {
+      "id": "C3",
+      "type": "attack",
+      "status": "source-supported",
+      "statement": "A compiler can deliberately miscompile a target program such as login to insert hidden behavior not present in the target source.",
+      "scope": "Stage III.",
+      "evidence_refs": ["E-login-trojan"],
+      "caveats": ["The attack requires control of or influence over the compiler binary or build chain."]
+    },
+    {
+      "id": "C4",
+      "type": "attack",
+      "status": "source-supported",
+      "statement": "A compromised compiler can reinsert its own Trojan behavior when compiling a clean compiler source, leaving no visible malicious source.",
+      "scope": "Stage III.",
+      "evidence_refs": ["E-self-reinsertion"],
+      "caveats": ["Independent rebuilds or diverse compilation can mitigate this class, but they are outside the original lecture's demonstration."]
+    },
+    {
+      "id": "C5",
+      "type": "security_principle",
+      "status": "source-supported",
+      "statement": "Source-level verification alone cannot protect against malicious behavior introduced by untrusted lower-level program-handling tools.",
+      "scope": "Moral.",
+      "evidence_refs": ["E-moral"],
+      "caveats": ["Source review remains valuable; the claim is that it is insufficient as a complete trust argument."]
+    },
+    {
+      "id": "C6",
+      "type": "agent_security",
+      "status": "inference",
+      "statement": "For LLM agents, the analogous risk is trusting the visible prompt/trace while ignoring opaque models, tools, sandboxes, evaluators, and infrastructure below that trace.",
+      "scope": "Application to agent infrastructure.",
+      "evidence_refs": ["E-agent-analogy"],
+      "caveats": ["This is an inference from the trust-boundary argument, not a claim Thompson made about LLMs."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-self-reproduction",
+      "kind": "demonstration",
+      "source": "lecture",
+      "locator": "Stage I",
+      "result": "Thompson presents a self-reproducing C program and notes that it can be written by another program and can reproduce arbitrary excess baggage.",
+      "metric": "payload persistence through reproduction",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-compiler-training",
+      "kind": "demonstration",
+      "source": "lecture",
+      "locator": "Stage II",
+      "result": "The lecture shows how to teach a self-hosting C compiler a new escape sequence so future source can use the learned behavior.",
+      "metric": "self-hosted compiler learning",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-login-trojan",
+      "kind": "attack",
+      "source": "lecture",
+      "locator": "Stage III",
+      "result": "Thompson describes a compiler modification that recognizes the UNIX login command and emits code accepting either the intended password or a known password.",
+      "metric": "targeted miscompilation",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-self-reinsertion",
+      "kind": "attack",
+      "source": "lecture",
+      "locator": "Stage III",
+      "result": "A second pattern recognizes the compiler source and emits a compiler that contains both the login Trojan and the compiler self-reinsertion Trojan, even after source cleanup.",
+      "metric": "persistent binary-level compromise",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-moral",
+      "kind": "security_principle",
+      "source": "lecture",
+      "locator": "Moral",
+      "result": "The lecture concludes that no amount of source-level verification protects against using untrusted lower-level tools such as compilers, assemblers, loaders, or hardware microcode.",
+      "metric": "trust boundary depth",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-agent-analogy",
+      "kind": "inference",
+      "source": "reviewer",
+      "locator": "Agent-infrastructure reading context",
+      "result": "The same recursive trust problem appears when an agent's safety case depends on components below the visible conversation: model weights, tool servers, sandbox runtimes, evaluators, dependencies, and build/deploy pipelines.",
+      "metric": "agent trust boundary analysis",
+      "claim_refs": ["C6"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "Do not confuse a clean transcript, clean prompt, or clean source file with a complete trust argument.",
+    "Agent tools, sandboxes, evaluators, and model-serving stacks are part of the trusted computing base.",
+    "Build provenance, reproducible builds, signed artifacts, isolated tool execution, and independent verification matter for agent systems.",
+    "If an agent can run code or call tools, the compiler/interpreter/container underneath can be the real security boundary.",
+    "Trust has to bottom out somewhere; the engineering task is to make that root explicit, small, auditable, and replaceable.",
+    "This is the bridge from agent security to systems security: prompt-level policies are not a substitute for trusted runtime design."
+  ],
+  "caveats": [
+    "The lecture is a short conceptual demonstration, not a modern supply-chain security survey.",
+    "It predates reproducible builds, diverse double compilation, signed supply chains, TEEs, and modern software provenance systems.",
+    "The LLM-agent application is an analogy; Thompson discusses compilers, login, and lower-level program-handling tools.",
+    "The conclusion can sound fatalistic, but in practice it motivates reducing and checking the trusted base rather than giving up on verification.",
+    "The concrete login example is historically Unix/C-specific, while the trust-boundary principle is broader."
+  ],
+  "related_work": [
+    {
+      "title": "Capability Myths Demolished",
+      "relation": "security_model",
+      "note": "Capability security narrows authority; Trusting Trust asks which lower layers enforce that authority.",
+      "url": "https://srl.cs.jhu.edu/pubs/SRL2003-02.pdf"
+    },
+    {
+      "title": "seL4",
+      "relation": "verified_tcb",
+      "note": "seL4 shows how a small mediator can be verified; Trusting Trust explains why the build/provenance of that mediator still matters.",
+      "url": "https://sel4.systems/Research/pdfs/sel4-formal-verification-os-kernel.pdf"
+    },
+    {
+      "title": "Fully Countering Trusting Trust through Diverse Double-Compiling",
+      "relation": "mitigation",
+      "note": "Diverse double compilation is a later mitigation technique for detecting this class of compiler subversion.",
+      "url": "https://arxiv.org/abs/1004.5534"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A compact PoC could implement a tiny compiler/interpreter that hides a source-invisible backdoor and reinserts it on rebuild."
+  },
+  "slide_plan": {
+    "title": "Trusting Trust",
+    "subtitle": "Source is not the whole trust boundary",
+    "sections": [
+      "summary",
+      "problem",
+      "self_reproducing_program",
+      "compiler_training",
+      "compiler_trojan",
+      "source_verification_limit",
+      "agent_security_takeaways",
+      "caveats",
+      "references"
+    ]
+  }
+}

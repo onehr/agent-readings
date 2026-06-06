@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · ReAct: Synergizing Reasoning and Acting in Language Models</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/react-yao-2022/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Reasoning, Acting, and Reflection</p>
+        <h1>ReAct</h1>
+        <p class="hero-lede">ReAct prompts a frozen LLM to interleave natural-language thoughts with task actions and observations, making tool use and environment interaction part of the reasoning loop.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>6</strong><span>Claims</span></div>
+          <div class="metric"><strong>6</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2022 · ICLR 2023</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>1</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/react-yao-2022/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2210.03629">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>This paper gives a compact blueprint for the modern LLM agent loop: model proposes intent and action, host runtime executes the action, observation returns to context, and the trace remains inspectable.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Chain-of-thought style reasoning was useful but static: the model reasoned from internal representations without grounding in external state.</li><li>Language-model acting/planning work often predicted domain actions without abstract goal reasoning or working-memory style progress tracking.</li><li>Knowledge-intensive QA and fact verification needed both multi-hop reasoning and fresh retrieval, while interactive environments needed long-horizon subgoal tracking.</li></ul>
+      <p><strong>Key gap:</strong> The paper targets the missing closed-loop pattern that combines reasoning, action, and observation for general task solving rather than treating reasoning and acting as isolated capabilities.</p>
+
+      <h2>Method</h2>
+      <p>Augment the agent's action space with free-form language thoughts. Thoughts do not affect the external environment directly, but they update the context used to choose later thoughts or actions.</p>
+      <ul><li>Provide a few ReAct-format trajectories as in-context examples.</li><li>Let the model generate thoughts and actions in an interleaved trajectory.</li><li>Execute actions through the environment or tool API, then append observations to context.</li><li>Use dense thoughts for knowledge tasks and sparse thoughts for longer-horizon decision tasks.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>Adding language thoughts to the action space lets the model use reasoning as context for future actions without directly mutating the environment.</p>
+  <p><strong>Scope:</strong> Formal setup and prompt-based ReAct method in Section 2.</p>
+  <ul><li><strong>E-method</strong>: The paper augments the action space with language thoughts that update context without environment feedback, then prompts a frozen LLM with human trajectories.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>On HotpotQA and FEVER, ReAct is consistently better than acting-only prompting, while ReAct plus CoT self-consistency gives the strongest prompting results in Table 1.</p>
+  <p><strong>Scope:</strong> PaLM-540B prompting on HotpotQA exact match and FEVER accuracy with a simple Wikipedia API.</p>
+  <ul><li><strong>E-hotpot-fever</strong>: ReAct beats Act on HotpotQA and FEVER (27.4 vs 25.7 EM; 60.9 vs 58.9 Acc). Hybrid methods reach 35.1 HotpotQA EM and 64.6 FEVER Acc.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>External actions make ReAct trajectories more grounded than CoT, but the action structure introduces its own reasoning and retrieval failure modes.</p>
+  <p><strong>Scope:</strong> Manual labeling of sampled HotpotQA trajectories.</p>
+  <ul><li><strong>E-failure-modes</strong>: ReAct has lower false positives than CoT in sampled successes (6% vs 14%) and no hallucination-labeled failures, but higher reasoning-error failures (47% vs 16%) and 23% search-result-error failures.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>On ALFWorld, ReAct substantially improves over acting-only and imitation-learning baselines in success rate.</p>
+  <p><strong>Scope:</strong> ALFWorld task-specific setup over 134 unseen evaluation games.</p>
+  <ul><li><strong>E-alfworld</strong>: Best-of-six ReAct reaches 71% ALFWorld success, compared with 45% for best-of-six Act and 37% for BUTLER.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>On WebShop, one-shot ReAct improves success rate over Act and the IL/IL+RL baselines, but remains below human expert performance.</p>
+  <p><strong>Scope:</strong> WebShop 500 test instructions with average score and success rate.</p>
+  <ul><li><strong>E-webshop</strong>: ReAct reaches WebShop score 66.6 and success rate 40.0, compared with Act 62.3/30.1, IL+RL 62.4/28.7, and human 82.1/59.6.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>Flexible sparse reasoning beats an Inner-Monologue-like dense external feedback pattern on ALFWorld.</p>
+  <p><strong>Scope:</strong> ReAct vs ReAct-IM ablation in ALFWorld Table 3.</p>
+  <ul><li><strong>E-react-im</strong>: Best-of-six ReAct reaches 71% ALFWorld success, while ReAct-IM reaches 53%; the paper attributes the gap to high-level goal decomposition and commonsense reasoning.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>The model should not directly execute tools; the host runtime should parse constrained actions and append observations.</li><li>Thoughts are useful as inspectable state, but they should not be treated as proof of correctness.</li><li>A review should record both positive evidence and failure modes, because retrieval and looping failures are part of the design contract.</li><li>Hybrid control is a real design knob: the paper's CoT-SC/ReAct switches show that internal reasoning and external retrieval can be routed based on confidence or timeout.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>ReAct is a prompting paradigm in this paper, not a new model architecture.</li><li>Standalone ReAct is not uniformly best: it trails CoT on HotpotQA exact match and needs hybrid routing for the strongest QA result.</li><li>Search quality is load-bearing; non-informative search accounts for a meaningful share of ReAct errors in the manual analysis.</li><li>The method can loop or repeat thoughts/actions under greedy decoding.</li><li>Decision-task results remain far below expert humans on WebShop.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/react-yao-2022.json.</span>
+  </footer>
+</body>
+</html>

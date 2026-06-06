@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · tau-bench: A Benchmark for Tool-Agent-User Interaction in Real-World Domains</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/tau-bench-yao-2024/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Evaluation and Benchmarks</p>
+        <h1>tau-bench</h1>
+        <p class="hero-lede">tau-bench evaluates whether tool-using agents can converse with simulated users, follow domain policies, update databases correctly, and do so consistently across repeated trials.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>7</strong><span>Claims</span></div>
+          <div class="metric"><strong>7</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2024 · arXiv 2024</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>3</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/tau-bench-yao-2024/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2406.12045">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>For production agents, pass@1 is not enough. tau-bench makes reliability visible by asking whether the same task succeeds repeatedly under stochastic user conversations.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Many tool-use benchmarks provide all required user information in a single instruction.</li><li>Function-calling benchmarks often evaluate individual tool calls rather than long-horizon dialogue plus database mutation.</li><li>Agent benchmarks often omit domain-specific policies that constrain what actions are allowed.</li><li>Single-run scores hide inconsistency when agents face stochastic users or slightly different conversation flows.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks how to evaluate agents in realistic tool-agent-user interactions where user communication, API actions, and policy compliance all matter.</p>
+
+      <h2>Method</h2>
+      <p>Build domains with realistic databases, APIs, policy documents, and user scenarios; run agents in conversations with LM-simulated users; then compare final database state to annotated goal state across multiple trials.</p>
+      <ul><li>Manually design domain schemas, APIs, and policy documents.</li><li>Generate realistic database entries with LM assistance and manual verification.</li><li>Create and verify user scenarios and target goal states.</li><li>Run an agent with access to policy text and API tools.</li><li>Let a simulated user converse with the agent and reveal information dynamically.</li><li>Execute tool calls against deterministic database APIs.</li><li>At episode end, compare database state with annotated goal state.</li><li>Repeat trials to compute pass^k consistency.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>tau-bench evaluates dynamic conversations between an LM-simulated user and an agent with domain-specific API tools and policy guidelines.</p>
+  <p><strong>Scope:</strong> Abstract and Introduction.</p>
+  <ul><li><strong>E-benchmark-setup</strong>: tau-bench emulates dynamic conversations between an LM-simulated user and an agent with domain-specific API tools and policy guidelines.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>The evaluation compares the database state at the end of a conversation with an annotated goal state.</p>
+  <p><strong>Scope:</strong> Abstract and Introduction.</p>
+  <ul><li><strong>E-db-state-eval</strong>: The benchmark compares final database state after a conversation to annotated goal state, allowing stochastic conversation paths that should end in the same outcome.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>pass^k measures the consistency and robustness of agent behavior across k independent trials.</p>
+  <p><strong>Scope:</strong> Abstract and Introduction.</p>
+  <ul><li><strong>E-passk</strong>: The paper proposes pass^k to evaluate reliability of agent behavior over multiple independent trials.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>The first tau-bench domains are customer-service-style retail and airline tasks with databases, APIs, policies, and user scenarios.</p>
+  <p><strong>Scope:</strong> Introduction.</p>
+  <ul><li><strong>E-domains</strong>: The first benchmark includes tau-retail and tau-airline domains with realistic databases, APIs, policy documents, and user scenarios.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>The paper reports that state-of-the-art function-calling agents such as GPT-4o succeed on less than 50% of tasks overall.</p>
+  <p><strong>Scope:</strong> Abstract.</p>
+  <ul><li><strong>E-overall-result</strong>: The paper says state-of-the-art function-calling agents like GPT-4o succeed on less than 50% of tasks.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>The paper reports GPT-4o pass^1 around 61% on retail and 35% on airline, with pass^8 dropping to about 25% on retail.</p>
+  <p><strong>Scope:</strong> Introduction.</p>
+  <ul><li><strong>E-passk-result</strong>: The paper reports GPT-4o function-calling pass^1 around 61% on retail and 35% on airline, with pass^8 on retail around 25%.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · paper-supported</h3>
+  <p>The paper identifies failures in database reasoning, policy following, compound requests, and consistency under stochastic conversation.</p>
+  <p><strong>Scope:</strong> Introduction and analysis.</p>
+  <ul><li><strong>E-failures</strong>: The authors report that agents struggle with complex database reasoning, policy following, compound requests, stochasticity, and partial information.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Production agent evaluation needs users, not just tools. Missing information must be gathered through conversation.</li><li>Policy compliance should be tested against state changes, not only against plausible natural-language explanations.</li><li>Final database state is the right verifier for many business agents because tool calls are side effects.</li><li>pass^k is a better reliability signal than pass@1 when small stochastic differences can break a workflow.</li><li>Agents need durable state, policy retrieval, authorization, idempotency, and rollback because tau-bench tasks mutate databases.</li><li>Simulated users are benchmark infrastructure; their fidelity and stochasticity affect the measured agent.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The users are LM-simulated, not actual humans.</li><li>The first benchmark covers retail and airline, not all real-world domains.</li><li>Database-state matching can miss conversational quality unless quality is encoded in the task.</li><li>pass^k can be expensive because it multiplies trials per task.</li><li>The reported GPT-4o numbers are historical and setup-specific.</li><li>Strong agents could overfit to policy documents or simulator quirks if benchmark splits are not managed carefully.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/tau-bench-yao-2024.json.</span>
+  </footer>
+</body>
+</html>

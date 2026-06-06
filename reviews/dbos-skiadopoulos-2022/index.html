@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · DBOS: A DBMS-Oriented Operating System</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/dbos-skiadopoulos-2022/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">The Agent Runtime</p>
+        <h1>DBOS</h1>
+        <p class="hero-lede">DBOS argues that a distributed transactional DBMS should be the substrate for cluster operating-system services, so execution state becomes queryable, transactional, and highly available by construction.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>7</strong><span>Claims</span></div>
+          <div class="metric"><strong>7</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2022 · PVLDB 15(1): 21-30, 2022</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>2</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/dbos-skiadopoulos-2022/">Open deck</a>
+        <a class="button" href="https://people.eecs.berkeley.edu/~matei/papers/2022/vldb_dbos.pdf">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>For agents, the DBOS idea is the systems ancestor of 'every step is a durable write': if task state, messages, retries, and results live in a transactional store, an agent trajectory becomes recoverable and inspectable instead of ephemeral control flow.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Modern cloud systems compose Linux, cluster schedulers, distributed filesystems, RPC systems, monitoring tools, and databases as separate components.</li><li>Each component maintains its own state, semantics, fault-tolerance machinery, and analytics surface.</li><li>Serverless and distributed workloads expose an abstraction gap between application tasks and the OS/kernel machinery underneath.</li><li>Runtime observability and recovery are often bolt-ons rather than properties of the execution substrate.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks whether operating-system services can be implemented over a distributed transactional DBMS while retaining competitive performance.</p>
+
+      <h2>Method</h2>
+      <p>Put OS state in a distributed DBMS, then implement OS services as stored procedures over tables so scheduling, communication, storage, transactions, high availability, and analytics share one substrate.</p>
+      <ul><li>Define the DBOS stack with distributed DBMS, microkernel services, OS services, and user applications.</li><li>Represent scheduler state in Task and Worker tables.</li><li>Implement FIFO, locality-aware, and least-loaded schedulers as stored procedure variants.</li><li>Represent IPC messages as rows in a Message table partitioned by receiver.</li><li>Use DBMS transactions, replication, and deletion-on-receive for reliability and exactly-once-style message consumption.</li><li>Represent filesystem blocks and metadata as relational tables.</li><li>Benchmark scheduling, IPC, and filesystem prototypes against conventional systems to test feasibility.</li><li>Use SQL queries over the same tables for monitoring, debugging, analytics, and policy changes.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>DBOS proposes a cluster OS whose bottom layer is a high-performance distributed transactional DBMS.</p>
+  <p><strong>Scope:</strong> Abstract and Section 2.</p>
+  <ul><li><strong>E-dbms-substrate</strong>: The paper argues that a distributed transactional DBMS should be the basis for a scalable cluster OS, with a four-level stack containing the distributed DBMS, microkernel services, OS services, and user applications.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>Representing OS state as tables gives schema discipline, uniform SQL analytics, and shared transaction/high-availability machinery.</p>
+  <p><strong>Scope:</strong> Section 2.2.</p>
+  <ul><li><strong>E-table-benefits</strong>: The authors argue that moving OS state to DBMS tables imposes schema discipline, allows querying across OS data in SQL, and lets transactions, high availability, and multi-node support be implemented once by the DBMS.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>Scheduler behavior can be changed substantially with small SQL/stored-procedure edits over Task and Worker tables.</p>
+  <p><strong>Scope:</strong> Section 4.2.</p>
+  <ul><li><strong>E-scheduler</strong>: The prototype scheduler uses Task and Worker tables. The least-loaded scheduler differs from the FIFO scheduler by adding an order-by-unused-capacity clause, illustrating policy changes through small relational edits.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>DBMS-backed IPC stores messages as table rows, making reliability, failover, in-order delivery, and exactly-once consumption database operations.</p>
+  <p><strong>Scope:</strong> Section 4.3.</p>
+  <ul><li><strong>E-ipc</strong>: Sending a message inserts a row into a Message table partitioned by receiver, receiving queries the local partition, replication supports failover, message_id indexing supports ordering, and deletion after receipt supports exactly-once consumption.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>DBOS IPC is slower than TCP and has mixed performance against gRPC, but can outperform gRPC on batched or fan-out communication workloads.</p>
+  <p><strong>Scope:</strong> Section 4.3.3.</p>
+  <ul><li><strong>E-ipc-benchmarks</strong>: DBOS reports 24-49% lower throughput and 1.3-2.5x higher median latency than gRPC in ping-pong, 4-9.5x lower performance than TCP/IP, up to 2.7x better than gRPC for small batched messages, and 2.3x higher throughput with 64% lower median latency than gRPC for a 40-receiver multicast workload.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>The DBOS filesystem prototype shows transactional-table flexibility and competitive write/parallel throughput, while read costs expose DBMS invocation overhead.</p>
+  <p><strong>Scope:</strong> Section 4.4.</p>
+  <ul><li><strong>E-filesystem</strong>: The filesystem prototype can change block size or object-store shape through schema edits, matches or exceeds ext4 write performance in the localized benchmark, lags ext4 reads because VoltDB invocation costs about 40 microseconds versus roughly 1 microsecond for a Linux system call, saturates 25 Gbps writes like Lustre, and scales almost linearly after the two-node remote penalty.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · paper-supported</h3>
+  <p>The paper's conclusion is feasibility, not completion: DBOS-straw demonstrates basic services and the authors were still building DBOS-wood for serverless and end-to-end applications.</p>
+  <p><strong>Scope:</strong> Section 6.</p>
+  <ul><li><strong>E-conclusion</strong>: The paper concludes it has shown feasibility for layering a cluster OS on a distributed DBMS, with competitive basic services, less SQL service code, queryable OS state, and ongoing work on DBOS-wood.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Agent execution state should be first-class data, not hidden call stack state. DBOS gives the cleanest systems argument for that choice.</li><li>A scheduler table is a natural shape for agent work: task id, worker, capacity, retry budget, priority, lease, and provenance can all be queried.</li><li>An agent message bus backed by transactions can make observations, tool results, and handoffs replayable and deduplicatable.</li><li>SQL observability is not a side feature. If trajectories are rows, debugging is a query instead of log archaeology.</li><li>The DBOS paper is honest about performance tradeoffs. Database-backed runtime semantics buy reliability and analytics, but hot-path latency still matters.</li><li>Durable execution is the agent-level version of the same pattern: use a database to make control flow recoverable.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>DBOS-straw is a prototype, not a full production operating system.</li><li>The paper demonstrates basic OS services, not LLM-agent runtimes directly.</li><li>IPC performance is not universally better; TCP is substantially faster in the reported benchmarks.</li><li>Database invocation overhead is visible in read-heavy filesystem workloads.</li><li>Exactly-once language in IPC still depends on application semantics and external side effects.</li><li>A database substrate centralizes state but also makes database design, transactions, and operations part of the runtime's critical path.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/dbos-skiadopoulos-2022.json.</span>
+  </footer>
+</body>
+</html>

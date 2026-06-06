@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Tulu 3: Pushing Frontiers in Open Language Model Post-Training</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/tulu-3-lambert-2024/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Training Agents</p>
+        <h1>Tulu 3</h1>
+        <p class="hero-lede">Tulu 3 is an open post-training recipe that combines data curation, SFT, length-normalized DPO, RL with verifiable rewards, decontamination, and staged evaluation.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>7</strong><span>Claims</span></div>
+          <div class="metric"><strong>12</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2024 · arXiv 2024; current v5 revised 2025</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>5</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/tulu-3-lambert-2024/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2411.15124">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>For agent training, Tulu 3 is the bridge from RLHF/DPO to verifiable-reward training: it shows how to use exact checks for math and instruction-following, while documenting the operational costs and failure modes of doing that at scale.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Open post-training recipes lagged proprietary labs in transparency, scale, and model quality.</li><li>Instruction tuning, preference tuning, evaluation, decontamination, and RL were often reported as fragments rather than a reproducible stack.</li><li>Open models could overfit popular benchmarks or lack clear unseen evaluations for core capabilities.</li><li>Verifiable-reward training was promising but under-documented as a practical post-training stage.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks how to build a fully open, competitive post-training pipeline with released data, code, checkpoints, evaluation tooling, and recipe decisions.</p>
+
+      <h2>Method</h2>
+      <p>Build a staged open recipe: curate and decontaminate data around core skills, train SFT checkpoints, generate on-policy preference data and tune with length-normalized DPO, then run PPO with binary verifiable rewards for math and precise instruction-following before validating on development and unseen evaluations.</p>
+      <ul><li>Identify core skills: knowledge recall, reasoning, math, coding, chat, safety, and precise instruction following.</li><li>Build development and unseen evaluation suites before finalizing recipes.</li><li>Curate public and synthetic instruction data and aggressively decontaminate against evaluations.</li><li>Train SFT checkpoints on Llama 3.1 base models.</li><li>Create on-policy preference data and train DPO checkpoints, selecting length-normalized DPO after ablations.</li><li>Train final 8B and 70B models with RLVR using GSM8K, MATH, and IFEval-style verifiers.</li><li>Scale the recipe to a 405B model with adjusted SFT/DPO/RLVR details.</li><li>Release weights, intermediate checkpoints, datasets, training code, evaluation code, and decontamination tooling.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>Tulu 3 releases a complete open stack: model checkpoints, intermediate stages, datasets, training code, evaluation code, decontamination tooling, and a demo.</p>
+  <p><strong>Scope:</strong> Abstract, Table 1, and release repositories.</p>
+  <ul><li><strong>E-release</strong>: The release lists base, SFT, DPO, reward-model, and final checkpoints; training code in open-instruct; evaluation code in olmes; decontamination tooling; preference-data inference; SFT, preference, and RLVR datasets; and a demo.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>The Tulu 3 recipe is multi-stage: SFT, preference tuning with length-normalized DPO, then RLVR for selected verifiable skills.</p>
+  <p><strong>Scope:</strong> Introduction, Sections 4-6.</p>
+  <ul><li><strong>E-recipe</strong>: The recipe starts from Llama 3.1 base models, curates/decontaminates data, trains SFT, runs preference tuning over on-policy data, then applies RLVR for verifiable math and instruction-following tasks.</li><li><strong>E-dpo-ablation</strong>: Across explored preference-tuning algorithms on an early Tulu 3 checkpoint and UltraFeedback, only length-normalized DPO outperformed the base checkpoint overall; the best listed average score is 57.3 versus 55.7 SFT base.</li><li><strong>E-rlvr</strong>: RLVR samples completions, applies a deterministic verifier, gives reward alpha when correct and zero otherwise, and optimizes the policy with PPO plus KL regularization.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>On the paper's main evaluation suite, Tulu 3 8B and 70B outperform comparable open-weight instruct models at the same size and the 70B model matches or exceeds several smaller closed models on average.</p>
+  <p><strong>Scope:</strong> Table 2.</p>
+  <ul><li><strong>E-main-results</strong>: The main suite reports averages of 65.1 for Tulu 3 8B and 76.2 for Tulu 3 70B, compared with 62.9 for Llama 3.1 8B Instruct, 74.1 for Llama 3.1 70B Instruct, 69 for GPT-4o mini, 70.6 for Claude 3.5 Haiku, and 75.3 for the best closed-model column in the table.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>RLVR provides deterministic binary rewards for math and precise instruction-following, improving targeted test performance but not guaranteeing average performance gains across all evaluations.</p>
+  <p><strong>Scope:</strong> Section 6.2.1 and Figure 19.</p>
+  <ul><li><strong>E-rlvr-targeted</strong>: RLVR improves targeted test performance for GSM8K, MATH, and prompts with constraints, and improves train-set verifiable rewards, but the paper states an increase in average score across all evaluations is not guaranteed.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>Scaling post-training exposed concrete systems issues: loss aggregation semantics, DPO scaling cost, asynchronous RLVR inference/training, weight synchronization, and hardware restarts.</p>
+  <p><strong>Scope:</strong> Sections 4.3, 5.4, 6.3, and 8.1.</p>
+  <ul><li><strong>E-sft-infra</strong>: The paper identifies mean-loss behavior under gradient accumulation and distributed training as changing sample/token weighting, and chooses sum loss with a 5e-6 learning rate and 2 epochs for SFT after experiments.</li><li><strong>E-dpo-infra</strong>: The 8B DPO model trains for about 10 hours on 8 H100s, while the 70B DPO model trains for about 19 hours on 64 interconnected H100s with maximum sequence length 2048.</li><li><strong>E-rlvr-infra</strong>: RLVR uses separate GPUs for inference and training, concurrent rollout/training to reduce idle time, and weight synchronization to the inference engine, while noting stale-data and reproducibility risks.</li><li><strong>E-405b-infra</strong>: For the 405B RLVR setup, inference uses vLLM with 16-way tensor parallelism while the remaining 240 GPUs train; inference takes about 550 seconds, weight transfer about 25 seconds, and training about 1500 seconds per iteration.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>The paper explicitly separates development and unseen evaluations and finds that some choices generalize while some instruction-following and knowledge decisions overfit development benchmarks.</p>
+  <p><strong>Scope:</strong> Section 7.4 and Tables 31-33.</p>
+  <ul><li><strong>E-unseen-evals</strong>: The paper builds unseen evaluations aligned to core skills, reports that final checkpoints get the best average development and unseen performance, but notes overfitting in precise instruction-following and some knowledge/reasoning choices.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · paper-supported</h3>
+  <p>Several plausible training methods did not reliably improve performance, including online DPO in their setup and rejection sampling at the explored compute budget.</p>
+  <p><strong>Scope:</strong> Section 8.2.</p>
+  <ul><li><strong>E-unfruitful</strong>: The paper reports that online DPO gave little or no improvement on GSM8K and degraded MATH in their setup, and that rejection sampling produced minimal gains for the compute required.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Open recipes need artifacts, not just weights. The reusable contribution is data, code, evals, decontamination, intermediate checkpoints, and failed-method notes.</li><li>Verifiable rewards are the agent-training hinge: when a task has an executable checker, reward generation moves from human-time to compute-time.</li><li>Evaluation should be part of the training loop from day one, with development tasks separated from unseen tasks.</li><li>Post-training is a distributed systems problem at scale: rollout engines, learner GPUs, weight sync, stale data, hardware failures, and loss semantics all affect the model.</li><li>Synthetic data is useful only with aggressive curation and contamination checks; otherwise the apparent skill may just be benchmark leakage.</li><li>Negative results are recipe data. Knowing which obvious methods failed prevents cargo-cult post-training.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The detailed PDF source used here is a v3 mirror, while the current arXiv entry is v5; the arXiv page confirms later 405B results and analyses.</li><li>The recipe is complex and resource-intensive, so reproducibility still requires substantial GPU infrastructure.</li><li>RLVR only applies cleanly where answer extraction and deterministic verification are reliable.</li><li>The paper focuses mostly on English data and evaluations, and lists long-context, multi-turn, and multilinguality as future-work areas.</li><li>Some comparisons with closed models rely on non-identical external reports, interpolated scores, or model-card numbers.</li><li>Unseen evaluations are unseen for Tulu 3, but the authors cannot verify that comparison models did not train on them.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/tulu-3-lambert-2024.json.</span>
+  </footer>
+</body>
+</html>

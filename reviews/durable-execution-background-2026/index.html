@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Durable Execution</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/durable-execution-background-2026/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">The Agent Runtime</p>
+        <h1>Durable Execution</h1>
+        <p class="hero-lede">Durable execution records workflow progress so long-running code can resume after failures without redoing already completed steps or losing the logical trajectory.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>7</strong><span>Claims</span></div>
+          <div class="metric"><strong>7</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2026 · Background reading and product documentation</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>source-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>6</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/durable-execution-background-2026/">Open deck</a>
+        <a class="button" href="https://docs.dbos.dev/why-dbos">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>Agents are exactly the kind of long-lived, side-effecting workflow durable execution was built for: model calls, tool calls, sleeps, callbacks, retries, and user interactions must survive crashes without duplicating actions or losing context.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Ordinary process memory loses workflow state on crash, deploy, timeout, or machine restart.</li><li>Ad-hoc retry logic can duplicate side effects, skip recovery cases, or restart expensive work from the beginning.</li><li>Logs are often good enough for debugging but not strong enough to reconstruct executable control flow.</li><li>Agents intensify the problem because each task may contain many model calls, external tool effects, user interruptions, and long waits.</li></ul>
+      <p><strong>Key gap:</strong> Durable execution fills the gap between stateless request handling and reliable long-running programs by making step history part of the runtime contract.</p>
+
+      <h2>Method</h2>
+      <p>Keep orchestration deterministic, move every external or random operation into a durable boundary, persist each completed boundary's result, and recover by replaying the workflow until the first boundary without a recorded result.</p>
+      <ul><li>Start a workflow and persist its input.</li><li>Run deterministic orchestration code until it reaches a durable operation.</li><li>Execute the step/activity and persist its output before advancing the workflow.</li><li>If the process fails, restart the workflow with its checkpointed input.</li><li>During replay, return stored outputs for completed steps instead of running their code again.</li><li>Resume normal execution at the first step with no checkpointed output.</li><li>Handle external effects through idempotent steps, retries, and recorded operation identities.</li><li>Version or patch workflow code so in-flight histories can still replay after deploys.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · source-supported</h3>
+  <p>Durable execution persists workflow progress so applications can recover from crashes, restarts, and failures without starting from the beginning.</p>
+  <p><strong>Scope:</strong> DBOS and Temporal public docs.</p>
+  <ul><li><strong>E-durable-definition</strong>: DBOS describes durable workflows built on Postgres that recover from failures where they left off, while Temporal describes crash-proof execution that resumes after crashes, network failures, or infrastructure outages.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · source-supported</h3>
+  <p>DBOS recovery re-executes workflows from checkpointed inputs and returns stored step outputs until it reaches the failed or uncompleted step.</p>
+  <p><strong>Scope:</strong> DBOS Architecture docs.</p>
+  <ul><li><strong>E-dbos-recovery</strong>: DBOS stores workflow inputs and step outputs, detects interrupted workflows, restarts them with checkpointed inputs, returns checkpointed outputs for completed steps, and resumes at the first step without a checkpoint.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · source-supported</h3>
+  <p>Temporal uses event sourcing to restore workflow state by replaying workflow code against recorded history while ignoring already-recorded side effects.</p>
+  <p><strong>Scope:</strong> Temporal SDK documentation.</p>
+  <ul><li><strong>E-temporal-replay</strong>: Temporal uses event sourcing to recover workflow objects; when workflow state is restored, code is re-executed from the beginning, and side effects such as activity invocations are ignored because they are recorded in event history.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · source-supported</h3>
+  <p>Durable execution requires deterministic orchestration code: random values, wall-clock time, external I/O, service calls, and database reads must be inside durable steps or activities.</p>
+  <p><strong>Scope:</strong> DBOS Architecture, AWS Durable Execution SDK, and Temporal SDK docs.</p>
+  <ul><li><strong>E-determinism</strong>: All three sources state that code replayed by the durable runtime must be deterministic, and that non-deterministic work such as time, random values, external I/O, service calls, database reads, or SDK calls belongs in durable operations, steps, or activities.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · source-supported</h3>
+  <p>Steps should be idempotent because failure during a step can cause the runtime to retry that step during recovery.</p>
+  <p><strong>Scope:</strong> DBOS Architecture docs and AWS Durable Execution SDK framing.</p>
+  <ul><li><strong>E-idempotency</strong>: DBOS says steps should be idempotent because if a workflow fails while executing a step, the step is retried during recovery, while completed checkpointed steps are not re-executed.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · source-supported</h3>
+  <p>AWS Step Functions Standard Workflow redrive preserves successful-step results and execution history while restarting from the failed, aborted, or timed-out step.</p>
+  <p><strong>Scope:</strong> AWS Step Functions redrive docs.</p>
+  <ul><li><strong>E-step-functions-redrive</strong>: AWS states that redrive continues failed Standard Workflow executions from the unsuccessful step, preserves successful-step results and execution history, and appends redrive events to the original event history.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · source-supported</h3>
+  <p>Durable execution creates upgrade and history-size constraints: changing step order can break replay, and large histories or large step payloads can become performance or retention problems.</p>
+  <p><strong>Scope:</strong> DBOS Architecture and Temporal SDK docs.</p>
+  <ul><li><strong>E-upgrades-history</strong>: DBOS warns that breaking changes to steps or step order can make old checkpoints hard to recover and offers patching/versioning; Temporal warns that large execution histories can hurt performance and that workflow code changes while workflows are open can break replay assumptions.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>An agent trajectory should be a recoverable workflow history, not just a chat transcript.</li><li>Every non-deterministic agent operation belongs behind a durable boundary: model call, tool call, memory read, memory write, clock, random choice, external API, user callback.</li><li>Model calls are side effects for replay purposes. Record the prompt, model identity, parameters, returned text, tool-call JSON, usage, and errors before advancing.</li><li>Idempotency keys are required anywhere the agent can charge money, send mail, create files, open tickets, mutate databases, or call external services.</li><li>The workflow body should be boring deterministic orchestration. Agent creativity belongs in recorded steps, not in replay-sensitive branching.</li><li>History size becomes a product constraint for long-running agents. Summarization is useful, but the raw committed events still need retention and provenance rules.</li><li>Workflow-code upgrades are runtime migrations. Changing an agent graph while old runs are live requires versioning, patching, or explicit cutoff behavior.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>This is background reading synthesized from product documentation, not a single peer-reviewed paper.</li><li>Durable execution does not make side effects exactly-once by magic; external systems need idempotency or transactions.</li><li>The deterministic replay model can conflict with highly dynamic agent graphs unless graph evolution is versioned.</li><li>Replay recovers execution state, not semantic correctness. A recovered agent can still pursue the wrong goal.</li><li>Different platforms expose different durability, retention, history, redrive, and operational tradeoffs.</li><li>Durability can preserve bad actions too, so authorization and sandboxing still need independent enforcement.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/durable-execution-background-2026.json.</span>
+  </footer>
+</body>
+</html>

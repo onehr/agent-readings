@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Model Context Protocol</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/highlight/monokai.css" />
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <section data-markdown
+               data-separator="^\n---\n$"
+               data-separator-vertical="^\n--\n$"
+               data-separator-notes="^Note:">
+        <textarea data-template>
+<!-- .slide: class="title-slide apple-title" -->
+
+<div class="slide-frame slide-frame--center">
+  <p class="deck-kicker">agent-readings / Tool Use and Interoperability</p>
+  <h1>Model Context Protocol</h1>
+  <p class="deck-subtitle">A driver model for agent tools and context</p>
+
+  <div class="deck-meta-strip">
+    <div class="deck-meta-pill"><strong>2024</strong><span>Specification and documentation; current protocol revision 2025-06-18</span></div>
+    <div class="deck-meta-pill"><strong>7</strong><span>claims</span></div>
+    <div class="deck-meta-pill"><strong>7</strong><span>evidence refs</span></div>
+    <div class="deck-meta-pill"><strong>source-read</strong><span>status</span></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="statement-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">The one sentence</p>
+  <h2>MCP standardizes the protocol surface between AI applications and external context, tools, prompts, and client-mediated capabilities.</h2>
+  <p class="deck-note">Agent infrastructure needs an interface contract. MCP gives hosts, clients, and servers a shared JSON-RPC vocabulary for discovery, invocation, context access, user prompts, and permission-sensitive client features.</p>
+</div>
+
+---
+
+<!-- .slide: class="problem-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Before this paper</p>
+  <h2>The friction was structural.</h2>
+  <div class="apple-card-grid apple-card-grid--three">
+    <div class="apple-card"><p>LLM applications often used bespoke tool schemas, plugin manifests, local subprocess wrappers, or host-specific integration APIs.</p></div>
+<div class="apple-card"><p>A tool or data connector written for one host did not reliably compose with another host.</p></div>
+<div class="apple-card"><p>Tool calling, context injection, user prompts, and local filesystem scoping were mixed into application-specific conventions.</p></div>
+  </div>
+  <div class="deck-callout">
+    <span>Key gap</span>
+    <p>The protocol asks how AI applications can discover and use external context and capabilities through a common client-server contract without prescribing the application shell or agent algorithm.</p>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="idea-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Core idea</p>
+  <h2>Split an AI integration into a host, one client connection per server, and server/client capabilities negotiated at initialization; use JSON-RPC methods for...</h2>
+  <p class="deck-note">Split an AI integration into a host, one client connection per server, and server/client capabilities negotiated at initialization; use JSON-RPC methods for listing, retrieving, invoking, and notifying changes.</p>
+  <div class="idea-loop" aria-label="Agent loop">
+    <div><strong>Model</strong><span>reason</span></div>
+    <div><strong>Runtime</strong><span>act</span></div>
+    <div><strong>World</strong><span>observe</span></div>
+  </div>
+  <div class="step-strip">
+    <div class="step-item">
+  <span>01</span>
+  <p>A host application starts or connects to an MCP server through stdio, Streamable HTTP, or another compliant transport.</p>
+</div>
+<div class="step-item">
+  <span>02</span>
+  <p>The host instantiates an MCP client for that server and negotiates capabilities during initialization.</p>
+</div>
+<div class="step-item">
+  <span>03</span>
+  <p>The client discovers server-provided resources, prompts, and tools with list methods and pagination where supported.</p>
+</div>
+<div class="step-item">
+  <span>04</span>
+  <p>The host chooses how to display or insert resources and prompts into the model context.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="grammar-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Action grammar</p>
+  <h2>The agent is an interface contract.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>Initialize: client and server negotiate protocol version and supported capabilities.</p></div>
+<div class="apple-card"><p>List resources/prompts/tools: the client asks a server what context, prompt templates, or functions it exposes.</p></div>
+<div class="apple-card"><p>Read resource: the client requests URI-addressed context from a server.</p></div>
+<div class="apple-card"><p>Get prompt: the client retrieves a parameterized prompt template for explicit user use.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="code-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Executable shape</p>
+  <h2>The mechanism should fit on one screen.</h2>
+
+```python
+client = host.connect_mcp_server(server)
+capabilities = client.initialize(protocol_version)
+
+resources = client.request("resources/list")
+prompts = client.request("prompts/list")
+tools = client.request("tools/list")
+
+context = host.select_resources(resources)
+choice = model.decide(user_task, context, tools)
+if choice.kind == "tool_call" and host.user_approves(choice):
+    result = client.request("tools/call", choice.name, choice.arguments)
+
+if server.requests_sampling and host.user_approves_sampling():
+    response = host.run_model(server_sampling_request)
+```
+</div>
+
+---
+
+<!-- .slide: class="proof-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Evidence</p>
+  <h2>The proof objects.</h2>
+  <div class="proof-grid">
+    <div class="proof-card">
+  <span>E-overview</span>
+  <p>The spec says MCP uses JSON-RPC 2.0, stateful connections, and server/client capability negotiation between hosts, clients, and servers. The architecture docs describe an MCP...</p>
+</div>
+<div class="proof-card">
+  <span>E-server-primitives</span>
+  <p>Resources expose URI-addressed context and optional templates; prompts expose parameterized messages for explicit user invocation; tools expose named functions with input schemas...</p>
+</div>
+<div class="proof-card">
+  <span>E-client-primitives</span>
+  <p>Roots expose filesystem scopes; sampling lets servers request completions through clients; elicitation lets servers request structured user input with JSON schemas. The top-level...</p>
+</div>
+<div class="proof-card">
+  <span>E-transports</span>
+  <p>The transport spec defines UTF-8 JSON-RPC over stdio and Streamable HTTP, requires the Streamable HTTP endpoint to support POST and GET, adds session and protocol-version header...</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="claim-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Claim map</p>
+  <h2>What the review actually supports.</h2>
+  <div class="claim-grid">
+    <div class="claim-card">
+  <span>C1 · spec-supported</span>
+  <p>MCP defines a host/client/server architecture using JSON-RPC 2.0, stateful connections, and capability negotiation for AI application integrations.</p>
+  <small>E-overview</small>
+</div>
+<div class="claim-card">
+  <span>C2 · spec-supported</span>
+  <p>The server-side interface is organized around resources, prompts, and tools, with different intended controllers: application, user, and model.</p>
+  <small>E-server-primitives</small>
+</div>
+<div class="claim-card">
+  <span>C3 · spec-supported</span>
+  <p>The client-side interface adds roots, sampling, and elicitation so servers can request filesystem scope, model generations, and structured user input through...</p>
+  <small>E-client-primitives</small>
+</div>
+<div class="claim-card">
+  <span>C4 · spec-supported</span>
+  <p>MCP currently standardizes stdio and Streamable HTTP transports for JSON-RPC messages, while allowing custom transports that preserve lifecycle requirements.</p>
+  <small>E-transports</small>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="takeaway-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Agent infrastructure</p>
+  <h2>What changes if you build systems.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>MCP is the agent-tool driver model: the goal is to make connectors reusable across hosts instead of embedding each tool into one application.</p></div>
+<div class="apple-card"><p>Server primitives should be stored separately in review data: resources are context, prompts are reusable workflows, and tools are side-effecting...</p></div>
+<div class="apple-card"><p>Client primitives matter because they move sensitive actions back through the host: roots, sampling, and elicitation all require host/user policy...</p></div>
+<div class="apple-card"><p>The protocol boundary is not the security boundary. Serious agent runtimes still need sandboxing, capability grants, audit logs, and consent UX.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="caveat-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Caveats</p>
+  <h2>What this does not prove.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>This is a specification and documentation corpus, not an empirical paper with benchmark results.</p></div>
+<div class="apple-card"><p>MCP changes over time; this review is anchored to the 2025-06-18 protocol revision while the README entry is dated by the 2024 launch.</p></div>
+<div class="apple-card"><p>The spec standardizes protocol shape, not context-ranking algorithms, model routing, tool planning, or workflow execution semantics.</p></div>
+<div class="apple-card"><p>Security outcomes depend on host and client implementation. The spec explicitly notes that MCP itself cannot enforce the security principles.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="closing-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Run it</p>
+  <h2>No PoC yet.</h2>
+  <p class="deck-note">No PoC yet - contributions welcome. A useful local PoC would run a tiny stdio MCP server with one resource and one tool, then show the JSON-RPC initialize, tools/list, resources/list, and tools/call exchange.</p>
+  <div class="reference-list">
+    <ul><li>Paper: <a href="https://modelcontextprotocol.io">Model Context Protocol</a></li><li>Project/code: <a href="https://github.com/modelcontextprotocol">https://github.com/modelcontextprotocol</a></li><li>inspiration: <a href="https://microsoft.github.io/language-server-protocol/">Language Server Protocol</a></li><li>enables: <a href="https://arxiv.org/abs/2210.03629">ReAct</a></li><li>complements: <a href="https://arxiv.org/abs/2307.16789">ToolLLM</a></li></ul>
+  </div>
+</div>
+
+Note: This deck is synthesized from `data/reviews/model-context-protocol-anthropic-2024.json`. Update the review record, then run `bun run build`.
+
+        </textarea>
+      </section>
+    </div>
+  </div>
+  <script type="module" src="../../assets/deck.js"></script>
+</body>
+</html>

@@ -1,0 +1,297 @@
+{
+  "schema_version": 1,
+  "slug": "tau-bench-yao-2024",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "tau-bench: A Benchmark for Tool-Agent-User Interaction in Real-World Domains",
+    "authors": [
+      "Shunyu Yao",
+      "Noah Shinn",
+      "Pedram Razavi",
+      "Karthik Narasimhan"
+    ],
+    "year": 2024,
+    "venue": "arXiv 2024",
+    "url": "https://arxiv.org/abs/2406.12045",
+    "project_url": "https://github.com/sierra-research/tau-bench",
+    "arxiv_id": "2406.12045",
+    "read_sources": [
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2406.12045",
+        "note": "Used for arXiv metadata, authors, abstract, and headline pass^k results."
+      },
+      {
+        "kind": "paper_pdf",
+        "url": "https://arxiv.org/pdf/2406.12045",
+        "note": "Read for benchmark setup, simulated-user design, database/API state, domain policies, retail/airline domains, pass^k metric, and failure analysis."
+      },
+      {
+        "kind": "project_repo",
+        "url": "https://github.com/sierra-research/tau-bench",
+        "note": "Used to confirm code/data availability."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "tau-bench evaluates whether tool-using agents can converse with simulated users, follow domain policies, update databases correctly, and do so consistently across repeated trials.",
+    "thesis": "The benchmark's central move is to evaluate customer-service-style agents as interactive systems, not one-shot tool callers: the agent must gather missing information, obey policy, mutate state, and end in the right database state.",
+    "why_it_matters": "For production agents, pass@1 is not enough. tau-bench makes reliability visible by asking whether the same task succeeds repeatedly under stochastic user conversations."
+  },
+  "problem": {
+    "prior_state": [
+      "Many tool-use benchmarks provide all required user information in a single instruction.",
+      "Function-calling benchmarks often evaluate individual tool calls rather than long-horizon dialogue plus database mutation.",
+      "Agent benchmarks often omit domain-specific policies that constrain what actions are allowed.",
+      "Single-run scores hide inconsistency when agents face stochastic users or slightly different conversation flows."
+    ],
+    "key_gap": "The paper asks how to evaluate agents in realistic tool-agent-user interactions where user communication, API actions, and policy compliance all matter.",
+    "assumptions": [
+      "LM-simulated users can produce faithful variations of the same scenario.",
+      "Database end state can be compared to an annotated goal state.",
+      "Domain policies can be represented as documents available to the agent.",
+      "Repeated independent trials measure reliability better than a single success rate."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "tool-agent-user",
+      "name": "Tool-agent-user interaction",
+      "definition": "A benchmark episode where an agent converses with a user while also invoking API tools that read or write domain databases."
+    },
+    {
+      "id": "simulated-user",
+      "name": "Simulated user",
+      "definition": "A language model prompted with a scenario to interact with the agent and reveal information over a conversation."
+    },
+    {
+      "id": "domain-policy",
+      "name": "Domain policy",
+      "definition": "A document of task procedures and rules the agent must follow, such as airline or retail constraints."
+    },
+    {
+      "id": "database-state",
+      "name": "Database state",
+      "definition": "The hidden environment state that API tools read and mutate during the episode."
+    },
+    {
+      "id": "goal-state",
+      "name": "Annotated goal state",
+      "definition": "The expected database state after a successful task completion."
+    },
+    {
+      "id": "pass-k",
+      "name": "pass^k",
+      "definition": "A reliability metric measuring whether an agent succeeds consistently across k independent trials of the same task."
+    }
+  ],
+  "method": {
+    "core_idea": "Build domains with realistic databases, APIs, policy documents, and user scenarios; run agents in conversations with LM-simulated users; then compare final database state to annotated goal state across multiple trials.",
+    "action_grammar": [
+      "agent message: natural-language response to user.",
+      "user message: simulated-user utterance based on hidden scenario.",
+      "tool action: database API call such as get, update, cancel, book, or refund.",
+      "policy document: domain-specific rules available as context.",
+      "episode: one conversation and tool-use trajectory for one scenario.",
+      "final database state: result after all tool calls.",
+      "pass^k: probability/task fraction of succeeding in all k runs."
+    ],
+    "steps": [
+      "Manually design domain schemas, APIs, and policy documents.",
+      "Generate realistic database entries with LM assistance and manual verification.",
+      "Create and verify user scenarios and target goal states.",
+      "Run an agent with access to policy text and API tools.",
+      "Let a simulated user converse with the agent and reveal information dynamically.",
+      "Execute tool calls against deterministic database APIs.",
+      "At episode end, compare database state with annotated goal state.",
+      "Repeat trials to compute pass^k consistency."
+    ],
+    "pseudocode": "for task in tau_bench:\n    successes = []\n    for trial in range(k):\n        db = reset_database(task.initial_state)\n        user = SimulatedUser(task.scenario)\n        agent = Agent(policy=task.policy, tools=task.apis)\n        transcript = run_conversation(agent, user, db)\n        successes.append(compare(db.state, task.goal_state))\n    pass_k[task] = all(successes)"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "benchmark",
+      "status": "paper-supported",
+      "statement": "tau-bench evaluates dynamic conversations between an LM-simulated user and an agent with domain-specific API tools and policy guidelines.",
+      "scope": "Abstract and Introduction.",
+      "evidence_refs": ["E-benchmark-setup"],
+      "caveats": ["The users are simulated rather than real customers."]
+    },
+    {
+      "id": "C2",
+      "type": "evaluation",
+      "status": "paper-supported",
+      "statement": "The evaluation compares the database state at the end of a conversation with an annotated goal state.",
+      "scope": "Abstract and Introduction.",
+      "evidence_refs": ["E-db-state-eval"],
+      "caveats": ["Correct final database state does not capture every possible quality or policy concern unless encoded in the goal/policy checks."]
+    },
+    {
+      "id": "C3",
+      "type": "metric",
+      "status": "paper-supported",
+      "statement": "pass^k measures the consistency and robustness of agent behavior across k independent trials.",
+      "scope": "Abstract and Introduction.",
+      "evidence_refs": ["E-passk"],
+      "caveats": ["pass^k can drop quickly as k increases, so the chosen k should match deployment reliability needs."]
+    },
+    {
+      "id": "C4",
+      "type": "domain",
+      "status": "paper-supported",
+      "statement": "The first tau-bench domains are customer-service-style retail and airline tasks with databases, APIs, policies, and user scenarios.",
+      "scope": "Introduction.",
+      "evidence_refs": ["E-domains"],
+      "caveats": ["Two domains are a demonstration, not full enterprise coverage."]
+    },
+    {
+      "id": "C5",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "The paper reports that state-of-the-art function-calling agents such as GPT-4o succeed on less than 50% of tasks overall.",
+      "scope": "Abstract.",
+      "evidence_refs": ["E-overall-result"],
+      "caveats": ["This is paper-era GPT-4o/function-calling evaluation."]
+    },
+    {
+      "id": "C6",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "The paper reports GPT-4o pass^1 around 61% on retail and 35% on airline, with pass^8 dropping to about 25% on retail.",
+      "scope": "Introduction.",
+      "evidence_refs": ["E-passk-result"],
+      "caveats": ["Numbers are approximate as reported in text and depend on agent construction."]
+    },
+    {
+      "id": "C7",
+      "type": "failure_analysis",
+      "status": "paper-supported",
+      "statement": "The paper identifies failures in database reasoning, policy following, compound requests, and consistency under stochastic conversation.",
+      "scope": "Introduction and analysis.",
+      "evidence_refs": ["E-failures"],
+      "caveats": ["Failure categories are from the evaluated domains and agent designs."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-benchmark-setup",
+      "kind": "benchmark",
+      "source": "paper",
+      "locator": "Abstract and Introduction",
+      "result": "tau-bench emulates dynamic conversations between an LM-simulated user and an agent with domain-specific API tools and policy guidelines.",
+      "metric": "tool-agent-user benchmark setup",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-db-state-eval",
+      "kind": "evaluation",
+      "source": "paper",
+      "locator": "Abstract and Introduction",
+      "result": "The benchmark compares final database state after a conversation to annotated goal state, allowing stochastic conversation paths that should end in the same outcome.",
+      "metric": "database state match",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-passk",
+      "kind": "metric",
+      "source": "paper",
+      "locator": "Abstract and Introduction",
+      "result": "The paper proposes pass^k to evaluate reliability of agent behavior over multiple independent trials.",
+      "metric": "multi-trial consistency",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-domains",
+      "kind": "domain",
+      "source": "paper",
+      "locator": "Introduction",
+      "result": "The first benchmark includes tau-retail and tau-airline domains with realistic databases, APIs, policy documents, and user scenarios.",
+      "metric": "domain coverage",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-overall-result",
+      "kind": "benchmark_result",
+      "source": "paper",
+      "locator": "Abstract",
+      "result": "The paper says state-of-the-art function-calling agents like GPT-4o succeed on less than 50% of tasks.",
+      "metric": "task success rate",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-passk-result",
+      "kind": "benchmark_result",
+      "source": "paper",
+      "locator": "Introduction",
+      "result": "The paper reports GPT-4o function-calling pass^1 around 61% on retail and 35% on airline, with pass^8 on retail around 25%.",
+      "metric": "pass^1 and pass^8",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-failures",
+      "kind": "failure_analysis",
+      "source": "paper",
+      "locator": "Introduction",
+      "result": "The authors report that agents struggle with complex database reasoning, policy following, compound requests, stochasticity, and partial information.",
+      "metric": "failure categories",
+      "claim_refs": ["C7"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "Production agent evaluation needs users, not just tools. Missing information must be gathered through conversation.",
+    "Policy compliance should be tested against state changes, not only against plausible natural-language explanations.",
+    "Final database state is the right verifier for many business agents because tool calls are side effects.",
+    "pass^k is a better reliability signal than pass@1 when small stochastic differences can break a workflow.",
+    "Agents need durable state, policy retrieval, authorization, idempotency, and rollback because tau-bench tasks mutate databases.",
+    "Simulated users are benchmark infrastructure; their fidelity and stochasticity affect the measured agent."
+  ],
+  "caveats": [
+    "The users are LM-simulated, not actual humans.",
+    "The first benchmark covers retail and airline, not all real-world domains.",
+    "Database-state matching can miss conversational quality unless quality is encoded in the task.",
+    "pass^k can be expensive because it multiplies trials per task.",
+    "The reported GPT-4o numbers are historical and setup-specific.",
+    "Strong agents could overfit to policy documents or simulator quirks if benchmark splits are not managed carefully."
+  ],
+  "related_work": [
+    {
+      "title": "WebArena",
+      "relation": "complements",
+      "note": "WebArena evaluates stateful web actions; tau-bench adds simulated users, business APIs, and domain policy.",
+      "url": "https://arxiv.org/abs/2307.13854"
+    },
+    {
+      "title": "ToolLLM",
+      "relation": "tool_use",
+      "note": "ToolLLM studies API sequence learning at scale; tau-bench tests API use under user interaction and policy constraints.",
+      "url": "https://arxiv.org/abs/2307.16789"
+    },
+    {
+      "title": "Durable Execution",
+      "relation": "runtime_need",
+      "note": "tau-bench-style database mutations are exactly where durable, idempotent workflow execution matters.",
+      "url": "https://docs.dbos.dev/why-dbos"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A compact PoC could implement one retail database, two API tools, a simulated user, and pass^k over repeated conversations."
+  },
+  "slide_plan": {
+    "title": "tau-bench",
+    "subtitle": "Tool-agent-user reliability",
+    "sections": [
+      "summary",
+      "problem",
+      "benchmark_setup",
+      "database_state_eval",
+      "pass_k",
+      "domains",
+      "results",
+      "agent_eval_takeaways",
+      "caveats",
+      "references"
+    ]
+  }
+}

@@ -1,0 +1,303 @@
+{
+  "schema_version": 1,
+  "slug": "autonomous-agents-survey-wang-2023",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "A Survey on Large Language Model Based Autonomous Agents",
+    "authors": [
+      "Lei Wang",
+      "Chen Ma",
+      "Xueyang Feng",
+      "Zeyu Zhang",
+      "Hao Yang",
+      "Jingsen Zhang",
+      "Zhiyuan Chen",
+      "Jiakai Tang",
+      "Xu Chen",
+      "Yankai Lin",
+      "Wayne Xin Zhao",
+      "Zhewei Wei",
+      "Ji-Rong Wen"
+    ],
+    "year": 2023,
+    "venue": "arXiv 2023",
+    "url": "https://arxiv.org/abs/2308.11432",
+    "project_url": "https://github.com/Paitesanshi/LLM-Agent-Survey",
+    "arxiv_id": "2308.11432",
+    "read_sources": [
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2308.11432",
+        "note": "Used for metadata, authors, abstract, revision history, DOI note, and top-level framing."
+      },
+      {
+        "kind": "paper_html",
+        "url": "https://ar5iv.labs.arxiv.org/html/2308.11432",
+        "note": "Read for construction modules, memory/planning taxonomy, application domains, evaluation strategies, and challenges."
+      },
+      {
+        "kind": "project_repo",
+        "url": "https://github.com/Paitesanshi/LLM-Agent-Survey",
+        "note": "Used to confirm the maintained companion reference repository."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "Wang et al. organize LLM-based autonomous agents around profile, memory, planning, and action modules, then survey capability acquisition, applications, evaluation, and challenges.",
+    "thesis": "The survey's useful move is to treat an autonomous agent as an architecture around the LLM, not the LLM alone: roles, memory stores, plans, tools/actions, and feedback loops shape behavior.",
+    "why_it_matters": "For agent infrastructure, this is a clear pre-runtime map. Each module implies state management, prompt/schema control, tool execution, evaluation hooks, and failure modes."
+  },
+  "problem": {
+    "prior_state": [
+      "Traditional autonomous agents were often trained with limited knowledge in isolated environments.",
+      "LLMs made open-domain autonomous agents plausible, but early systems were proposed independently with inconsistent terminology.",
+      "Research on profiles, memory, planning, tools, and evaluation was fragmented across many agent papers.",
+      "The field needed a taxonomy that connected construction choices to applications and evaluation."
+    ],
+    "key_gap": "The survey asks how to systematically summarize LLM-based autonomous agent construction, applications, evaluation strategies, and challenges.",
+    "assumptions": [
+      "LLMs can be central controllers for autonomous agents but need additional modules to operate in dynamic environments.",
+      "Agent construction has both architecture design and capability acquisition dimensions.",
+      "Applications span social science, natural science, and engineering.",
+      "Agent evaluation requires both subjective human-centered measures and objective quantitative benchmarks."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "profile-module",
+      "name": "Profile module",
+      "definition": "The role/persona component that specifies agent identity, capabilities, relationships, or domain background."
+    },
+    {
+      "id": "memory-module",
+      "name": "Memory module",
+      "definition": "The component that stores perceived information and past behavior so the agent can retrieve, reflect, and act consistently over time."
+    },
+    {
+      "id": "planning-module",
+      "name": "Planning module",
+      "definition": "The component that decomposes tasks, forms plans, and optionally revises plans using feedback from environments, humans, or models."
+    },
+    {
+      "id": "action-module",
+      "name": "Action module",
+      "definition": "The component that translates agent decisions into specific outputs, tool calls, or embodied/environmental actions."
+    },
+    {
+      "id": "capability-acquisition",
+      "name": "Capability acquisition",
+      "definition": "Strategies for enabling agents to solve tasks, including fine-tuning, prompt engineering, and mechanism engineering."
+    },
+    {
+      "id": "subjective-objective-evaluation",
+      "name": "Subjective and objective evaluation",
+      "definition": "The survey's split between human or LLM-judge assessments and quantitative metrics/protocols/benchmarks."
+    }
+  ],
+  "method": {
+    "core_idea": "Survey LLM autonomous agents through three linked taxonomies: construction, applications, and evaluation, with challenges derived from the gaps in those categories.",
+    "action_grammar": [
+      "profile: handcrafted, LLM-generated, or dataset-aligned role description.",
+      "memory: short-term context, long-term vector/database/list stores, reading/writing/reflection operations.",
+      "planning: single-path, multi-path, external-planner, or feedback-driven planning.",
+      "action: output modality, tool/API use, or embodied action.",
+      "capability acquisition: fine-tuning, prompt engineering, or mechanism engineering.",
+      "application: social science, natural science, or engineering domain.",
+      "evaluation: subjective annotation/Turing tests or objective metrics/protocols/benchmarks.",
+      "challenge: role-playing, generalized human alignment, prompt robustness, and evaluation limits."
+    ],
+    "steps": [
+      "Define the scope around LLM-based autonomous agents rather than general chat models.",
+      "Propose a unified construction framework with profile, memory, planning, and action modules.",
+      "Survey memory structures, formats, and operations, including short/long-term memory and database-like stores.",
+      "Survey planning methods with and without feedback, including external planners and ReAct-style environment feedback.",
+      "Survey capability acquisition through fine-tuning, prompt engineering, and mechanism engineering.",
+      "Classify applications in social science, natural science, and engineering.",
+      "Classify evaluation into subjective and objective strategies and summarize unresolved challenges."
+    ],
+    "pseudocode": "agent = AutonomousAgent(\n  profile=role_or_population_profile,\n  memory=short_term_context + long_term_store,\n  planner=plan_generator(feedback=True),\n  action=tool_or_environment_interface\n)\n\nagent.capabilities = fine_tuning | prompt_engineering | mechanism_engineering\nevaluation = subjective_judgment + objective_benchmark"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "taxonomy",
+      "status": "paper-supported",
+      "statement": "The survey proposes a unified construction framework with profiling, memory, planning, and action modules.",
+      "scope": "Section 2.1.",
+      "evidence_refs": ["E-framework"],
+      "caveats": ["The framework is descriptive; individual systems may merge or omit modules."]
+    },
+    {
+      "id": "C2",
+      "type": "taxonomy",
+      "status": "paper-supported",
+      "statement": "The profile module can be handcrafted, generated by an LLM, or aligned from real-world datasets.",
+      "scope": "Section 2.1.1.",
+      "evidence_refs": ["E-profile"],
+      "caveats": ["Profiles can make simulations easier to build but do not guarantee faithful human behavior."]
+    },
+    {
+      "id": "C3",
+      "type": "memory",
+      "status": "paper-supported",
+      "statement": "The memory module is analyzed through structures, formats, and operations such as reading, writing, and reflection.",
+      "scope": "Section 2.1.2.",
+      "evidence_refs": ["E-memory"],
+      "caveats": ["The survey summarizes representative formats; actual memory systems can combine multiple formats."]
+    },
+    {
+      "id": "C4",
+      "type": "planning",
+      "status": "paper-supported",
+      "statement": "Planning methods are organized into no-feedback strategies, external-planner strategies, and feedback-driven planning from environments, humans, or models.",
+      "scope": "Section 2.1.3.",
+      "evidence_refs": ["E-planning"],
+      "caveats": ["The taxonomy predates many 2024-2026 agent planning and verifier systems."]
+    },
+    {
+      "id": "C5",
+      "type": "application_taxonomy",
+      "status": "paper-supported",
+      "statement": "The survey groups LLM-agent applications into social science, natural science, and engineering domains.",
+      "scope": "Section 3.",
+      "evidence_refs": ["E-applications"],
+      "caveats": ["Applications are examples of research directions, not uniformly mature deployments."]
+    },
+    {
+      "id": "C6",
+      "type": "evaluation",
+      "status": "paper-supported",
+      "statement": "Agent evaluation is split into subjective evaluation by humans or proxies and objective evaluation using metrics, protocols, and benchmarks.",
+      "scope": "Section 4.",
+      "evidence_refs": ["E-evaluation"],
+      "caveats": ["The survey notes weaknesses in both subjective and objective strategies."]
+    },
+    {
+      "id": "C7",
+      "type": "agent_infrastructure",
+      "status": "inference",
+      "statement": "The profile-memory-planning-action decomposition is directly usable as a review schema for agent papers because it separates identity, state, control, and effects.",
+      "scope": "Application to agent-readings review structure.",
+      "evidence_refs": ["E-schema-implication"],
+      "caveats": ["This is a reviewer inference, but it matches the project's structured-review goal."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-framework",
+      "kind": "taxonomy",
+      "source": "paper",
+      "locator": "Section 2.1",
+      "result": "The paper's unified framework for autonomous agents is composed of profiling, memory, planning, and action modules.",
+      "metric": "four-module construction framework",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-profile",
+      "kind": "taxonomy",
+      "source": "paper",
+      "locator": "Section 2.1.1",
+      "result": "The survey describes handcrafted profiles, LLM-generated profiles, and dataset-aligned profiles as common ways to specify agent roles.",
+      "metric": "profile generation strategies",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-memory",
+      "kind": "taxonomy",
+      "source": "paper",
+      "locator": "Section 2.1.2",
+      "result": "Memory is discussed through short/long-term structures, formats including natural language, embeddings, databases, and structured lists, and operations including reading, writing, and reflection.",
+      "metric": "memory structures, formats, operations",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-planning",
+      "kind": "taxonomy",
+      "source": "paper",
+      "locator": "Section 2.1.3",
+      "result": "Planning methods include single-path and multi-path reasoning, external planners such as PDDL-based approaches, and feedback-driven planning such as ReAct-style thought-action-observation loops.",
+      "metric": "planning strategy categories",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-applications",
+      "kind": "taxonomy",
+      "source": "paper",
+      "locator": "Section 3",
+      "result": "The application survey covers social science, natural science, and engineering, including software engineering, robotics/embodied AI, chemistry, and social simulation examples.",
+      "metric": "application domains",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-evaluation",
+      "kind": "evaluation_taxonomy",
+      "source": "paper",
+      "locator": "Section 4",
+      "result": "The paper distinguishes subjective evaluation, such as human annotation and Turing-test-style comparison, from objective evaluation using quantitative metrics, protocols, and benchmarks.",
+      "metric": "subjective/objective evaluation split",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-schema-implication",
+      "kind": "inference",
+      "source": "reviewer",
+      "locator": "Agent-readings review context",
+      "result": "Profile, memory, planning, and action correspond to identity/configuration, persistent state, control policy, and side-effect surface, which are core schema axes for structured reviews.",
+      "metric": "review schema mapping",
+      "claim_refs": ["C7"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "This survey gives a clean architecture checklist for reviewing agent papers: profile, memory, planning, action, capability acquisition, and evaluation.",
+    "Memory formats matter operationally. Natural-language, embedding, database, and structured-list stores expose different retrieval, audit, and mutation semantics.",
+    "Planning with feedback is the critical line between static prompt decomposition and real agent control loops.",
+    "Profiles should be treated as configuration with provenance, not harmless prompt text, especially in multi-agent simulations.",
+    "Evaluation needs subjective and objective signals, but neither is sufficient alone for production-grade confidence.",
+    "The construction taxonomy is directly useful for this project's review database because it separates mechanisms that Markdown-only summaries tend to blur."
+  ],
+  "caveats": [
+    "The arXiv paper has later revisions; this review preserves the reading-list year while noting the source is actively maintained.",
+    "As a survey, it synthesizes primary papers rather than producing new experimental results.",
+    "The taxonomy predates many later agent-runtime, safety, and benchmark papers.",
+    "The application survey includes early-stage prototypes and research demonstrations, so maturity varies widely."
+  ],
+  "related_work": [
+    {
+      "title": "The Rise and Potential of Large Language Model Based Agents",
+      "relation": "neighboring_survey",
+      "note": "Xi et al. offer a broader brain-perception-action and agent-society framing; Wang et al. provide a more operational module taxonomy.",
+      "url": "https://arxiv.org/abs/2309.07864"
+    },
+    {
+      "title": "Cognitive Architectures for Language Agents",
+      "relation": "cognitive_architecture",
+      "note": "CoALA's memory/action/decision decomposition is more formal and cognitive-architecture oriented.",
+      "url": "https://arxiv.org/abs/2309.02427"
+    },
+    {
+      "title": "ReAct",
+      "relation": "planning_with_feedback",
+      "note": "ReAct is a primary example of feedback-driven thought-action-observation planning in the survey.",
+      "url": "https://arxiv.org/abs/2210.03629"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet. A useful PoC would be a tiny inspectable agent skeleton with separate profile, memory, planning, and action modules."
+  },
+  "slide_plan": {
+    "title": "Autonomous Agents Survey",
+    "subtitle": "Profile, memory, planning, action",
+    "sections": [
+      "summary",
+      "problem",
+      "four_modules",
+      "memory_taxonomy",
+      "planning_taxonomy",
+      "applications",
+      "evaluation",
+      "review_schema_use",
+      "references"
+    ]
+  }
+}

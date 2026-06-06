@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · OSWorld: Benchmarking Multimodal Agents for Open-Ended Tasks in Real Computer Environments</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/osworld-xie-2024/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Evaluation and Benchmarks</p>
+        <h1>OSWorld</h1>
+        <p class="hero-lede">OSWorld evaluates multimodal computer-use agents inside real desktop environments with task setup, browser/desktop actions, and execution-based grading.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>7</strong><span>Claims</span></div>
+          <div class="metric"><strong>7</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2024 · NeurIPS 2024 Datasets and Benchmarks Track; arXiv 2024</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>4</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/osworld-xie-2024/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2404.07972">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>For computer-use agents, OSWorld is a close proxy for production difficulty because the agent must ground pixels/UI state, coordinate applications, mutate files, and survive long-horizon desktop workflows.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Many digital-agent benchmarks are static, text-only, web-only, or limited to one application/domain.</li><li>GUI agents need to handle visual grounding, OS state, files, browser tabs, desktop apps, and cross-application workflows.</li><li>Action matching is too brittle for open-ended computer tasks where many valid paths can reach the target state.</li><li>Live or ad hoc desktop evaluations are hard to reproduce without controlled setup and executable validators.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks how to build a realistic, reproducible benchmark for multimodal agents that use real computer environments rather than simplified interfaces.</p>
+
+      <h2>Method</h2>
+      <p>Create a benchmark inside controllable desktop environments, define real-world tasks with setup configuration and execution-based validators, run agents through a standardized computer-control interface, and compare success rates with human performance.</p>
+      <ul><li>Prepare a virtualized desktop environment and load the task-specific initial state.</li><li>Give the agent a natural-language instruction and a multimodal computer observation.</li><li>Let the agent execute actions against real web and desktop applications over multiple steps.</li><li>Collect screenshots, actions, videos, files, and other artifacts during the run.</li><li>Run the custom task evaluation script against the final state.</li><li>Aggregate success rates across 369 tasks and compare model baselines with human performance.</li><li>Analyze failure modes such as GUI grounding, operational knowledge, layout robustness, and history handling.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>OSWorld introduces a scalable real computer environment for multimodal agents across operating systems including Ubuntu, Windows, and macOS.</p>
+  <p><strong>Scope:</strong> Abstract.</p>
+  <ul><li><strong>E-real-computer-env</strong>: The paper describes OSWorld as a scalable real computer environment for multimodal agents with task setup, execution-based evaluation, and interactive learning across Ubuntu, Windows, and macOS.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>The benchmark contains 369 computer tasks involving real web apps, desktop apps, OS file I/O, and workflows across multiple applications.</p>
+  <p><strong>Scope:</strong> Abstract and project page statistics.</p>
+  <ul><li><strong>E-task-count</strong>: OSWorld contains 369 tasks involving real web and desktop apps, open domains, OS file I/O, and multi-application workflows.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>Each task includes detailed initial-state setup and a custom execution-based evaluation script for reproducible grading.</p>
+  <p><strong>Scope:</strong> Abstract and environment infrastructure description.</p>
+  <ul><li><strong>E-setup-eval</strong>: Each task uses detailed initial state setup and custom execution-based evaluation scripts; the environment infrastructure includes task initialization, agent interaction, post-processing, retrieval, and evaluation.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>OSWorld is designed for multimodal and cross-application computer-use tasks, including intermediate initial states and many execution-based evaluation functions.</p>
+  <p><strong>Scope:</strong> Project page comparison table.</p>
+  <ul><li><strong>E-feature-table</strong>: The project page lists OSWorld as supporting a controllable executable computer environment, multimodal support, cross-app tasks, intermediate initial state, and 134 execution-based evaluation functions.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>The paper reports that humans complete over 72.36% of tasks while the best evaluated model achieves only 12.24% success.</p>
+  <p><strong>Scope:</strong> Abstract.</p>
+  <ul><li><strong>E-human-model-gap</strong>: Humans accomplish over 72.36% of OSWorld tasks while the best evaluated model achieves 12.24% success.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>The authors attribute major model deficiencies to GUI grounding and operational knowledge, with further analysis of resolution, history, layout/noise robustness, and OS transfer.</p>
+  <p><strong>Scope:</strong> Abstract and project page analysis.</p>
+  <ul><li><strong>E-failure-analysis</strong>: The paper emphasizes GUI grounding and operational knowledge failures; the project page summarizes analysis on screenshot resolution, trajectory history, UI layout/noise robustness, and cross-OS performance correlation.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · paper-supported</h3>
+  <p>Running OSWorld is itself a systems task: the code supports local VM providers and Docker/KVM/cloud-style parallel execution, and records artifacts for result inspection.</p>
+  <p><strong>Scope:</strong> Project repository setup and experiments instructions.</p>
+  <ul><li><strong>E-runtime-requirements</strong>: The repository documents VMware/VirtualBox setup, Docker with KVM support, AWS-style parallel evaluation, headless runs, baseline agent commands, and result artifacts including screenshots/actions/videos.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Computer-use evaluation is runtime infrastructure, not just data curation: reset, isolation, credentials, files, GUI state, and validators all matter.</li><li>Execution-based validators are the right primitive for open-ended desktop tasks because many action paths can be valid.</li><li>Multimodal agents fail on grounding and operational procedures, so benchmark logs must preserve screenshots, actions, videos, and final artifacts.</li><li>VM/provider choice affects reproducibility, parallelism, cost, and security; these are benchmark design variables.</li><li>Desktop agents need durable execution and cleanup because interrupted runs can leave containers, files, accounts, or app state behind.</li><li>OSWorld sits downstream of WebArena and tau-bench: it expands from websites and business APIs to full operating-system control.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The benchmark is much heavier to run than text-only or browser-only evaluations.</li><li>Some tasks involve credentials or network-sensitive services, and the project notes Google Drive setup issues for 8 tasks.</li><li>The reported 12.24% best-model score is historical and not the current leaderboard ceiling.</li><li>VM images, provider support, and setup scripts are part of the benchmark surface and can drift over time.</li><li>Execution-based evaluation is only as good as the task validator and setup isolation.</li><li>Full-computer tasks are faithful but can make failure attribution harder because perception, planning, app knowledge, and infrastructure issues mix together.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/osworld-xie-2024.json.</span>
+  </footer>
+</body>
+</html>

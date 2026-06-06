@@ -1,0 +1,308 @@
+{
+  "schema_version": 1,
+  "slug": "toolllm-qin-2023",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "ToolLLM: Facilitating Large Language Models to Master 16000+ Real-world APIs",
+    "authors": [
+      "Yujia Qin",
+      "Shihao Liang",
+      "Yining Ye",
+      "Kunlun Zhu",
+      "Lan Yan",
+      "Yaxi Lu",
+      "Yankai Lin",
+      "Xin Cong",
+      "Xiangru Tang",
+      "Bill Qian",
+      "Sihan Zhao",
+      "Lauren Hong",
+      "Runchu Tian",
+      "Ruobing Xie",
+      "Jie Zhou",
+      "Mark Gerstein",
+      "Dahai Li",
+      "Zhiyuan Liu",
+      "Maosong Sun"
+    ],
+    "year": 2023,
+    "venue": "arXiv 2023; ICLR 2024",
+    "url": "https://arxiv.org/abs/2307.16789",
+    "project_url": "https://github.com/OpenBMB/ToolBench",
+    "arxiv_id": "2307.16789",
+    "read_sources": [
+      {
+        "kind": "paper_html",
+        "url": "https://ar5iv.labs.arxiv.org/html/2307.16789",
+        "note": "Read for framework overview, ToolBench construction, API retriever, DFSDT, ToolEval, main results, APIBench generalization, and related-work framing."
+      },
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2307.16789",
+        "note": "Used for arXiv metadata, abstract, author list, and DOI."
+      },
+      {
+        "kind": "paper_pdf",
+        "url": "https://arxiv.org/pdf/2307.16789",
+        "note": "Read for extracted numerical tables that were incomplete in the HTML rendering."
+      },
+      {
+        "kind": "venue_page",
+        "url": "https://proceedings.iclr.cc/paper_files/paper/2024/hash/28e50ee5b72e90b50e7196fde8ea260e-Abstract-Conference.html",
+        "note": "Used to confirm ICLR 2024 venue metadata."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "ToolLLM scales tool learning from API-call selection to multi-step REST API trajectories over 16,464 real-world APIs.",
+    "thesis": "Open-source LLMs need tool-specific instruction data, API retrieval, executable multi-step trajectories, and a planner that can backtrack when tool calls fail.",
+    "why_it_matters": "ToolLLM treats an agent as a system over a real API marketplace: catalog ingestion, API metadata, retriever precision, execution traces, evaluator design, and search strategy are all part of the same tool-use stack."
+  },
+  "problem": {
+    "prior_state": [
+      "General instruction tuning gave open-source LLMs broad dialogue skills but weak tool-use ability.",
+      "Earlier datasets often used limited APIs, single-tool settings, or no real API execution responses.",
+      "Users cannot manually choose the correct API subset when the available tool pool contains thousands of real APIs.",
+      "Linear ReAct-style reasoning can get stuck after a wrong API call because it explores only one trajectory."
+    ],
+    "key_gap": "The paper asks how to build, train, retrieve, plan, and evaluate open-source LLM tool use over a large real-world REST API marketplace with both single-tool and multi-tool tasks.",
+    "assumptions": [
+      "RapidAPI documentation and example responses can be crawled and normalized into useful API metadata.",
+      "ChatGPT can generate candidate tool-use instructions and solution paths with minimal human supervision.",
+      "A decision-tree search over tool-use trajectories can produce better annotations than one-path ReAct.",
+      "An LLM-based evaluator can approximate human judgment for pass/fail and pairwise solution quality."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "toolbench",
+      "name": "ToolBench",
+      "definition": "An instruction-tuning dataset for tool use built from RapidAPI APIs, synthetic instructions, and annotated multi-step solution paths."
+    },
+    {
+      "id": "df-sdt",
+      "name": "Depth-first search decision tree",
+      "definition": "A reasoning strategy that explores multiple tool-use trajectories and can abandon failed branches instead of committing to one ReAct-style path."
+    },
+    {
+      "id": "tooleval",
+      "name": "ToolEval",
+      "definition": "A ChatGPT-backed evaluator with pass-rate and win-rate metrics for judging whether tool-use trajectories complete an instruction and which trajectory is better."
+    },
+    {
+      "id": "api-retriever",
+      "name": "Neural API retriever",
+      "definition": "A dense retriever trained from generated instruction/API pairs to select relevant APIs from the large ToolBench API pool."
+    }
+  ],
+  "method": {
+    "core_idea": "Collect and filter RapidAPI tools, generate single-tool and multi-tool instructions with ChatGPT, annotate executable solution paths with DFSDT, finetune LLaMA-2 7B into ToolLLaMA, retrieve candidate APIs with a neural retriever, and evaluate trajectories with ToolEval.",
+    "action_grammar": [
+      "Tool: a RapidAPI-hosted service containing one or more APIs.",
+      "API document: endpoint name, description, HTTP method, required and optional parameters, request body, code snippets, and example response.",
+      "Instruction: a generated user request involving one or more APIs.",
+      "Action: a thought, API name, and parameters for one API call.",
+      "Observation: the real API response returned after an action.",
+      "Finish with final answer: the terminating action for a successful trajectory.",
+      "Finish by giving up: the terminating action for an abandoned branch.",
+      "Retriever result: a set of relevant APIs passed to ToolLLaMA for multi-round decision making."
+    ],
+    "steps": [
+      "Crawl RapidAPI tools and filter unreliable or low-quality APIs.",
+      "Sample APIs and use ChatGPT to generate diverse single-tool and multi-tool instructions.",
+      "Use ChatGPT with DFSDT to search for successful multi-step solution paths with real API calls and responses.",
+      "Train a neural API retriever from generated instruction/API relevance pairs.",
+      "Finetune LLaMA-2 7B on the retained instruction/solution-path pairs to produce ToolLLaMA.",
+      "At inference, retrieve relevant APIs, let ToolLLaMA call APIs over multiple rounds, and score the resulting trajectory with ToolEval."
+    ],
+    "pseudocode": "api_docs = crawl_and_filter_rapidapi()\ninstructions = chatgpt_generate_instructions(api_docs)\npaths = []\nfor instruction in instructions:\n    path = dfsdt_search(chatgpt, instruction, relevant_apis(instruction))\n    if path.passed:\n        paths.append(path)\nretriever = train_dense_retriever(instructions, relevant_apis)\ntoolllama = finetune(llama2_7b, paths)\n\napis = retriever(user_instruction)\ntrajectory = toolllama.solve(user_instruction, apis)\nscore = tooleval(trajectory)"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "dataset",
+      "status": "paper-supported",
+      "statement": "ToolBench filters RapidAPI into 3,451 high-quality tools and 16,464 APIs across 49 categories from an initial crawl of 10,853 tools and 53,190 APIs.",
+      "scope": "Section 2.1 and abstract.",
+      "evidence_refs": ["E-api-corpus"],
+      "caveats": ["The corpus depends on RapidAPI availability, quality, and temporal stability."]
+    },
+    {
+      "id": "C2",
+      "type": "dataset",
+      "status": "paper-supported",
+      "statement": "ToolBench includes large-scale generated instructions and executable solution paths, including nearly 200k qualified instruction/API relevance pairs and 126,486 instruction/solution-path pairs.",
+      "scope": "Section 2.2 and Section 2.3.",
+      "evidence_refs": ["E-instructions-paths"],
+      "caveats": ["The construction relies on ChatGPT for instruction generation and trajectory annotation."]
+    },
+    {
+      "id": "C3",
+      "type": "method",
+      "status": "paper-supported",
+      "statement": "DFSDT improves solution-path annotation over ReAct by exploring multiple branches and allowing failed branches to be abandoned.",
+      "scope": "Section 2.3 and preliminary experiments in Section 3.1.",
+      "evidence_refs": ["E-dfsdt"],
+      "caveats": ["DFSDT consumes more API calls than one ReAct run; the paper compares against ReAct@N to normalize budget."]
+    },
+    {
+      "id": "C4",
+      "type": "evaluation",
+      "status": "paper-supported",
+      "statement": "ToolEval defines pass rate and win rate for tool-use trajectories and reports high agreement with human annotators.",
+      "scope": "Section 3.1 and Appendix A.5.",
+      "evidence_refs": ["E-tooleval"],
+      "caveats": ["ToolEval is still an LLM-based judge, so it is not an executable ground-truth verifier."]
+    },
+    {
+      "id": "C5",
+      "type": "retrieval",
+      "status": "paper-supported",
+      "statement": "The neural API retriever substantially outperforms BM25 and OpenAI Ada embeddings on ToolBench retrieval metrics.",
+      "scope": "Section 3.1, Table 2.",
+      "evidence_refs": ["E-retriever"],
+      "caveats": ["Retrieval is evaluated on generated instruction/API pairs, not arbitrary production traffic."]
+    },
+    {
+      "id": "C6",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "ToolLLaMA plus DFSDT reaches near-ChatGPT tool-use performance on ToolBench and exceeds Text-Davinci-003 and Claude-2 in the paper's averages.",
+      "scope": "Section 3.2, Table 4.",
+      "evidence_refs": ["E-main-results"],
+      "caveats": ["Most Table 4 settings use oracle APIs; only ToolLLaMA-DFSDT-Retriever uses retrieved APIs instead of ground-truth APIs."]
+    },
+    {
+      "id": "C7",
+      "type": "generalization",
+      "status": "paper-supported",
+      "statement": "ToolLLaMA generalizes to APIBench despite training on a different API and instruction domain, but oracle retrieval still matters heavily.",
+      "scope": "Section 3.3, Table 5.",
+      "evidence_refs": ["E-apibench"],
+      "caveats": ["With the paper's own retriever, ToolLLaMA's APIBench AST accuracy is much lower than with oracle retrieval."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-api-corpus",
+      "kind": "dataset",
+      "source": "paper",
+      "locator": "Abstract, Section 2.1",
+      "result": "ToolBench collects 16,464 real-world RESTful APIs spanning 49 RapidAPI categories. The paper reports starting from 10,853 tools and 53,190 APIs and retaining 3,451 high-quality tools and 16,464 APIs after filtering.",
+      "metric": "tools, APIs, categories",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-instructions-paths",
+      "kind": "dataset",
+      "source": "paper",
+      "locator": "Section 2.2, Section 2.3",
+      "result": "The paper reports nearly 200k qualified instruction/API relevance pairs, specifically 87,413 I1, 84,815 I2, and 25,251 I3 instances, and 126,486 retained instruction/solution-path pairs after DFSDT annotation.",
+      "metric": "instruction/API pairs and solution paths",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-dfsdt",
+      "kind": "ablation",
+      "source": "paper",
+      "locator": "Section 2.3, Section 3.1, Table 3",
+      "result": "DFSDT pass rates are 58.0 on I1, 70.6 on I2, 62.8 on I3, and 63.8 average, compared with ReAct at 37.8, 40.6, 27.6, and 35.3 average, and ReAct@N at 49.4, 49.4, 34.6, and 44.5 average.",
+      "metric": "pass rate by reasoning strategy",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-tooleval",
+      "kind": "evaluation_method",
+      "source": "paper",
+      "locator": "Section 3.1",
+      "result": "ToolEval uses pass rate and win rate. The paper reports 87.1% agreement with human annotators for pass rate and 80.3% agreement for win rate.",
+      "metric": "human agreement",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-retriever",
+      "kind": "result_table",
+      "source": "paper",
+      "locator": "Section 3.1, Table 2",
+      "result": "The API retriever reports average NDCG@1 78.0 and NDCG@5 84.9, compared with BM25 at 18.5 and 17.0 and Ada at 49.6 and 45.4.",
+      "metric": "NDCG@1 and NDCG@5",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-main-results",
+      "kind": "result_table",
+      "source": "paper",
+      "locator": "Section 3.2, Table 4",
+      "result": "Average pass/win rates: ChatGPT+DFSDT 64.8/64.3, GPT-4+DFSDT 71.1/70.4, Text-Davinci-003+DFSDT 43.1/46.3, Claude-2+DFSDT 22.6/43.5, ToolLLaMA+DFSDT 66.7/60.0, and ToolLLaMA+DFSDT-Retriever 67.3/63.1.",
+      "metric": "average pass rate and win rate",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-apibench",
+      "kind": "ood_result",
+      "source": "paper",
+      "locator": "Section 3.3, Table 5",
+      "result": "On APIBench, ToolLLaMA with its own retriever reports AST accuracy 16.77 on HuggingFace, 51.16 on TorchHub, and 40.59 on TensorHub. With oracle retrieval it reports 88.80, 85.88, and 88.62, while Gorilla-RS+Oracle reports 89.27, 93.01, and 94.16.",
+      "metric": "AST accuracy and retrieval condition",
+      "claim_refs": ["C7"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "The tool registry is data infrastructure: every endpoint needs method, parameters, request body, code snippets, example responses, and quality checks.",
+    "Multi-tool agents need execution traces, not just API-call labels. ToolBench stores thought, action, parameters, observation, and final-answer steps.",
+    "Search strategy matters. DFSDT is a runtime planning primitive because it supports branch abandonment and recovery from bad tool calls.",
+    "Retrieval is part of the action space. The model's reachable tools depend on retriever quality, so retriever evaluation belongs in the agent CI loop.",
+    "LLM-as-judge can scale evaluation, but executable checks and human audits remain necessary where side effects or correctness matter.",
+    "API temporality is unavoidable: ToolEval and ToolBench both acknowledge that RapidAPI versions, availability, responses, and reliability can change."
+  ],
+  "caveats": [
+    "ToolBench depends heavily on ChatGPT for instruction generation, solution-path annotation, and evaluation.",
+    "ToolEval is not a formal verifier; it approximates human judgment using a prompted model.",
+    "The paper's strongest ToolBench main results mostly use oracle APIs, while production settings require retrieval.",
+    "RapidAPI endpoints can disappear, slow down, change schemas, or return low-quality responses over time.",
+    "ToolLLaMA's APIBench generalization improves dramatically with oracle retrieval, which shows retrieval remains a major bottleneck.",
+    "The paper focuses on tool-use capability, not authentication, authorization, rate limits, rollback, or safe side-effect execution."
+  ],
+  "related_work": [
+    {
+      "title": "ReAct",
+      "relation": "extends",
+      "note": "ToolLLM compares against ReAct and adds DFSDT to recover from bad branches in multi-step API execution.",
+      "url": "https://arxiv.org/abs/2210.03629"
+    },
+    {
+      "title": "Gorilla",
+      "relation": "extends",
+      "note": "Gorilla focuses on API-call correctness over model-hub APIs; ToolLLM expands to RapidAPI REST APIs, multi-tool tasks, and solution-path annotation.",
+      "url": "https://arxiv.org/abs/2305.15334"
+    },
+    {
+      "title": "Tree of Thoughts",
+      "relation": "connects-to",
+      "note": "The paper explicitly relates DFSDT to tree-style reasoning, while targeting open-ended decision spaces rather than small brute-force-search tasks.",
+      "url": "https://arxiv.org/abs/2305.10601"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A useful local PoC would build a tiny REST API catalog, retrieve candidate endpoints, run a branch-and-backtrack planner over mocked responses, and score pass/win outcomes."
+  },
+  "slide_plan": {
+    "title": "ToolLLM",
+    "subtitle": "Multi-step tool learning over 16k real-world APIs",
+    "sections": [
+      "summary",
+      "problem",
+      "toolbench",
+      "instruction_generation",
+      "dfsdt",
+      "retriever",
+      "tooleval",
+      "main_results",
+      "ood_apibench",
+      "infra_takeaways",
+      "caveats",
+      "references"
+    ]
+  }
+}

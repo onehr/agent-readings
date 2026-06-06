@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · DBOS</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/highlight/monokai.css" />
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <section data-markdown
+               data-separator="^\n---\n$"
+               data-separator-vertical="^\n--\n$"
+               data-separator-notes="^Note:">
+        <textarea data-template>
+<!-- .slide: class="title-slide apple-title" -->
+
+<div class="slide-frame slide-frame--center">
+  <p class="deck-kicker">agent-readings / The Agent Runtime</p>
+  <h1>DBOS</h1>
+  <p class="deck-subtitle">Runtime state as database state</p>
+
+  <div class="deck-meta-strip">
+    <div class="deck-meta-pill"><strong>2022</strong><span>PVLDB 15(1): 21-30, 2022</span></div>
+    <div class="deck-meta-pill"><strong>7</strong><span>claims</span></div>
+    <div class="deck-meta-pill"><strong>7</strong><span>evidence refs</span></div>
+    <div class="deck-meta-pill"><strong>paper-read</strong><span>status</span></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="statement-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">The one sentence</p>
+  <h2>DBOS argues that a distributed transactional DBMS should be the substrate for cluster operating-system services, so execution state becomes queryable, transactional, and highly available by construction.</h2>
+  <p class="deck-note">For agents, the DBOS idea is the systems ancestor of 'every step is a durable write': if task state, messages, retries, and results live in a transactional store, an agent trajectory becomes recoverable and inspectable instead of ephemeral control flow.</p>
+</div>
+
+---
+
+<!-- .slide: class="problem-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Before this paper</p>
+  <h2>The friction was structural.</h2>
+  <div class="apple-card-grid apple-card-grid--three">
+    <div class="apple-card"><p>Modern cloud systems compose Linux, cluster schedulers, distributed filesystems, RPC systems, monitoring tools, and databases as separate components.</p></div>
+<div class="apple-card"><p>Each component maintains its own state, semantics, fault-tolerance machinery, and analytics surface.</p></div>
+<div class="apple-card"><p>Serverless and distributed workloads expose an abstraction gap between application tasks and the OS/kernel machinery underneath.</p></div>
+  </div>
+  <div class="deck-callout">
+    <span>Key gap</span>
+    <p>The paper asks whether operating-system services can be implemented over a distributed transactional DBMS while retaining competitive performance.</p>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="idea-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Core idea</p>
+  <h2>Put OS state in a distributed DBMS, then implement OS services as stored procedures over tables so scheduling, communication, storage, transactions, high...</h2>
+  <p class="deck-note">Put OS state in a distributed DBMS, then implement OS services as stored procedures over tables so scheduling, communication, storage, transactions, high availability, and analytics share one substrate.</p>
+  <div class="idea-loop" aria-label="Agent loop">
+    <div><strong>Model</strong><span>reason</span></div>
+    <div><strong>Runtime</strong><span>act</span></div>
+    <div><strong>World</strong><span>observe</span></div>
+  </div>
+  <div class="step-strip">
+    <div class="step-item">
+  <span>01</span>
+  <p>Define the DBOS stack with distributed DBMS, microkernel services, OS services, and user applications.</p>
+</div>
+<div class="step-item">
+  <span>02</span>
+  <p>Represent scheduler state in Task and Worker tables.</p>
+</div>
+<div class="step-item">
+  <span>03</span>
+  <p>Implement FIFO, locality-aware, and least-loaded schedulers as stored procedure variants.</p>
+</div>
+<div class="step-item">
+  <span>04</span>
+  <p>Represent IPC messages as rows in a Message table partitioned by receiver.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="grammar-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Action grammar</p>
+  <h2>The agent is an interface contract.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>Task table: records task id, partition key, worker assignment, and scheduling metadata.</p></div>
+<div class="apple-card"><p>Worker table: records worker id, partition key, and unused task capacity.</p></div>
+<div class="apple-card"><p>Message table: records sender, receiver, message id, and message data.</p></div>
+<div class="apple-card"><p>Localized file table: stores file blocks local to one database partition.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="code-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Executable shape</p>
+  <h2>The mechanism should fit on one screen.</h2>
+
+```python
+Task(p_key, task_id, worker_id, priority, created_at)
+Worker(p_key, worker_id, unused_capacity)
+Message(sender_id, receiver_id, message_id, data)
+
+schedule(task):
+    worker = select worker_id from Worker
+             where unused_capacity > 0 and p_key = task.home_partition
+             order by unused_capacity desc
+             limit 1
+    if worker:
+        update Worker set unused_capacity = unused_capacity - 1 where worker_id = worker
+        insert into Task values(task.partition, task.id, worker, ...)
+    else:
+        insert into Task values(task.home_partition, task.id, null, ...)
+
+send(sender, receiver, id, data):
+    insert into Message values(sender, receiver, id, data)
+
+receive(receiver):
+    msg = select * from Message where receiver_id = receiver order by message_id limit 1
+    delete from Message where receiver_id = receiver and message_id = msg.id
+    return msg
+```
+</div>
+
+---
+
+<!-- .slide: class="proof-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Evidence</p>
+  <h2>The proof objects.</h2>
+  <div class="proof-grid">
+    <div class="proof-card">
+  <span>E-dbms-substrate</span>
+  <p>The paper argues that a distributed transactional DBMS should be the basis for a scalable cluster OS, with a four-level stack containing the distributed DBMS, microkernel...</p>
+</div>
+<div class="proof-card">
+  <span>E-table-benefits</span>
+  <p>The authors argue that moving OS state to DBMS tables imposes schema discipline, allows querying across OS data in SQL, and lets transactions, high availability, and multi-node...</p>
+</div>
+<div class="proof-card">
+  <span>E-scheduler</span>
+  <p>The prototype scheduler uses Task and Worker tables. The least-loaded scheduler differs from the FIFO scheduler by adding an order-by-unused-capacity clause, illustrating policy...</p>
+</div>
+<div class="proof-card">
+  <span>E-ipc</span>
+  <p>Sending a message inserts a row into a Message table partitioned by receiver, receiving queries the local partition, replication supports failover, message_id indexing supports...</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="claim-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Claim map</p>
+  <h2>What the review actually supports.</h2>
+  <div class="claim-grid">
+    <div class="claim-card">
+  <span>C1 · paper-supported</span>
+  <p>DBOS proposes a cluster OS whose bottom layer is a high-performance distributed transactional DBMS.</p>
+  <small>E-dbms-substrate</small>
+</div>
+<div class="claim-card">
+  <span>C2 · paper-supported</span>
+  <p>Representing OS state as tables gives schema discipline, uniform SQL analytics, and shared transaction/high-availability machinery.</p>
+  <small>E-table-benefits</small>
+</div>
+<div class="claim-card">
+  <span>C3 · paper-supported</span>
+  <p>Scheduler behavior can be changed substantially with small SQL/stored-procedure edits over Task and Worker tables.</p>
+  <small>E-scheduler</small>
+</div>
+<div class="claim-card">
+  <span>C4 · paper-supported</span>
+  <p>DBMS-backed IPC stores messages as table rows, making reliability, failover, in-order delivery, and exactly-once consumption database operations.</p>
+  <small>E-ipc</small>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="takeaway-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Agent infrastructure</p>
+  <h2>What changes if you build systems.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>Agent execution state should be first-class data, not hidden call stack state. DBOS gives the cleanest systems argument for that choice.</p></div>
+<div class="apple-card"><p>A scheduler table is a natural shape for agent work: task id, worker, capacity, retry budget, priority, lease, and provenance can all be queried.</p></div>
+<div class="apple-card"><p>An agent message bus backed by transactions can make observations, tool results, and handoffs replayable and deduplicatable.</p></div>
+<div class="apple-card"><p>SQL observability is not a side feature. If trajectories are rows, debugging is a query instead of log archaeology.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="caveat-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Caveats</p>
+  <h2>What this does not prove.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>DBOS-straw is a prototype, not a full production operating system.</p></div>
+<div class="apple-card"><p>The paper demonstrates basic OS services, not LLM-agent runtimes directly.</p></div>
+<div class="apple-card"><p>IPC performance is not universally better; TCP is substantially faster in the reported benchmarks.</p></div>
+<div class="apple-card"><p>Database invocation overhead is visible in read-heavy filesystem workloads.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="closing-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Run it</p>
+  <h2>No PoC yet.</h2>
+  <p class="deck-note">No PoC yet - contributions welcome. A useful PoC could implement a tiny transactional agent scheduler with task, message, and step-result tables in SQLite or Postgres.</p>
+  <div class="reference-list">
+    <ul><li>Paper: <a href="https://people.eecs.berkeley.edu/~matei/papers/2022/vldb_dbos.pdf">DBOS: A DBMS-Oriented Operating System</a></li><li>Project/code: <a href="https://github.com/DBOS-project">https://github.com/DBOS-project</a></li><li>complements: <a href="https://worrydream.com/refs/Armstrong_2003_-_Making_reliable_distributed_systems_in_the_presence_of_software_errors.pdf">Making Reliable Distributed Systems in the Presence of Software Errors</a></li><li>enables: <a href="https://docs.dbos.dev/why-dbos">Durable Execution</a></li><li>analogy: <a href="https://arxiv.org/abs/2310.08560">MemGPT</a></li></ul>
+  </div>
+</div>
+
+Note: This deck is synthesized from `data/reviews/dbos-skiadopoulos-2022.json`. Update the review record, then run `bun run build`.
+
+        </textarea>
+      </section>
+    </div>
+  </div>
+  <script type="module" src="../../assets/deck.js"></script>
+</body>
+</html>

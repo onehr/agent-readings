@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/flashattention-dao-2022/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Inference and Serving Infrastructure</p>
+        <h1>FlashAttention</h1>
+        <p class="hero-lede">FlashAttention makes exact attention fast by tiling the computation so the quadratic attention matrix is never materialized in slow GPU HBM.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>7</strong><span>Claims</span></div>
+          <div class="metric"><strong>7</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2022 · NeurIPS 2022; arXiv 2022</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>3</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/flashattention-dao-2022/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2205.14135">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>For agents, every serving-layer gain compounds across long contexts and many calls; FlashAttention is the kernel-level reason longer prompts and cheaper serving became practical.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Self-attention has quadratic time and memory complexity in sequence length.</li><li>Approximate attention methods reduce theoretical compute but often fail to improve wall-clock time or reduce quality.</li><li>Standard attention materializes the N by N attention matrix and moves it through GPU HBM, making memory traffic a bottleneck.</li><li>Deep learning framework interfaces often hide fine-grained memory movement decisions needed for optimal kernels.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks how to compute exact attention with fewer HBM reads/writes by explicitly designing for the GPU memory hierarchy.</p>
+
+      <h2>Method</h2>
+      <p>Load blocks of Q, K, and V into SRAM, compute attention tile by tile with online softmax, write only final outputs and small normalization state to HBM, and recompute tiles during backward rather than storing the whole attention matrix.</p>
+      <ul><li>Partition Q, K, and V into blocks sized for GPU SRAM.</li><li>Loop over K/V blocks and Q blocks, loading only the active tiles into SRAM.</li><li>Compute local attention scores for the tile.</li><li>Update online softmax statistics and accumulated outputs without storing the full N by N score matrix.</li><li>Write final output blocks and small normalization values to HBM.</li><li>During backward pass, recompute required attention tiles on chip using saved normalization data.</li><li>Fuse attention operations into one CUDA kernel for fine-grained memory control.</li><li>Extend the same IO-aware pattern to block-sparse attention for longer contexts.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>Approximate attention methods often reduce compute complexity but fail to deliver wall-clock speedups because they ignore memory-access overhead.</p>
+  <p><strong>Scope:</strong> Abstract and Introduction.</p>
+  <ul><li><strong>E-approximate-attention-gap</strong>: The paper argues approximate attention methods focus on FLOP reduction and often do not achieve wall-clock speedup because they ignore IO and memory-access overheads.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>FlashAttention is an exact attention algorithm that uses tiling to reduce reads and writes between GPU HBM and on-chip SRAM.</p>
+  <p><strong>Scope:</strong> Abstract and Introduction.</p>
+  <ul><li><strong>E-tiling</strong>: FlashAttention uses tiling to load Q, K, and V blocks into SRAM and avoid reading/writing the large attention matrix to HBM.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>The paper analyzes FlashAttention's IO complexity and proves it is IO-optimal for a range of SRAM sizes.</p>
+  <p><strong>Scope:</strong> Abstract and Introduction.</p>
+  <ul><li><strong>E-io-complexity</strong>: The paper analyzes IO complexity, states FlashAttention requires fewer HBM accesses than standard attention, and proves optimality for a range of SRAM sizes.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>FlashAttention reports major attention-kernel speedups by avoiding materialization of the N by N attention matrix in HBM.</p>
+  <p><strong>Scope:</strong> Introduction and Figure 1.</p>
+  <ul><li><strong>E-attention-kernel-speed</strong>: The paper reports that not materializing the N by N attention matrix gives a 7.6x speedup on GPT-2 attention computation and up to 9x fewer HBM accesses in typical settings.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>FlashAttention reports 15% end-to-end speedup on BERT-large, 3x speedup on GPT-2, and 2.4x speedup on Long Range Arena training workloads.</p>
+  <p><strong>Scope:</strong> Abstract and Introduction.</p>
+  <ul><li><strong>E-training-speedups</strong>: FlashAttention trains BERT-large 15% faster than the MLPerf 1.1 training speed record, trains GPT-2 at sequence length 1K 3x faster than HuggingFace/Megatron baselines, and trains Long Range Arena at sequence length 1K-4K 2.4x faster than baselines.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>FlashAttention and block-sparse FlashAttention enable longer context, including better-than-chance performance on Path-X at 16K length and Path-256 at 64K length.</p>
+  <p><strong>Scope:</strong> Abstract and Introduction.</p>
+  <ul><li><strong>E-long-context</strong>: The paper reports 0.7 better GPT-2 perplexity, 6.4 points lift on long-document classification, 61.4% accuracy on Path-X at 16K, and 63.1% on Path-256 at 64K using FlashAttention/block-sparse FlashAttention.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · paper-supported</h3>
+  <p>FlashAttention uses recomputation in backward pass to avoid storing the large attention matrix, trading extra FLOPs for much lower HBM traffic and memory footprint.</p>
+  <p><strong>Scope:</strong> Introduction.</p>
+  <ul><li><strong>E-recompute</strong>: The paper stores softmax normalization factors from the forward pass and recomputes attention on-chip during the backward pass rather than reading the intermediate attention matrix from HBM.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Serving improvements start at the kernel. Agent workflows become cheaper when the primitive attention operation stops wasting HBM bandwidth.</li><li>FLOPs are not the whole cost model. For long-context agents, memory traffic and KV residency often dominate.</li><li>FlashAttention is exact, so it can improve throughput/latency without changing model semantics the way approximate attention might.</li><li>Longer context is an infrastructure feature. It changes what agents can carry in prompt state, tool traces, and retrieval context.</li><li>IO-awareness recurs up the stack: FlashAttention for attention matrices, PagedAttention for KV cache, SGLang for prefix reuse.</li><li>Better kernels do not remove the need for scheduling, paging, prompt compression, or durable state; they make those layers cheaper.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The paper is primarily about training and attention kernels, though the kernel later became central to inference stacks.</li><li>Kernel speedups are hardware- and implementation-dependent.</li><li>Block-sparse FlashAttention is approximate and should not be conflated with exact FlashAttention.</li><li>Exact attention still has quadratic work in sequence length; FlashAttention reduces memory traffic and footprint, not the mathematical attention dependency.</li><li>The original 2022 results predate FlashAttention-2/3 and current production kernels.</li><li>Longer context can help agents but can also increase latency, prompt-management complexity, and exposure to irrelevant or malicious context.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/flashattention-dao-2022.json.</span>
+  </footer>
+</body>
+</html>

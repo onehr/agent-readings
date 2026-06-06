@@ -1,0 +1,317 @@
+{
+  "schema_version": 1,
+  "slug": "planning-abilities-valmeekam-2023",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "On the Planning Abilities of Large Language Models: A Critical Investigation",
+    "authors": [
+      "Karthik Valmeekam",
+      "Matthew Marquez",
+      "Sarath Sreedharan",
+      "Subbarao Kambhampati"
+    ],
+    "year": 2023,
+    "venue": "NeurIPS 2023 Spotlight",
+    "url": "https://arxiv.org/abs/2305.15771",
+    "project_url": "https://github.com/karthikv792/LLMs-Planning",
+    "arxiv_id": "2305.15771",
+    "read_sources": [
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2305.15771",
+        "note": "Used for arXiv metadata, author list, NeurIPS Spotlight note, abstract, and headline results."
+      },
+      {
+        "kind": "paper_pdf",
+        "url": "https://papers.nips.cc/paper_files/paper/2023/file/efb2072a358cefb75886a315a6fcf880-Paper-Conference.pdf",
+        "note": "Read for prompt generation, autonomous-mode tables, obfuscation tests, LPG heuristic mode, VAL backprompting, human study, and conclusion."
+      },
+      {
+        "kind": "project_repo",
+        "url": "https://github.com/karthikv792/LLMs-Planning",
+        "note": "Used to confirm the benchmark code repository and related PlanBench leaderboard context."
+      },
+      {
+        "kind": "venue_page",
+        "url": "https://neurips.cc/virtual/2023/poster/71377",
+        "note": "Used to confirm NeurIPS 2023 Spotlight venue metadata."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "LLMs are weak autonomous planners but useful plan sketchers when an external planner or verifier owns correctness.",
+    "thesis": "Planning is not the same as fluent plan-shaped text: autonomous LLM plans fail executable validation, especially under obfuscation, but the same outputs can help sound planners or verifier-backed repair loops.",
+    "why_it_matters": "This paper is the hard boundary around agent planning hype. It gives agent builders a concrete architecture lesson: keep domain models, validators, and planners in the loop, and never treat an LLM's natural-language plan as proof of executability."
+  },
+  "problem": {
+    "prior_state": [
+      "Many agent demos evaluated plans by plausibility or human inspection rather than executability against a domain model.",
+      "LLMs often produce natural-language plans that look reasonable but violate action preconditions or fail to reach goals.",
+      "Human-in-the-loop iterative correction can hide who is doing the planning, creating a Clever Hans problem.",
+      "Classical planners can validate and repair plans, but LLM agent literature often underuses them."
+    ],
+    "key_gap": "The paper asks whether LLMs can autonomously generate executable plans in classical planning tasks, and whether their failed plans can still help sound planners or verifiers.",
+    "assumptions": [
+      "Planning ability should be evaluated against executable domain models and validators, not just human plausibility.",
+      "Natural-language and PDDL prompts can be generated from the same planning benchmark instances.",
+      "VAL validation and LPG local search are appropriate external planning tools for checking and repairing candidate plans.",
+      "Obfuscating action and predicate names should not affect a domain-independent planner, so it is a useful probe of LLM pattern matching."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "autonomous-mode",
+      "name": "Autonomous mode",
+      "definition": "The LLM is treated as the planner and its generated plan is extracted, translated when needed, and checked by VAL."
+    },
+    {
+      "id": "heuristic-mode",
+      "name": "Heuristic mode",
+      "definition": "The LLM provides a candidate plan or plan sketch to an external planner or verifier that owns correctness."
+    },
+    {
+      "id": "mystery-blocksworld",
+      "name": "Mystery Blocksworld",
+      "definition": "A Blocksworld variant where action and predicate names are replaced by deceptive or random labels while the formal transition model is unchanged."
+    },
+    {
+      "id": "lpg-seed",
+      "name": "LLM-seeded LPG",
+      "definition": "A local-search planner starts from an LLM-generated seed plan and repairs flaws until it finds a valid plan."
+    },
+    {
+      "id": "val-backprompting",
+      "name": "VAL backprompting",
+      "definition": "A sound plan validator reports concrete plan errors that are converted into feedback prompts for GPT-4."
+    }
+  ],
+  "method": {
+    "core_idea": "Generate planning prompts from PDDL domains, test LLM plans autonomously with a validator, then separately test whether LLM candidate plans help external planners or verifier-backed repair.",
+    "action_grammar": [
+      "Domain prompt: lifted action model, preconditions, effects, initial state, and goal.",
+      "Prompt mode: natural language or PDDL; zero-shot or one-shot; optional state-tracking chain of thought.",
+      "Plan extraction: parse the LLM response until a plan-end tag.",
+      "Validation: use VAL to check whether the plan is executable and reaches the goal.",
+      "Obfuscation: rename predicates/actions to deceptive or random labels without changing the formal problem.",
+      "LPG seeding: feed the LLM plan as an initial seed to a sound local-search planner.",
+      "Verifier feedback: use VAL error reports to backprompt GPT-4 for another plan.",
+      "Human comparison: compare unassisted and LLM-assisted human planning on Blocksworld-like tasks."
+    ],
+    "steps": [
+      "Generate planning instances from PDDL domains and translate them into natural-language and PDDL prompt variants.",
+      "Evaluate GPT-family models, BLOOM, and a fine-tuned GPT-3 variant in autonomous mode by validating generated plans.",
+      "Stress-test GPT-4 with Mystery Blocksworld name obfuscations.",
+      "Evaluate forgiving plan-validation relaxations to see whether failed plans are close to correct.",
+      "Seed LPG with LLM-generated plans and compare search steps against empty and random seed plans.",
+      "Use VAL to give mechanical feedback to GPT-4 for up to 15 backprompting rounds.",
+      "Run a human user study with and without GPT-4 suggestions and measure accuracy, time, and cognitive load."
+    ],
+    "pseudocode": "for problem in benchmark:\n    prompt = render_prompt(problem, mode=\"natural_language\", examples=0_or_1)\n    candidate = llm.generate(prompt)\n    plan = extract_plan(candidate)\n    valid = val.validate(problem.domain, problem.instance, plan)\n\n    if heuristic_mode:\n        repaired = lpg.solve(seed_plan=plan, domain=problem.domain, instance=problem.instance)\n\n    if backprompt_mode and not valid:\n        for round in range(15):\n            feedback = val.explain_failure(plan)\n            plan = llm.generate(prompt + feedback)\n            if val.validate(problem.domain, problem.instance, plan):\n                break"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "evaluation-design",
+      "status": "paper-supported",
+      "statement": "The paper separates LLM planning evaluation into autonomous mode and heuristic mode, using automated planning tools to avoid plausibility-only assessment.",
+      "scope": "Abstract, Introduction, Figure 1, and Sections 3-5.",
+      "evidence_refs": ["E-eval-design"],
+      "caveats": ["The domains are classical planning benchmarks, not every kind of real-world planning."]
+    },
+    {
+      "id": "C2",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "In autonomous mode, the best model, GPT-4, averages only about 12% executable-plan success across domains.",
+      "scope": "Abstract and Section 4.",
+      "evidence_refs": ["E-headline"],
+      "caveats": ["The exact rate depends on prompt/domain setting, but the paper's headline result is consistently low."]
+    },
+    {
+      "id": "C3",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "Even in Blocksworld, GPT-4 reaches only around one-third success, and chain-of-thought or PDDL-formatted prompts do not fix the failure.",
+      "scope": "Tables 1 and 2, Section 4.",
+      "evidence_refs": ["E-blocksworld"],
+      "caveats": ["Blocksworld is simple for humans but still synthetic; it tests causal sequencing under a compact action model."]
+    },
+    {
+      "id": "C4",
+      "type": "brittleness",
+      "status": "paper-supported",
+      "statement": "Obfuscating action and predicate names causes a catastrophic drop, showing that GPT-4's apparent planning depends strongly on familiar semantics.",
+      "scope": "Section 4 obfuscation experiments.",
+      "evidence_refs": ["E-obfuscation"],
+      "caveats": ["Obfuscation is deliberately adversarial, but a true domain-independent planner is unaffected by renaming."]
+    },
+    {
+      "id": "C5",
+      "type": "human-baseline",
+      "status": "paper-supported",
+      "statement": "Humans substantially outperform LLMs on the simple Blocksworld setting: 78% of participants produced valid plans, and 89.7% of valid human plans were optimal.",
+      "scope": "Section 4 human baseline.",
+      "evidence_refs": ["E-human-baseline"],
+      "caveats": ["The human baseline is reported for Blocksworld, not every domain."]
+    },
+    {
+      "id": "C6",
+      "type": "heuristic",
+      "status": "paper-supported",
+      "statement": "LLM-generated plans can still be useful as seed plans for LPG local-search repair, reducing search steps in familiar domains.",
+      "scope": "Section 5.1, Table 3.",
+      "evidence_refs": ["E-lpg"],
+      "caveats": ["The benefit fades in Mystery Blocksworld, where semantic cues are removed."]
+    },
+    {
+      "id": "C7",
+      "type": "verifier",
+      "status": "paper-supported",
+      "statement": "External verifier feedback from VAL improves GPT-4 plan generation in common-sense domains but not much in obfuscated domains.",
+      "scope": "Section 5.2, Table 4.",
+      "evidence_refs": ["E-val"],
+      "caveats": ["The loop allows up to 15 feedback rounds and depends on a sound verifier with diagnostic feedback."]
+    },
+    {
+      "id": "C8",
+      "type": "human-factors",
+      "status": "paper-supported",
+      "statement": "LLM suggestions did not significantly improve human planning accuracy, time, or cognitive load, and some users accepted incorrect suggestions.",
+      "scope": "Section 5.3.",
+      "evidence_refs": ["E-human-assist"],
+      "caveats": ["This user study is limited to the paper's task setup, but it directly flags automation-bias risk."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-eval-design",
+      "kind": "evaluation_method",
+      "source": "paper",
+      "locator": "Abstract, Introduction, Sections 3-5",
+      "result": "The paper evaluates LLMs in autonomous mode, where generated plans are validated by VAL, and heuristic mode, where generated plans are used by external planners or verifiers.",
+      "metric": "evaluation modes",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-headline",
+      "kind": "headline_result",
+      "source": "paper",
+      "locator": "Abstract and Introduction",
+      "result": "The abstract states that the best model, GPT-4, has an average autonomous executable-plan success rate of about 12% across domains.",
+      "metric": "average success rate",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-blocksworld",
+      "kind": "result_table",
+      "source": "paper",
+      "locator": "Tables 1 and 2, Section 4",
+      "result": "GPT-4 solves 210/600 (34.6%) zero-shot natural-language Blocksworld instances, 214/600 (35.6%) with chain-of-thought, 106/600 (17.6%) zero-shot PDDL instances, and 75/600 (12.5%) one-shot PDDL instances. The paper says overall Blocksworld performance is still around 34%.",
+      "metric": "Blocksworld instances correct",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-obfuscation",
+      "kind": "robustness",
+      "source": "paper",
+      "locator": "Section 4, Tables 1 and 2",
+      "result": "With zero-shot natural-language prompts, GPT-4 solves 210/600 ordinary Blocksworld instances, but only 1/600 deceptive Mystery Blocksworld instances and 0/600 randomized Mystery Blocksworld instances. With PDDL prompts, GPT-4 solves 106/600 ordinary instances but only 3/600 deceptive instances.",
+      "metric": "success under renamed predicates/actions",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-human-baseline",
+      "kind": "human_study",
+      "source": "paper",
+      "locator": "Section 4 human baseline",
+      "result": "In an IRB-approved Blocksworld study, 39 of 50 participants produced valid plans (78%), and 35 of those 39 valid plans were optimal (89.7%).",
+      "metric": "human validity and optimality",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-lpg",
+      "kind": "planner_assist",
+      "source": "paper",
+      "locator": "Section 5.1, Table 3",
+      "result": "LPG with a GPT-4 Blocksworld seed plan takes 8.9 average search steps versus 15.8 empty-seed and 20.07 random-seed baselines; Logistics takes 51.3 versus 77.5 and 144.39. Mystery Blocksworld shows weaker help: 16.09 versus 15.8 empty and 20.45 random.",
+      "metric": "average LPG search steps",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-val",
+      "kind": "verifier_loop",
+      "source": "paper",
+      "locator": "Section 5.2, Table 4",
+      "result": "With VAL backprompting over 50 failed instances and at most 15 feedback rounds, GPT-4 reaches 41/50 correct on Blocksworld with 3.68 average feedback rounds, 35/50 on Logistics with 3.31 rounds, and 5/50 on deceptive Mystery Blocksworld with 7.0 rounds.",
+      "metric": "correct instances and feedback rounds",
+      "claim_refs": ["C7"]
+    },
+    {
+      "id": "E-human-assist",
+      "kind": "human_study",
+      "source": "paper",
+      "locator": "Section 5.3",
+      "result": "The LLM-assisted human study had 49 unassisted and 48 assisted participants and found no statistically significant differences in accuracy, time, or cognitive load. Three assisted participants accepted incorrect LLM suggestions, and two submitted those suggestions as their plans.",
+      "metric": "human-assistance outcomes",
+      "claim_refs": ["C8"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "Do not let plan-shaped text bypass an executable validator. Planning outputs need machine-checkable preconditions, effects, and goals.",
+    "LLMs can be good proposal generators while still being bad autonomous planners. Architect the loop so a sound planner or verifier owns correctness.",
+    "Name obfuscation is a useful stress test: if a model collapses when labels lose semantics, it is pattern matching more than planning.",
+    "Verifier feedback beats self-critique because it comes from the domain model, not the same model that made the error.",
+    "Human review is not a free safety layer; LLM suggestions can create automation bias without improving planning performance.",
+    "Agent planning benchmarks should report executable success, not plausibility, and should separate extraction failures, invalid actions, unmet goals, and repairable sketches."
+  ],
+  "caveats": [
+    "The results focus on classical deterministic planning domains.",
+    "The paper evaluates GPT-family models available at the time plus BLOOM; later reasoning models may change absolute numbers but not the architecture lesson without fresh proof.",
+    "Autonomous-mode prompts include domain descriptions, so this is not a test of discovering actions from raw environment interaction.",
+    "Heuristic mode relies on external planners and verifiers with correct domain models.",
+    "Verifier backprompting can require multiple rounds and still fails badly in obfuscated settings.",
+    "The human-assistance study is limited, but it is enough to flag automation-bias risk."
+  ],
+  "related_work": [
+    {
+      "title": "LLM+P",
+      "relation": "supports",
+      "note": "LLM+P implements the architecture this paper motivates: translate to PDDL and let a classical planner solve.",
+      "url": "https://arxiv.org/abs/2304.11477"
+    },
+    {
+      "title": "Tree of Thoughts",
+      "relation": "contrast",
+      "note": "Tree search over thoughts helps some reasoning tasks, but this paper shows executable planning needs domain validators and planners.",
+      "url": "https://arxiv.org/abs/2305.10601"
+    },
+    {
+      "title": "Reflexion",
+      "relation": "contrast",
+      "note": "Reflexion-style self-feedback is weaker for planning unless feedback comes from an external verifier such as VAL.",
+      "url": "https://arxiv.org/abs/2303.11366"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A useful PoC would validate one LLM-generated Blocks World plan with VAL or a tiny local precondition/effect checker, then show how verifier feedback changes the next plan."
+  },
+  "slide_plan": {
+    "title": "Planning Abilities",
+    "subtitle": "LLMs are plan sketchers, not planners",
+    "sections": [
+      "summary",
+      "problem",
+      "evaluation_modes",
+      "autonomous_results",
+      "obfuscation",
+      "human_baseline",
+      "lpg_seed",
+      "val_backprompting",
+      "human_assistance",
+      "infra_takeaways",
+      "caveats",
+      "references"
+    ]
+  }
+}

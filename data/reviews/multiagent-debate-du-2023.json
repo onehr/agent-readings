@@ -1,0 +1,326 @@
+{
+  "schema_version": 1,
+  "slug": "multiagent-debate-du-2023",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "Improving Factuality and Reasoning in Language Models through Multiagent Debate",
+    "authors": [
+      "Yilun Du",
+      "Shuang Li",
+      "Antonio Torralba",
+      "Joshua B. Tenenbaum",
+      "Igor Mordatch"
+    ],
+    "year": 2023,
+    "venue": "arXiv 2023; ICML 2024, PMLR 235:11733-11763",
+    "url": "https://arxiv.org/abs/2305.14325",
+    "project_url": "https://github.com/composable-models/llm_multiagent_debate",
+    "arxiv_id": "2305.14325",
+    "read_sources": [
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2305.14325",
+        "note": "Used for arXiv metadata, abstract, submission date, and project/code link."
+      },
+      {
+        "kind": "paper_pdf",
+        "url": "https://openreview.net/pdf?id=zj7YuTE4t8",
+        "note": "Read for the method, Table 1 and Table 2 results, design analyses, limitations, and evaluation details."
+      },
+      {
+        "kind": "proceedings",
+        "url": "https://proceedings.mlr.press/v235/du24e.html",
+        "note": "Used to confirm ICML 2024/PMLR publication metadata."
+      },
+      {
+        "kind": "project_page",
+        "url": "https://composable-models.github.io/llm_debate/",
+        "note": "Used for project framing, ICML 2024 status, and high-level result summaries."
+      },
+      {
+        "kind": "project_repo",
+        "url": "https://github.com/composable-models/llm_multiagent_debate",
+        "note": "Used to confirm the released implementation and supported task folders."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "Multiagent Debate improves some reasoning and factuality tasks by making several model instances critique and update each other's answers before taking a final consensus.",
+    "thesis": "The paper's useful claim is narrower than 'more agents are better': debate helps when independent model samples expose inconsistent reasoning or uncertain facts that later rounds can reconcile.",
+    "why_it_matters": "It is an important calibration paper for multi-agent systems because it gives a concrete inference-time coordination protocol, direct baselines against single-agent reflection and majority vote, and clear cost/context-length caveats."
+  },
+  "problem": {
+    "prior_state": [
+      "Most prompting improvements focused on a single model instance: chain-of-thought, reflection, verification, or self-consistency.",
+      "Single-agent generations can hallucinate facts or make reasoning jumps while still reporting high confidence.",
+      "Majority voting can exploit sample diversity, but does not let samples critique each other's reasoning.",
+      "Multi-agent agent systems needed empirical evidence for when communication adds value beyond simply sampling more answers."
+    ],
+    "key_gap": "The paper asks whether black-box LLM instances can improve factuality and reasoning by communicating before the final answer, rather than only being sampled independently.",
+    "assumptions": [
+      "Different instances or samples of the same model can produce useful disagreement.",
+      "A model can use other agents' answers as evidence to revise its own reasoning.",
+      "The task has an extractable final answer or externally checkable target.",
+      "The extra inference cost of multiple agents and rounds is acceptable for the task."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "multiagent-debate",
+      "name": "Multiagent debate",
+      "definition": "An inference-time protocol where multiple model instances answer independently, then repeatedly update their answers after reading the other agents' responses."
+    },
+    {
+      "id": "consensus-prompt",
+      "name": "Consensus prompt",
+      "definition": "The prompt that inserts other agents' answers into each agent's context and asks the agent to produce an updated response."
+    },
+    {
+      "id": "majority-baseline",
+      "name": "Majority baseline",
+      "definition": "A multi-sample baseline that chooses the most common final answer without debate rounds."
+    },
+    {
+      "id": "agreement-signal",
+      "name": "Agreement signal",
+      "definition": "The paper's observation that uncertain questions often produce divergent initial answers, while debate pushes agents toward one consensus answer."
+    },
+    {
+      "id": "summarized-debate",
+      "name": "Summarized debate",
+      "definition": "A variant where other agents' responses are summarized before being passed into the next round to reduce context length."
+    }
+  ],
+  "method": {
+    "core_idea": "Run several black-box LLM instances in parallel, give each one the task, feed each agent the other agents' answers with a debate prompt, repeat for a fixed number of rounds, then use consensus or majority over the final answers.",
+    "action_grammar": [
+      "initial_answer: each agent independently answers the same task.",
+      "share: collect responses from all other agents.",
+      "debate_prompt: insert other responses into the agent's context as advice or candidate solutions.",
+      "update_answer: the agent critiques the visible responses and revises its own answer.",
+      "repeat: run the same update for multiple debate rounds.",
+      "finalize: if agents disagree at the end, use the majority answer."
+    ],
+    "steps": [
+      "Select a task and a base language model.",
+      "Instantiate multiple agents, typically copies of the same model.",
+      "Ask each agent to produce an independent initial answer.",
+      "For every round, concatenate or summarize the other agents' responses and give them to each agent with a consensus prompt.",
+      "Ask each agent to update its answer after inspecting the other responses.",
+      "Stop after the configured number of rounds or when consensus is reached.",
+      "Evaluate final answers against task-specific labels, factual bullets, Stockfish scores, or chess validity constraints."
+    ],
+    "pseudocode": "agents = [model.copy() for _ in range(n)]\nanswers = [agent.solve(task) for agent in agents]\n\nfor _round in range(rounds):\n    next_answers = []\n    for i, agent in enumerate(agents):\n        others = [answer for j, answer in enumerate(answers) if j != i]\n        prompt = consensus_prompt(task, others)\n        next_answers.append(agent.update(prompt))\n    answers = next_answers\n\nreturn consensus(answers) or majority_vote(answers)"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "method",
+      "status": "paper-supported",
+      "statement": "The debate protocol is model-agnostic and only needs black-box access to generated text.",
+      "scope": "Abstract, Introduction, and Section 2.1.",
+      "evidence_refs": ["E-black-box-method"],
+      "caveats": ["It still depends on prompt-following behavior and on tasks where final answers can be extracted."]
+    },
+    {
+      "id": "C2",
+      "type": "runtime",
+      "status": "paper-supported",
+      "statement": "Consensus is empirical rather than guaranteed; when agents do not converge, the paper takes a majority answer.",
+      "scope": "Section 2.2.",
+      "evidence_refs": ["E-consensus"],
+      "caveats": ["This is not a formal distributed consensus protocol and has no correctness guarantee."]
+    },
+    {
+      "id": "C3",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "With three agents and two rounds, debate outperforms single-agent, reflection, and majority baselines on the paper's arithmetic, GSM8K, and chess-move optimality reasoning tasks.",
+      "scope": "Section 3.1, Table 1.",
+      "evidence_refs": ["E-reasoning-table"],
+      "caveats": ["The main results use chatGPT-3.5 and fixed task samples; extra compute is part of the method."]
+    },
+    {
+      "id": "C4",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "Debate also improves the paper's factuality evaluations for biographies, MMLU, and chess move validity.",
+      "scope": "Section 3.2, Table 2.",
+      "evidence_refs": ["E-factuality-table"],
+      "caveats": ["The biography benchmark uses an LLM critic and can miss unsupported generated facts not present in the ground-truth bullets."]
+    },
+    {
+      "id": "C5",
+      "type": "analysis",
+      "status": "paper-supported",
+      "statement": "The paper's ablations suggest more agents and more rounds can improve arithmetic performance, and different personas can improve MMLU.",
+      "scope": "Section 3.3.",
+      "evidence_refs": ["E-agent-round-analysis", "E-persona-analysis"],
+      "caveats": ["These are task-specific analyses and imply higher latency and token cost."]
+    },
+    {
+      "id": "C6",
+      "type": "systems",
+      "status": "paper-supported",
+      "statement": "Context growth is a real systems constraint for debate, so summarizing other agents' responses is proposed as an efficiency strategy.",
+      "scope": "Section 3.3 and Limitations.",
+      "evidence_refs": ["E-summarization", "E-limitations"],
+      "caveats": ["Summarization adds another model-mediated compression step that can drop important disagreement."]
+    },
+    {
+      "id": "C7",
+      "type": "limitation",
+      "status": "paper-supported",
+      "statement": "Multiagent Debate is a useful inference-time reliability technique, but it is expensive and can converge to an incorrect answer.",
+      "scope": "Introduction, Section 2.2, Appendix qualitative examples, and Limitations.",
+      "evidence_refs": ["E-limitations", "E-wrong-consensus"],
+      "caveats": ["The method should not be treated as a verifier without external checks."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-black-box-method",
+      "kind": "method",
+      "source": "paper",
+      "locator": "Abstract, Introduction, Section 2.1",
+      "result": "The paper describes multiple model instances generating candidate answers, reading and critiquing other agents' responses, and updating their own answers over multiple rounds, while requiring only black-box generation access.",
+      "metric": "protocol design",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-consensus",
+      "kind": "runtime_behavior",
+      "source": "paper",
+      "locator": "Section 2.2",
+      "result": "The authors state that convergence is not guaranteed in general, but empirically agents often converge; in remaining disagreement cases they take the majority answer.",
+      "metric": "consensus behavior",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-reasoning-table",
+      "kind": "benchmark_result",
+      "source": "paper",
+      "locator": "Table 1",
+      "result": "With three agents and two rounds, debate reports 81.8% arithmetic, 85.0% GSM8K, and 122.9 pawn-score chess optimality, versus single-agent 67.0%, 77.0%, and 91.4, reflection 72.1%, 75.0%, and 102.1, and majority 75.0%, 81.0%, and 105.2.",
+      "metric": "reasoning accuracy and chess pawn-score",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-factuality-table",
+      "kind": "benchmark_result",
+      "source": "paper",
+      "locator": "Table 2",
+      "result": "Debate reports 73.8 biography factuality, 71.1 MMLU, and 45.2 chess move validity, versus single-agent 66.0, 63.9, and 29.3; reflection 68.3, 57.7, and 38.8; and majority 67.0 MMLU and 36.0 chess validity.",
+      "metric": "factuality and validity accuracy",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-agent-round-analysis",
+      "kind": "ablation",
+      "source": "paper",
+      "locator": "Section 3.3, Figure 9",
+      "result": "On arithmetic, performance increases monotonically in the reported analysis as the number of debating agents increases and as the number of debate rounds increases.",
+      "metric": "agents and rounds",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-persona-analysis",
+      "kind": "ablation",
+      "source": "paper",
+      "locator": "Section 3.3",
+      "result": "Using different persona prompts on MMLU improves debate performance from 71.1 to 74.2 in the reported experiment.",
+      "metric": "MMLU accuracy",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-summarization",
+      "kind": "systems_analysis",
+      "source": "paper",
+      "locator": "Section 3.3, Figure 11",
+      "result": "The paper notes that concatenating all other agents' responses is expensive as agent count grows, and reports that summarizing other responses before debate improves arithmetic performance.",
+      "metric": "context management",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-limitations",
+      "kind": "limitation",
+      "source": "paper",
+      "locator": "Section 5",
+      "result": "The limitations section states that the approach is more expensive than other prompting techniques because it requires multiple agents and debate, and that longer debates strain current models' ability to process context.",
+      "metric": "cost and context length",
+      "claim_refs": ["C6", "C7"]
+    },
+    {
+      "id": "E-wrong-consensus",
+      "kind": "qualitative_limit",
+      "source": "paper",
+      "locator": "Appendix A.1 and Figure 8",
+      "result": "The appendix says debate generally improves final answers, though sometimes answers converge to an incorrect value; Figure 8 also notes that convergence on an uncertain fact is not necessarily correct.",
+      "metric": "incorrect convergence",
+      "claim_refs": ["C7"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "Do not count agents; count independent evidence. Debate helps when agents expose different reasoning paths or uncertain facts.",
+    "Multi-agent communication is not a verifier. Without an external checker, agents can converge on the wrong answer together.",
+    "The protocol is inference-time reliability through redundancy, critique, and aggregation; the runtime cost scales with agents, rounds, and context size.",
+    "Debate transcripts are valuable state. They reveal disagreement, persuasion, convergence, and failure modes that a single final answer hides.",
+    "Summarization is a systems primitive for agent collectives: once every agent must read every other agent, context management becomes the bottleneck.",
+    "Specialized agents are plausible, but the paper's strongest evidence is still task-local; role design needs measurement, not vibes."
+  ],
+  "caveats": [
+    "The README framing is right to be skeptical: some gains are debate-specific, but the method is also an expensive way to use more samples and more tokens.",
+    "The main reported results use chatGPT-3.5-era models and relatively small evaluated subsets for several tasks.",
+    "The biography factuality evaluation uses an LLM critic and may miss generated inaccuracies outside the ground-truth bullet list.",
+    "Consensus is not correctness; the paper explicitly notes that convergence can land on an incorrect value.",
+    "Long debates create context-length and attention problems, making this as much an inference-systems question as an agent-design question.",
+    "The method is easiest to evaluate on tasks with extractable final answers; open-ended agent trajectories need stronger instrumentation."
+  ],
+  "related_work": [
+    {
+      "title": "Self-Consistency Improves Chain of Thought Reasoning",
+      "relation": "compares",
+      "note": "Multiagent Debate adds communication rounds on top of the same broad idea of using multiple samples at inference time.",
+      "url": "https://arxiv.org/abs/2203.11171"
+    },
+    {
+      "title": "Reflexion",
+      "relation": "compares",
+      "note": "The paper compares against reflection-style self-critique and frames debate as critique by other model instances.",
+      "url": "https://arxiv.org/abs/2303.11366"
+    },
+    {
+      "title": "AutoGen",
+      "relation": "connects",
+      "note": "AutoGen generalizes multi-agent conversation into a developer framework; Multiagent Debate is a narrower inference-time protocol.",
+      "url": "https://arxiv.org/abs/2308.08155"
+    },
+    {
+      "title": "MetaGPT",
+      "relation": "contrast",
+      "note": "MetaGPT structures agents by organizational roles and SOPs; Multiagent Debate structures them as peers critiquing candidate answers.",
+      "url": "https://arxiv.org/abs/2308.00352"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A compact PoC could run local model samples over arithmetic tasks, compare single sample, majority vote, and one debate round, and persist all prompts/responses."
+  },
+  "slide_plan": {
+    "title": "Multiagent Debate",
+    "subtitle": "More agents help only when disagreement becomes useful evidence",
+    "sections": [
+      "summary",
+      "problem",
+      "debate_protocol",
+      "consensus",
+      "reasoning_results",
+      "factuality_results",
+      "systems_cost",
+      "failure_modes",
+      "infra_takeaways",
+      "caveats",
+      "references"
+    ]
+  }
+}

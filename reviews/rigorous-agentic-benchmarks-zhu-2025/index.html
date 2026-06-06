@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Establishing Best Practices for Building Rigorous Agentic Benchmarks</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/rigorous-agentic-benchmarks-zhu-2025/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Evaluation and Benchmarks</p>
+        <h1>Rigorous Agentic Benchmarks</h1>
+        <p class="hero-lede">This paper turns agent benchmark quality into a checklist-driven validity problem: task validity, outcome validity, and honest benchmark reporting.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>7</strong><span>Claims</span></div>
+          <div class="metric"><strong>7</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2025 · arXiv 2025</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>5</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/rigorous-agentic-benchmarks-zhu-2025/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2507.02825">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>For agent infrastructure, the paper is a warning that benchmark harnesses are attack surfaces. A weak evaluator measures shortcuts, stale state, leakage, or parser bugs instead of agent capability.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Agent benchmarks often grade complex multistep outcomes with tests, string matching, LLM judges, or state comparisons.</li><li>Those success signals can be incomplete, brittle, stale, or directly exploitable by agents.</li><li>Leaderboard scores are increasingly used for research and product decisions, so evaluator flaws can misrepresent real capability.</li><li>Most benchmark writeups do not make limitations, uncertainty, trivial baselines, or exploit resistance explicit enough.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks how to systematically design, assess, and report agentic benchmarks so their scores correspond to the intended capability.</p>
+
+      <h2>Method</h2>
+      <p>Collect common agentic benchmark failure modes, organize them into an actionable checklist, apply that checklist to popular benchmarks, validate issues with experiments, and show that the checklist can improve a complex benchmark during construction.</p>
+      <ul><li>Survey agentic benchmark pitfalls, evaluation frameworks, and best practices from software testing and benchmark design.</li><li>Define two core validity criteria: task validity and outcome validity.</li><li>Create ABC with three sections: outcome validity, task validity, and benchmark reporting.</li><li>Apply ABC to selected widely used open-source agentic benchmarks covering software engineering, cybersecurity, assistants, and environment interaction.</li><li>Design experiments to validate identified issues and quantify their effect on reported scores.</li><li>Use CVE-Bench as a case study to show that ABC can reduce performance overestimation during benchmark development.</li><li>Release assessments and reproduction scripts so benchmark audits can be repeated and extended.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>The paper identifies task validity and outcome validity as the two central threats to rigorous agentic evaluation.</p>
+  <p><strong>Scope:</strong> Introduction and Section 3.</p>
+  <ul><li><strong>E-validity-taxonomy</strong>: The paper defines outcome validity as whether the evaluation result indicates true task success, and task validity as whether success corresponds to possessing the target capability.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>ABC organizes best practices into outcome validity, task validity, and benchmark reporting.</p>
+  <p><strong>Scope:</strong> Section 4 and checklist artifact.</p>
+  <ul><li><strong>E-abc-structure</strong>: ABC is organized into outcome validity, task validity, and benchmark reporting, with checks for string matching, LLM judges, unit/fuzz/E2E testing, state matching, tool versions, environment cleanup, ground-truth isolation, and reporting.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>Applying ABC to ten popular agentic benchmarks found seven with task-validity issues, seven with outcome-validity issues, and all ten with reporting limitations.</p>
+  <p><strong>Scope:</strong> Section 5.1.</p>
+  <ul><li><strong>E-assessment-results</strong>: Across ten selected open-source agentic benchmarks, the authors find seven violating task validity, seven violating outcome validity, and all ten with benchmark-reporting limitations.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>The paper reports benchmark issues that can under- or overestimate agent performance by up to 100% in relative terms.</p>
+  <p><strong>Scope:</strong> Abstract and Introduction.</p>
+  <ul><li><strong>E-relative-error</strong>: The paper says evaluation issues can cause under- or overestimation of agent performance by up to 100% in relative terms.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>The paper shows concrete shortcuts, including do-nothing tau-bench success, database-dump tau-bench success, SWE-Lancer test tampering, WebArena string/judge issues, KernelBench fuzzing gaps, and OSWorld stale selector failures.</p>
+  <p><strong>Scope:</strong> Section 5.2 and project repository.</p>
+  <ul><li><strong>E-concrete-issues</strong>: Examples include a do-nothing tau-bench agent scoring 38%, database-dump tau-bench shortcut scoring 40%, SWE-Lancer scoring 100% via test tampering, WebArena 1.4-5.2% overestimation, KernelBench 31% overestimation, and OSWorld 28% underestimation from broken website selectors.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>Applying ABC to CVE-Bench reduced performance overestimation by 33% according to the paper.</p>
+  <p><strong>Scope:</strong> Abstract and Section 5.3.</p>
+  <ul><li><strong>E-cve-bench</strong>: Using ABC on CVE-Bench reduced performance overestimation by 33%; specific fixes included correcting a time-based SQL injection evaluator and gating an outbound server shortcut.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · paper-supported</h3>
+  <p>The checklist recommends process metrics, evaluated LLM judges, frozen/reproducible environments, ground-truth isolation, trivial baselines, and statistical/interpretation reporting.</p>
+  <p><strong>Scope:</strong> Section 4 and project page.</p>
+  <ul><li><strong>E-best-practices</strong>: The paper and project page recommend process-based metrics, reproducible LLM-judge evaluation, frozen websites for navigation tasks, verified test quality, environment cleanup, ground-truth isolation, oracle solvers, trivial baselines, confidence intervals, and interpretation guidance.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Benchmark harnesses must be treated like security-sensitive infrastructure because agents can exploit files, state, parsers, tests, judges, and stale websites.</li><li>Outcome validators need adversarial baselines: do-nothing, answer-spamming, database-dumping, and test-tampering agents should fail by construction.</li><li>Task reset and ground-truth isolation are core runtime requirements, not benchmark polish.</li><li>For web and GUI benchmarks, frozen environments matter because live selectors, layouts, URLs, and rate limits drift.</li><li>LLM-as-judge and string matching should be audited with reproducible judge quality checks and adversarial examples.</li><li>Every agent benchmark should report limitations, uncertainty, trivial baselines, and guidance for interpreting scores.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>ABC is an assessment framework, not a full formal proof of benchmark validity.</li><li>The paper audits selected benchmarks; private or newer benchmarks may have different failure modes.</li><li>Some public benchmark issues cited by the paper or repository may already have been patched.</li><li>The checklist can increase benchmark-building cost because better validators, frozen environments, and oracle solvers require engineering effort.</li><li>A benchmark can satisfy many checklist items and still miss domain-specific flaws.</li><li>The paper's critique is about evaluation validity, not a direct ranking of agent model capability.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/rigorous-agentic-benchmarks-zhu-2025.json.</span>
+  </footer>
+</body>
+</html>

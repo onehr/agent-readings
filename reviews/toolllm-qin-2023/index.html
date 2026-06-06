@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · ToolLLM: Facilitating LLMs to Master 16000+ Real-World APIs</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/toolllm-qin-2023/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Tool Use and Interoperability</p>
+        <h1>ToolLLM</h1>
+        <p class="hero-lede">ToolLLM scales tool learning from API-call selection to multi-step REST API trajectories over 16,464 real-world APIs.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>7</strong><span>Claims</span></div>
+          <div class="metric"><strong>7</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2023 · arXiv 2023; ICLR 2024</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>4</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/toolllm-qin-2023/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2307.16789">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>ToolLLM treats an agent as a system over a real API marketplace: catalog ingestion, API metadata, retriever precision, execution traces, evaluator design, and search strategy are all part of the same tool-use stack.</p>
+
+      <h2>Problem</h2>
+      <ul><li>General instruction tuning gave open-source LLMs broad dialogue skills but weak tool-use ability.</li><li>Earlier datasets often used limited APIs, single-tool settings, or no real API execution responses.</li><li>Users cannot manually choose the correct API subset when the available tool pool contains thousands of real APIs.</li><li>Linear ReAct-style reasoning can get stuck after a wrong API call because it explores only one trajectory.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks how to build, train, retrieve, plan, and evaluate open-source LLM tool use over a large real-world REST API marketplace with both single-tool and multi-tool tasks.</p>
+
+      <h2>Method</h2>
+      <p>Collect and filter RapidAPI tools, generate single-tool and multi-tool instructions with ChatGPT, annotate executable solution paths with DFSDT, finetune LLaMA-2 7B into ToolLLaMA, retrieve candidate APIs with a neural retriever, and evaluate trajectories with ToolEval.</p>
+      <ul><li>Crawl RapidAPI tools and filter unreliable or low-quality APIs.</li><li>Sample APIs and use ChatGPT to generate diverse single-tool and multi-tool instructions.</li><li>Use ChatGPT with DFSDT to search for successful multi-step solution paths with real API calls and responses.</li><li>Train a neural API retriever from generated instruction/API relevance pairs.</li><li>Finetune LLaMA-2 7B on the retained instruction/solution-path pairs to produce ToolLLaMA.</li><li>At inference, retrieve relevant APIs, let ToolLLaMA call APIs over multiple rounds, and score the resulting trajectory with ToolEval.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>ToolBench filters RapidAPI into 3,451 high-quality tools and 16,464 APIs across 49 categories from an initial crawl of 10,853 tools and 53,190 APIs.</p>
+  <p><strong>Scope:</strong> Section 2.1 and abstract.</p>
+  <ul><li><strong>E-api-corpus</strong>: ToolBench collects 16,464 real-world RESTful APIs spanning 49 RapidAPI categories. The paper reports starting from 10,853 tools and 53,190 APIs and retaining 3,451 high-quality tools and 16,464 APIs after filtering.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>ToolBench includes large-scale generated instructions and executable solution paths, including nearly 200k qualified instruction/API relevance pairs and 126,486 instruction/solution-path pairs.</p>
+  <p><strong>Scope:</strong> Section 2.2 and Section 2.3.</p>
+  <ul><li><strong>E-instructions-paths</strong>: The paper reports nearly 200k qualified instruction/API relevance pairs, specifically 87,413 I1, 84,815 I2, and 25,251 I3 instances, and 126,486 retained instruction/solution-path pairs after DFSDT annotation.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>DFSDT improves solution-path annotation over ReAct by exploring multiple branches and allowing failed branches to be abandoned.</p>
+  <p><strong>Scope:</strong> Section 2.3 and preliminary experiments in Section 3.1.</p>
+  <ul><li><strong>E-dfsdt</strong>: DFSDT pass rates are 58.0 on I1, 70.6 on I2, 62.8 on I3, and 63.8 average, compared with ReAct at 37.8, 40.6, 27.6, and 35.3 average, and ReAct@N at 49.4, 49.4, 34.6, and 44.5 average.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>ToolEval defines pass rate and win rate for tool-use trajectories and reports high agreement with human annotators.</p>
+  <p><strong>Scope:</strong> Section 3.1 and Appendix A.5.</p>
+  <ul><li><strong>E-tooleval</strong>: ToolEval uses pass rate and win rate. The paper reports 87.1% agreement with human annotators for pass rate and 80.3% agreement for win rate.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>The neural API retriever substantially outperforms BM25 and OpenAI Ada embeddings on ToolBench retrieval metrics.</p>
+  <p><strong>Scope:</strong> Section 3.1, Table 2.</p>
+  <ul><li><strong>E-retriever</strong>: The API retriever reports average NDCG@1 78.0 and NDCG@5 84.9, compared with BM25 at 18.5 and 17.0 and Ada at 49.6 and 45.4.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>ToolLLaMA plus DFSDT reaches near-ChatGPT tool-use performance on ToolBench and exceeds Text-Davinci-003 and Claude-2 in the paper's averages.</p>
+  <p><strong>Scope:</strong> Section 3.2, Table 4.</p>
+  <ul><li><strong>E-main-results</strong>: Average pass/win rates: ChatGPT+DFSDT 64.8/64.3, GPT-4+DFSDT 71.1/70.4, Text-Davinci-003+DFSDT 43.1/46.3, Claude-2+DFSDT 22.6/43.5, ToolLLaMA+DFSDT 66.7/60.0, and ToolLLaMA+DFSDT-Retriever 67.3/63.1.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · paper-supported</h3>
+  <p>ToolLLaMA generalizes to APIBench despite training on a different API and instruction domain, but oracle retrieval still matters heavily.</p>
+  <p><strong>Scope:</strong> Section 3.3, Table 5.</p>
+  <ul><li><strong>E-apibench</strong>: On APIBench, ToolLLaMA with its own retriever reports AST accuracy 16.77 on HuggingFace, 51.16 on TorchHub, and 40.59 on TensorHub. With oracle retrieval it reports 88.80, 85.88, and 88.62, while Gorilla-RS+Oracle reports 89.27, 93.01, and 94.16.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>The tool registry is data infrastructure: every endpoint needs method, parameters, request body, code snippets, example responses, and quality checks.</li><li>Multi-tool agents need execution traces, not just API-call labels. ToolBench stores thought, action, parameters, observation, and final-answer steps.</li><li>Search strategy matters. DFSDT is a runtime planning primitive because it supports branch abandonment and recovery from bad tool calls.</li><li>Retrieval is part of the action space. The model's reachable tools depend on retriever quality, so retriever evaluation belongs in the agent CI loop.</li><li>LLM-as-judge can scale evaluation, but executable checks and human audits remain necessary where side effects or correctness matter.</li><li>API temporality is unavoidable: ToolEval and ToolBench both acknowledge that RapidAPI versions, availability, responses, and reliability can change.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>ToolBench depends heavily on ChatGPT for instruction generation, solution-path annotation, and evaluation.</li><li>ToolEval is not a formal verifier; it approximates human judgment using a prompted model.</li><li>The paper's strongest ToolBench main results mostly use oracle APIs, while production settings require retrieval.</li><li>RapidAPI endpoints can disappear, slow down, change schemas, or return low-quality responses over time.</li><li>ToolLLaMA's APIBench generalization improves dramatically with oracle retrieval, which shows retrieval remains a major bottleneck.</li><li>The paper focuses on tool-use capability, not authentication, authorization, rate limits, rollback, or safe side-effect execution.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/toolllm-qin-2023.json.</span>
+  </footer>
+</body>
+</html>

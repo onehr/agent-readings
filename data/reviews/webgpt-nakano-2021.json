@@ -1,0 +1,325 @@
+{
+  "schema_version": 1,
+  "slug": "webgpt-nakano-2021",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "WebGPT: Browser-Assisted Question-Answering with Human Feedback",
+    "authors": [
+      "Reiichiro Nakano",
+      "Jacob Hilton",
+      "Suchir Balaji",
+      "Jeff Wu",
+      "Long Ouyang",
+      "Christina Kim",
+      "Christopher Hesse",
+      "Shantanu Jain",
+      "Vineet Kosaraju",
+      "William Saunders",
+      "Xu Jiang",
+      "Karl Cobbe",
+      "Tyna Eloundou",
+      "Gretchen Krueger",
+      "Kevin Button",
+      "Matthew Knight",
+      "Benjamin Chess",
+      "John Schulman"
+    ],
+    "year": 2021,
+    "venue": "arXiv 2021; revised 2022",
+    "url": "https://arxiv.org/abs/2112.09332",
+    "project_url": "https://openai.com/index/webgpt/",
+    "arxiv_id": "2112.09332",
+    "read_sources": [
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2112.09332",
+        "note": "Used for arXiv metadata, abstract, author list, and revision history."
+      },
+      {
+        "kind": "paper_pdf",
+        "url": "https://cdn.openai.com/WebGPT.pdf",
+        "note": "Read for browser environment design, data collection, training methods, ELI5 and TruthfulQA results, scaling analysis, and web-access risks."
+      },
+      {
+        "kind": "project_page",
+        "url": "https://openai.com/index/webgpt/",
+        "note": "Used for public project framing, result summary, citation/evaluation caveats, and deployment risk discussion."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "WebGPT trains GPT-3 to answer long-form questions by operating a text browser, collecting citations, and optimizing answer quality with human feedback.",
+    "thesis": "The paper's lasting contribution is the environment framing: make web research a human-demonstrable action loop, then train a model to imitate and improve that loop with preferences.",
+    "why_it_matters": "WebGPT predates most agent frameworks but already has the shape of a serious agent: a constrained tool interface, trajectory demonstrations, preference optimization, citations for audit, and a threat model for side effects."
+  },
+  "problem": {
+    "prior_state": [
+      "Long-form QA systems needed both retrieval and synthesis, and prior methods often optimized document retrieval separately from answer quality.",
+      "Language models hallucinated obscure factual claims because pretraining alone did not force grounding in current sources.",
+      "Human evaluation of factual accuracy is hard when model answers do not expose the evidence behind their claims.",
+      "Browser-use models needed a task setup humans could perform so demonstrations and comparisons could be collected."
+    ],
+    "key_gap": "The paper asks how to train a language model to use a web browser for open-ended QA and make factuality evaluation tractable through collected references.",
+    "assumptions": [
+      "A text-only browser action space is expressive enough for ELI5-style web research.",
+      "Human browsing demonstrations teach the model the browser protocol and research loop.",
+      "References collected during browsing make human preference and factuality judgments easier.",
+      "Reward models can rank cited long-form answers well enough to guide rejection sampling or RL."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "text-browser",
+      "name": "Text-based browser",
+      "definition": "A constrained browsing environment exposing search, click, find, quote, scroll, back, top, and end commands to the model."
+    },
+    {
+      "id": "reference-collection",
+      "name": "Reference collection",
+      "definition": "The model quotes extracts from visited pages, storing title, domain, and passage as evidence for the final answer."
+    },
+    {
+      "id": "behavior-cloning",
+      "name": "Behavior cloning",
+      "definition": "Supervised fine-tuning on human demonstrations of using the browser to answer questions."
+    },
+    {
+      "id": "best-of-n",
+      "name": "Best-of-n rejection sampling",
+      "definition": "Sampling multiple answers and selecting the one scored highest by the reward model, trading inference-time compute for quality."
+    },
+    {
+      "id": "reference-cherry-picking",
+      "name": "Reference cherry-picking",
+      "definition": "A failure mode where the model selects sources that look convincing to evaluators rather than sources that fairly represent the evidence."
+    }
+  ],
+  "method": {
+    "core_idea": "Expose a restricted text browser to GPT-3, collect human browsing demonstrations and answer comparisons on ELI5 questions, train with behavior cloning and reward modeling, then use best-of-n rejection sampling or PPO to optimize answer quality.",
+    "action_grammar": [
+      "Search <query>: send a query to Bing and display search results.",
+      "Clicked on link <id>: follow a search result or page link.",
+      "Find in page: <text>: locate text on the current page.",
+      "Quote: <text>: store a passage as a reference for the final answer.",
+      "Scrolled down/up <n>: move through the current page.",
+      "Back or Top: navigate browser state.",
+      "End: Answer: stop browsing and compose the cited final answer.",
+      "End: Nonsense or Controversial: stop without answering when appropriate."
+    ],
+    "steps": [
+      "Represent browser state as text: question, page title, visible page text, cursor state, prior actions, and action budget.",
+      "Collect human demonstrations of using the browser to answer long-form ELI5 questions.",
+      "Collect human comparisons between two model-generated cited answers.",
+      "Fine-tune GPT-3 with behavior cloning on browser-command demonstrations.",
+      "Train reward models from answer comparisons.",
+      "Optimize with PPO or, for the best reported model, sample many behavior-cloned answers and select the reward-model winner.",
+      "Evaluate against human demonstrators, ELI5 reference answers, and TruthfulQA."
+    ],
+    "pseudocode": "state = browser.reset(question)\nrefs = []\nfor step in range(max_actions):\n    action = policy(state)\n    if action.type == \"Quote\":\n        refs.append(browser.quote(action.text))\n    elif action.type == \"End: Answer\":\n        break\n    else:\n        state = browser.apply(action)\n\nanswer = policy.compose_answer(question, refs)\nscore = reward_model(question, answer, refs)\n\n# best-of-n inference\nreturn max(sample_answers(policy, question, n=64), key=reward_model)"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "environment",
+      "status": "paper-supported",
+      "statement": "WebGPT turns web research into a constrained text-browser action loop that both humans and models can operate.",
+      "scope": "Section 2 and Table 1.",
+      "evidence_refs": ["E-browser-actions"],
+      "caveats": ["The environment depends on Bing search and a restricted, non-form-filling web interface."]
+    },
+    {
+      "id": "C2",
+      "type": "data",
+      "status": "paper-supported",
+      "statement": "The paper collects human demonstrations and model-output comparisons, mostly on ELI5, to train browser use and answer preference.",
+      "scope": "Section 3.1.",
+      "evidence_refs": ["E-data"],
+      "caveats": ["The task distribution is long-form Reddit QA, not arbitrary web tasks."]
+    },
+    {
+      "id": "C3",
+      "type": "training",
+      "status": "paper-supported",
+      "statement": "The best reported WebGPT model uses behavior cloning followed by reward-model best-of-n rejection sampling rather than PPO alone.",
+      "scope": "Abstract, Section 3.2, and Section 5.1.",
+      "evidence_refs": ["E-training", "E-rejection-sampling"],
+      "caveats": ["Best-of-n spends more inference-time compute and relies on reward-model selection quality."]
+    },
+    {
+      "id": "C4",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "On ELI5, the 175B best-of-64 WebGPT model is preferred to human browser demonstrators 56% of the time and to highest-voted Reddit answers 69% of the time.",
+      "scope": "Abstract and Section 4.1.",
+      "evidence_refs": ["E-eli5"],
+      "caveats": ["The Reddit-answer comparison strips references for fairness and has blinding/style concerns discussed by the authors."]
+    },
+    {
+      "id": "C5",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "WebGPT improves TruthfulQA over GPT-3 but remains below human performance on out-of-distribution adversarial questions.",
+      "scope": "Abstract, Section 4.2, and project page.",
+      "evidence_refs": ["E-truthfulqa"],
+      "caveats": ["WebGPT answers were truncated for TruthfulQA and evaluated by humans because automated metrics were out-of-distribution."]
+    },
+    {
+      "id": "C6",
+      "type": "evaluation",
+      "status": "paper-supported",
+      "statement": "Collected references make factuality evaluation more inspectable, but citations can also create overreliance and reward cherry-picked evidence.",
+      "scope": "Section 6.2 and Section 6.4.",
+      "evidence_refs": ["E-reference-benefits", "E-reference-risks"],
+      "caveats": ["Citations are evidence surfaces, not guarantees that the answer fairly summarizes the evidence."]
+    },
+    {
+      "id": "C7",
+      "type": "safety",
+      "status": "paper-supported",
+      "statement": "Even restricted web access creates train-time and inference-time side-effect risks that grow with model capability.",
+      "scope": "Section 6.5.",
+      "evidence_refs": ["E-web-risk"],
+      "caveats": ["The paper judges WebGPT's then-current side-effect risk low because actions are limited to search and following existing links."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-browser-actions",
+      "kind": "environment_design",
+      "source": "paper",
+      "locator": "Section 2, Table 1",
+      "result": "The model receives a text summary of browser state and must issue one valid command: search, click, find, quote, scroll, top, back, or end. Invalid actions count against the action budget.",
+      "metric": "browser command set",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-data",
+      "kind": "dataset",
+      "source": "paper",
+      "locator": "Section 3.1",
+      "result": "The authors collected around 6,000 browser demonstrations, 92% for ELI5 questions, and around 21,500 comparisons, 98% for ELI5 questions.",
+      "metric": "demonstrations and comparisons",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-training",
+      "kind": "training_method",
+      "source": "paper",
+      "locator": "Section 3.2",
+      "result": "Training methods include behavior cloning on demonstrations, reward modeling from comparisons, PPO against the reward model with a KL penalty, and best-of-n rejection sampling against the reward model.",
+      "metric": "training methods",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-rejection-sampling",
+      "kind": "training_result",
+      "source": "paper",
+      "locator": "Section 4 and Section 5.1",
+      "result": "The main evaluated models are behavior-cloned policies with best-of-n rejection sampling: 760M best-of-4, 13B best-of-16, and 175B best-of-64. The paper reports 175B best-of-64 BC preferred 68% of the time to 175B BC, while 175B RL is preferred 58% of the time to 175B BC.",
+      "metric": "preference over BC",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-eli5",
+      "kind": "human_eval",
+      "source": "paper",
+      "locator": "Abstract and Section 4.1",
+      "result": "The best 175B best-of-64 model is preferred 56% of the time to human demonstrator answers and 69% of the time to highest-voted ELI5 Reddit answers.",
+      "metric": "human preference win rate",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-truthfulqa",
+      "kind": "truthfulness_eval",
+      "source": "paper",
+      "locator": "Abstract, Section 4.2, Figure 3",
+      "result": "The best model's TruthfulQA answers are true 75% of the time and both true and informative 54% of the time; all WebGPT models outperform GPT-3 prompts but remain below humans.",
+      "metric": "TruthfulQA truthfulness and informativeness",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-reference-benefits",
+      "kind": "evaluation_design",
+      "source": "paper",
+      "locator": "Section 6.4",
+      "result": "The paper argues references make feedback more accurate and less noisy because labelers can judge whether claims are supported by cited sources, and they make browsing trajectories inspectable.",
+      "metric": "evaluation support",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-reference-risks",
+      "kind": "limitation",
+      "source": "paper",
+      "locator": "Section 6.2 and Section 6.4",
+      "result": "The paper warns that citations can make answers appear more authoritative, cause overreliance, and incentivize models to cherry-pick references that persuade labelers rather than fairly represent evidence.",
+      "metric": "citation risk",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-web-risk",
+      "kind": "safety_limit",
+      "source": "paper",
+      "locator": "Section 6.5",
+      "result": "The authors discuss live web access risks at train and inference time, including hypothetical side effects such as editing a source to create convincing evidence, and say safety burden should rise with model capability.",
+      "metric": "web side-effect risk",
+      "claim_refs": ["C7"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "WebGPT is an agent paper before the term stabilized: observation, action grammar, environment transition, evidence collection, and final answer.",
+    "Tool interfaces should be constrained and logged. The text browser makes invalid actions explicit and preserves a trajectory humans can inspect.",
+    "Citations are not decoration; they are training infrastructure that lets humans evaluate factual support without doing unrestricted research from scratch.",
+    "Reward-model optimization can move from training time to inference time. Best-of-n is expensive, but effective when the environment is unpredictable.",
+    "A browser is a side-effect boundary. Even read-mostly web access creates risks once the model can search, click, and choose evidence strategically.",
+    "For agent evaluation, judge the trajectory as well as the final answer: sources, search path, quote selection, and synthesis errors are separate failure modes."
+  ],
+  "caveats": [
+    "The system is trained primarily on ELI5 long-form QA, so it is not a general-purpose web automation benchmark.",
+    "The best model uses substantial inference-time compute through best-of-64 sampling.",
+    "The browser is restricted; conclusions do not directly transfer to agents with forms, authenticated sites, or write actions.",
+    "Citations can increase perceived truthfulness even when the answer is wrong or the source is unreliable.",
+    "The model can reinforce biases from GPT-3, the web, source selection, and question framing.",
+    "The paper reports out-of-distribution brittleness on TruthfulQA and examples of unreliable-source failures."
+  ],
+  "related_work": [
+    {
+      "title": "InstructGPT",
+      "relation": "connects",
+      "note": "InstructGPT applies the broader RLHF recipe to instruction following; WebGPT applies similar human-feedback machinery to a browser-use QA environment.",
+      "url": "https://arxiv.org/abs/2203.02155"
+    },
+    {
+      "title": "ReAct",
+      "relation": "precedes",
+      "note": "WebGPT already has action/observation loops and evidence collection; ReAct later made reasoning/action interleaving a general prompting pattern.",
+      "url": "https://arxiv.org/abs/2210.03629"
+    },
+    {
+      "title": "Indirect Prompt Injection",
+      "relation": "sets-up",
+      "note": "WebGPT's web-reading action surface is the kind of architecture later prompt-injection work attacks when untrusted content enters the agent context.",
+      "url": "https://arxiv.org/abs/2302.12173"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A local PoC could mock a text-browser over a small static corpus, collect quoted passages, and compare behavior cloning versus best-of-n reward selection."
+  },
+  "slide_plan": {
+    "title": "WebGPT",
+    "subtitle": "Browser use as an auditable agent trajectory",
+    "sections": [
+      "summary",
+      "problem",
+      "text_browser",
+      "data_collection",
+      "training_methods",
+      "eli5_results",
+      "truthfulqa",
+      "citations_and_risks",
+      "agent_infra_takeaways",
+      "caveats",
+      "references"
+    ]
+  }
+}

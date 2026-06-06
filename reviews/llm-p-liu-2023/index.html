@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · LLM+P: Empowering Large Language Models with Optimal Planning Proficiency</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/llm-p-liu-2023/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Planning and Skill Acquisition</p>
+        <h1>LLM+P</h1>
+        <p class="hero-lede">LLM+P gets reliable plans by making the LLM translate natural language into PDDL and letting a classical planner do the search.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>7</strong><span>Claims</span></div>
+          <div class="metric"><strong>7</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2023 · arXiv 2023</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>3</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/llm-p-liu-2023/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2304.11477">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>The paper is a clean neuro-symbolic systems pattern for agents: separate semantic parsing from plan search, keep a domain model explicit, and route correctness through a verifier/planner instead of model plausibility.</p>
+
+      <h2>Problem</h2>
+      <ul><li>LLMs produce plausible natural-language plans that often violate action preconditions or world constraints.</li><li>Classical planners can produce correct or optimal plans, but require structured domain and problem encodings.</li><li>Robot users naturally specify goals in language, not PDDL.</li><li>Long-horizon planning domains expose LLM weaknesses that are hidden by short or underspecified tasks.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks whether an LLM can be used as a translation layer into PDDL so a classical planner can provide the actual planning competence.</p>
+
+      <h2>Method</h2>
+      <p>Use the LLM for translation into and out of the formal planning language, but use a classical planner for the search and correctness-critical plan generation.</p>
+      <ul><li>Provide a domain PDDL file for the robot planning domain.</li><li>Prompt GPT-4 with the new natural-language planning problem plus one demonstration pair of natural language and PDDL.</li><li>Ask the model to produce only the problem PDDL.</li><li>Feed the domain and generated problem file to Fast Downward.</li><li>If a plan is found, translate the PDDL action sequence back to natural language or robot action execution.</li><li>Compare against direct LLM planning, in-context direct planning, and Tree-of-Thought-style direct planning.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>LLM+P delegates planning search to a classical planner after an LLM translates a natural-language task into a PDDL problem file.</p>
+  <p><strong>Scope:</strong> Abstract, Figure 1, and Section III-C.</p>
+  <ul><li><strong>E-pipeline</strong>: The pipeline asks the LLM to produce a problem PDDL file, feeds it with a human-provided domain PDDL file to a classical planner, then translates the planner output back to natural language.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>A simple in-context example is crucial because GPT-4 often emits incorrect PDDL without a demonstration pair.</p>
+  <p><strong>Scope:</strong> Sections III-A, III-B, and V-C.</p>
+  <ul><li><strong>E-context</strong>: Without context, GPT-4's PDDL example has made-up predicates and missing initial facts. With a simple natural-language/PDDL example, the sample problem becomes directly solvable. The results section says LLM+P without context fails to produce correct problem PDDL files.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>The benchmark covers seven robot-planning domains with 20 generated tasks per domain.</p>
+  <p><strong>Scope:</strong> Section V-A.</p>
+  <ul><li><strong>E-benchmark</strong>: The benchmark contains seven domains borrowed from past International Planning Competitions: Blocksworld, Barman, Floortile, Grippers, Storage, Termes, and Tyreworld, with 20 automatically generated tasks per domain.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>Direct LLM planning mostly produces infeasible plans because it fails to track preconditions and spatial constraints.</p>
+  <p><strong>Scope:</strong> Section V-C.</p>
+  <ul><li><strong>E-llm-as-p-fails</strong>: The paper reports that LLM-as-P returns natural-language plans for every problem but most are infeasible. It cites failures tracking Blocksworld on/clear predicates, Barman glass-cleaning requirements, spatial constraints in Floortile, Termes, and Storage, and ToT timeouts from many LLM calls.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>LLM+P with context substantially improves success across most domains, including 90% Blocksworld, 95% optimal / 100% satisficing Grippers, and 85% Storage.</p>
+  <p><strong>Scope:</strong> Section V-C, Table I.</p>
+  <ul><li><strong>E-table-results</strong>: LLM+P success rates are Barman 20% optimal / 100% satisficing, Blocksworld 90%, Floortile 0%, Grippers 95% optimal / 100% satisficing, Storage 85%, Termes 20%, and Tyreworld 10% optimal / 90% satisficing. Direct LLM and ToT baselines are much lower in the same table.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>In the home tidy-up robot demonstration, LLM+P finds a lower-cost plan than direct LLM planning by exploiting shared path structure.</p>
+  <p><strong>Scope:</strong> Section V-D.</p>
+  <ul><li><strong>E-robot-demo</strong>: In the tidy-up task, LLM+P finds an optimal plan with total cost 22 by taking the bottle partway, disposing of the soup can, re-grasping the bottle, and then going to the pantry. LLM-as-P takes the bottle to the pantry first and returns for the soup can, for cost 31.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · paper-supported</h3>
+  <p>The framework depends on external trigger detection, human-provided domain models, and accurate PDDL translation by the LLM.</p>
+  <p><strong>Scope:</strong> Sections III-C and VI.</p>
+  <ul><li><strong>E-assumptions</strong>: The method assumes a robot knows when to trigger LLM+P, a domain PDDL file exists, and an example problem/PDDL pair is provided. The conclusion names auto-detecting when to apply LLM+P and reducing dependence on human-provided information as future work.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Use LLMs as translators when a sound solver exists. Planning correctness should come from the planner, not from plausible prose.</li><li>The action model is infrastructure. Domain PDDL is a contract over capabilities, preconditions, effects, and costs.</li><li>Structured intermediate representations make agent failures inspectable: bad plan versus bad translation is a different bug.</li><li>One-shot examples can be enough to steer translation, but production systems need validation and repair loops for generated PDDL.</li><li>A planner-backed agent needs a router that decides when a task belongs to the planner rather than the general LLM loop.</li><li>The same pattern generalizes beyond planning: calculators, compilers, theorem provers, and simulators should own domains where they are sound.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The domain model is manually supplied; LLM+P does not learn or verify the domain PDDL.</li><li>The planner can only be correct with respect to the given domain and problem encoding.</li><li>Generated PDDL can omit facts or use wrong predicates, causing planner failure or an invalid plan request.</li><li>Floortile remains unsolved in the reported table.</li><li>The real-robot demonstration is a single tidy-up scenario.</li><li>The paper does not solve when to invoke the planning pipeline automatically.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/llm-p-liu-2023.json.</span>
+  </footer>
+</body>
+</html>

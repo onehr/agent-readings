@@ -1,0 +1,312 @@
+{
+  "schema_version": 1,
+  "slug": "durable-execution-background-2026",
+  "review_status": "source-read",
+  "paper": {
+    "title": "Durable Execution",
+    "authors": [
+      "DBOS",
+      "Temporal",
+      "Amazon Web Services"
+    ],
+    "year": 2026,
+    "venue": "Background reading and product documentation",
+    "url": "https://docs.dbos.dev/why-dbos",
+    "project_url": "https://docs.dbos.dev/architecture",
+    "arxiv_id": "",
+    "read_sources": [
+      {
+        "kind": "docs",
+        "url": "https://docs.dbos.dev/why-dbos",
+        "note": "Read for the DBOS definition of durable workflows, Postgres-backed checkpointing, use cases, and comparisons with Temporal, Airflow, and queues."
+      },
+      {
+        "kind": "docs",
+        "url": "https://docs.dbos.dev/architecture",
+        "note": "Read for workflow recovery, step checkpointing, deterministic workflow requirements, idempotent steps, and workflow-code upgrade constraints."
+      },
+      {
+        "kind": "docs",
+        "url": "https://docs.temporal.io/",
+        "note": "Read for Temporal's public durable-execution framing: resume exactly where workflows left off after crashes, network failures, or infrastructure outages."
+      },
+      {
+        "kind": "sdk_docs",
+        "url": "https://www.javadoc.io/static/io.temporal/temporal-sdk/0.23.1/io/temporal/workflow/Workflow.html",
+        "note": "Read for Temporal event-sourcing replay constraints, non-determinism restrictions, activity boundaries, and execution-history costs."
+      },
+      {
+        "kind": "docs",
+        "url": "https://docs.aws.amazon.com/step-functions/latest/dg/redrive-executions.html",
+        "note": "Read for Step Functions redrive behavior, preserving successful-step results/history, and restart from failed state."
+      },
+      {
+        "kind": "docs",
+        "url": "https://docs.aws.amazon.com/durable-execution/patterns/best-practices/determinism/",
+        "note": "Read for AWS Durable Execution SDK replay determinism rules, durable operation boundaries, and non-deterministic code constraints."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "Durable execution records workflow progress so long-running code can resume after failures without redoing already completed steps or losing the logical trajectory.",
+    "thesis": "The durable-execution contract is simple but strict: persist each non-deterministic or side-effecting step result, replay deterministic orchestration code over that history, and resume at the first uncompleted step.",
+    "why_it_matters": "Agents are exactly the kind of long-lived, side-effecting workflow durable execution was built for: model calls, tool calls, sleeps, callbacks, retries, and user interactions must survive crashes without duplicating actions or losing context."
+  },
+  "problem": {
+    "prior_state": [
+      "Ordinary process memory loses workflow state on crash, deploy, timeout, or machine restart.",
+      "Ad-hoc retry logic can duplicate side effects, skip recovery cases, or restart expensive work from the beginning.",
+      "Logs are often good enough for debugging but not strong enough to reconstruct executable control flow.",
+      "Agents intensify the problem because each task may contain many model calls, external tool effects, user interruptions, and long waits."
+    ],
+    "key_gap": "Durable execution fills the gap between stateless request handling and reliable long-running programs by making step history part of the runtime contract.",
+    "assumptions": [
+      "Workflow orchestration code can be kept deterministic with respect to recorded step outputs.",
+      "Non-deterministic work can be isolated into durable steps, activities, or operations.",
+      "Completed step outputs are persisted before the runtime treats them as done.",
+      "Side-effecting operations are idempotent or protected by deduplication keys.",
+      "Workflow code upgrades are managed so old executions can still replay."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "workflow",
+      "name": "Workflow",
+      "definition": "The durable orchestration function that controls order, branching, retries, waits, and calls to side-effecting steps."
+    },
+    {
+      "id": "step",
+      "name": "Step or activity",
+      "definition": "A durable operation boundary where non-deterministic work runs and its result is checkpointed or recorded in history."
+    },
+    {
+      "id": "checkpoint",
+      "name": "Checkpoint",
+      "definition": "A persisted record of workflow inputs or step outputs used to skip completed work during recovery."
+    },
+    {
+      "id": "event-history",
+      "name": "Event history",
+      "definition": "An append-only execution record that lets a runtime replay orchestration logic and reconstruct workflow state."
+    },
+    {
+      "id": "deterministic-replay",
+      "name": "Deterministic replay",
+      "definition": "The requirement that replaying workflow code with the same inputs and recorded operation results produces the same sequence of durable operations."
+    },
+    {
+      "id": "idempotent-step",
+      "name": "Idempotent step",
+      "definition": "A step that is safe to retry because repeated attempts either have no duplicate effect or are deduplicated by the external system."
+    }
+  ],
+  "method": {
+    "core_idea": "Keep orchestration deterministic, move every external or random operation into a durable boundary, persist each completed boundary's result, and recover by replaying the workflow until the first boundary without a recorded result.",
+    "action_grammar": [
+      "workflow input: arguments recorded at workflow start.",
+      "durable step/activity: a named operation whose output is persisted.",
+      "history/checkpoint store: database or service-side log containing completed steps and events.",
+      "replay: rerun orchestration code from the top, returning recorded step outputs instead of re-executing completed steps.",
+      "redrive/recovery: resume from an unsuccessful state or first uncheckpointed step.",
+      "idempotency key: stable identity used to protect retried external side effects."
+    ],
+    "steps": [
+      "Start a workflow and persist its input.",
+      "Run deterministic orchestration code until it reaches a durable operation.",
+      "Execute the step/activity and persist its output before advancing the workflow.",
+      "If the process fails, restart the workflow with its checkpointed input.",
+      "During replay, return stored outputs for completed steps instead of running their code again.",
+      "Resume normal execution at the first step with no checkpointed output.",
+      "Handle external effects through idempotent steps, retries, and recorded operation identities.",
+      "Version or patch workflow code so in-flight histories can still replay after deploys."
+    ],
+    "pseudocode": "workflow(input):\n    plan = deterministic_plan(input)\n\n    profile = step(\"load-profile\", () => db.read(input.user_id))\n    quote = step(\"model-call\", () => llm.generate(profile, plan))\n    charge_id = step(\"charge\", () => payments.charge(input.amount, idem_key=input.workflow_id))\n    receipt = step(\"notify\", () => email.send(input.email, quote, charge_id))\n\n    return receipt\n\nrecover(workflow_id):\n    input, checkpoints = load_history(workflow_id)\n    replay workflow(input)\n    completed steps return checkpoints\n    first missing step executes normally"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "architecture",
+      "status": "source-supported",
+      "statement": "Durable execution persists workflow progress so applications can recover from crashes, restarts, and failures without starting from the beginning.",
+      "scope": "DBOS and Temporal public docs.",
+      "evidence_refs": ["E-durable-definition"],
+      "caveats": ["Vendors differ on implementation: DBOS uses Postgres-backed library mechanics, while Temporal uses a service with event history."]
+    },
+    {
+      "id": "C2",
+      "type": "method",
+      "status": "source-supported",
+      "statement": "DBOS recovery re-executes workflows from checkpointed inputs and returns stored step outputs until it reaches the failed or uncompleted step.",
+      "scope": "DBOS Architecture docs.",
+      "evidence_refs": ["E-dbos-recovery"],
+      "caveats": ["Distributed DBOS deployments require recovery coordination through Conductor or manual coordination."]
+    },
+    {
+      "id": "C3",
+      "type": "method",
+      "status": "source-supported",
+      "statement": "Temporal uses event sourcing to restore workflow state by replaying workflow code against recorded history while ignoring already-recorded side effects.",
+      "scope": "Temporal SDK documentation.",
+      "evidence_refs": ["E-temporal-replay"],
+      "caveats": ["The cited Temporal SDK page is Java-specific, though the replay concept is platform-level."]
+    },
+    {
+      "id": "C4",
+      "type": "constraint",
+      "status": "source-supported",
+      "statement": "Durable execution requires deterministic orchestration code: random values, wall-clock time, external I/O, service calls, and database reads must be inside durable steps or activities.",
+      "scope": "DBOS Architecture, AWS Durable Execution SDK, and Temporal SDK docs.",
+      "evidence_refs": ["E-determinism"],
+      "caveats": ["The exact SDK APIs differ, but the replay constraint is common."]
+    },
+    {
+      "id": "C5",
+      "type": "constraint",
+      "status": "source-supported",
+      "statement": "Steps should be idempotent because failure during a step can cause the runtime to retry that step during recovery.",
+      "scope": "DBOS Architecture docs and AWS Durable Execution SDK framing.",
+      "evidence_refs": ["E-idempotency"],
+      "caveats": ["Idempotency often depends on external systems providing stable keys or transactional semantics."]
+    },
+    {
+      "id": "C6",
+      "type": "product_behavior",
+      "status": "source-supported",
+      "statement": "AWS Step Functions Standard Workflow redrive preserves successful-step results and execution history while restarting from the failed, aborted, or timed-out step.",
+      "scope": "AWS Step Functions redrive docs.",
+      "evidence_refs": ["E-step-functions-redrive"],
+      "caveats": ["Redrive support and execution history behavior differ between Standard and Express workflows."]
+    },
+    {
+      "id": "C7",
+      "type": "limitation",
+      "status": "source-supported",
+      "statement": "Durable execution creates upgrade and history-size constraints: changing step order can break replay, and large histories or large step payloads can become performance or retention problems.",
+      "scope": "DBOS Architecture and Temporal SDK docs.",
+      "evidence_refs": ["E-upgrades-history"],
+      "caveats": ["These are manageable constraints, but they must be designed for before long-lived agent workflows accumulate history."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-durable-definition",
+      "kind": "docs",
+      "source": "DBOS and Temporal docs",
+      "locator": "DBOS Why DBOS, Temporal homepage",
+      "result": "DBOS describes durable workflows built on Postgres that recover from failures where they left off, while Temporal describes crash-proof execution that resumes after crashes, network failures, or infrastructure outages.",
+      "metric": "durable workflow/resume guarantee",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-dbos-recovery",
+      "kind": "docs",
+      "source": "DBOS Architecture",
+      "locator": "How Workflow Recovery Works",
+      "result": "DBOS stores workflow inputs and step outputs, detects interrupted workflows, restarts them with checkpointed inputs, returns checkpointed outputs for completed steps, and resumes at the first step without a checkpoint.",
+      "metric": "checkpoint replay algorithm",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-temporal-replay",
+      "kind": "sdk_docs",
+      "source": "Temporal SDK documentation",
+      "locator": "Workflow Implementation Constraints",
+      "result": "Temporal uses event sourcing to recover workflow objects; when workflow state is restored, code is re-executed from the beginning, and side effects such as activity invocations are ignored because they are recorded in event history.",
+      "metric": "event-sourced workflow replay",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-determinism",
+      "kind": "constraint",
+      "source": "DBOS, AWS Durable Execution SDK, and Temporal SDK docs",
+      "locator": "DBOS recovery requirements; AWS Determinism during replay; Temporal workflow constraints",
+      "result": "All three sources state that code replayed by the durable runtime must be deterministic, and that non-deterministic work such as time, random values, external I/O, service calls, database reads, or SDK calls belongs in durable operations, steps, or activities.",
+      "metric": "determinism requirement",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-idempotency",
+      "kind": "constraint",
+      "source": "DBOS Architecture and AWS Durable Execution SDK docs",
+      "locator": "DBOS recovery requirements; AWS best practices",
+      "result": "DBOS says steps should be idempotent because if a workflow fails while executing a step, the step is retried during recovery, while completed checkpointed steps are not re-executed.",
+      "metric": "idempotent step requirement",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-step-functions-redrive",
+      "kind": "docs",
+      "source": "AWS Step Functions docs",
+      "locator": "Restarting state machine executions with redrive",
+      "result": "AWS states that redrive continues failed Standard Workflow executions from the unsuccessful step, preserves successful-step results and execution history, and appends redrive events to the original event history.",
+      "metric": "redrive behavior",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-upgrades-history",
+      "kind": "constraint",
+      "source": "DBOS Architecture and Temporal SDK docs",
+      "locator": "Upgrading Workflow Code; Temporal workflow constraints",
+      "result": "DBOS warns that breaking changes to steps or step order can make old checkpoints hard to recover and offers patching/versioning; Temporal warns that large execution histories can hurt performance and that workflow code changes while workflows are open can break replay assumptions.",
+      "metric": "upgrade and history constraints",
+      "claim_refs": ["C7"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "An agent trajectory should be a recoverable workflow history, not just a chat transcript.",
+    "Every non-deterministic agent operation belongs behind a durable boundary: model call, tool call, memory read, memory write, clock, random choice, external API, user callback.",
+    "Model calls are side effects for replay purposes. Record the prompt, model identity, parameters, returned text, tool-call JSON, usage, and errors before advancing.",
+    "Idempotency keys are required anywhere the agent can charge money, send mail, create files, open tickets, mutate databases, or call external services.",
+    "The workflow body should be boring deterministic orchestration. Agent creativity belongs in recorded steps, not in replay-sensitive branching.",
+    "History size becomes a product constraint for long-running agents. Summarization is useful, but the raw committed events still need retention and provenance rules.",
+    "Workflow-code upgrades are runtime migrations. Changing an agent graph while old runs are live requires versioning, patching, or explicit cutoff behavior."
+  ],
+  "caveats": [
+    "This is background reading synthesized from product documentation, not a single peer-reviewed paper.",
+    "Durable execution does not make side effects exactly-once by magic; external systems need idempotency or transactions.",
+    "The deterministic replay model can conflict with highly dynamic agent graphs unless graph evolution is versioned.",
+    "Replay recovers execution state, not semantic correctness. A recovered agent can still pursue the wrong goal.",
+    "Different platforms expose different durability, retention, history, redrive, and operational tradeoffs.",
+    "Durability can preserve bad actions too, so authorization and sandboxing still need independent enforcement."
+  ],
+  "related_work": [
+    {
+      "title": "DBOS",
+      "relation": "data_substrate",
+      "note": "DBOS is the systems paper behind the idea that execution state should live in database tables.",
+      "url": "https://people.eecs.berkeley.edu/~matei/papers/2022/vldb_dbos.pdf"
+    },
+    {
+      "title": "Making Reliable Distributed Systems in the Presence of Software Errors",
+      "relation": "fault_tolerance",
+      "note": "Armstrong gives the supervision and restart tree; durable execution adds persisted step replay to survive process and machine failure.",
+      "url": "https://worrydream.com/refs/Armstrong_2003_-_Making_reliable_distributed_systems_in_the_presence_of_software_errors.pdf"
+    },
+    {
+      "title": "ReAct",
+      "relation": "runtime_target",
+      "note": "A ReAct loop becomes production-grade only when each thought/action/observation step is recorded and recoverable.",
+      "url": "https://arxiv.org/abs/2210.03629"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A compact PoC could implement a SQLite-backed durable agent loop that records model-call and tool-call outputs and resumes after a simulated crash."
+  },
+  "slide_plan": {
+    "title": "Durable Execution",
+    "subtitle": "Replayable control flow for agents",
+    "sections": [
+      "summary",
+      "problem",
+      "core_contract",
+      "deterministic_replay",
+      "step_boundaries",
+      "idempotency",
+      "platform_examples",
+      "agent_runtime_takeaways",
+      "caveats",
+      "references"
+    ]
+  }
+}

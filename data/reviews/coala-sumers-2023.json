@@ -1,0 +1,260 @@
+{
+  "schema_version": 1,
+  "slug": "coala-sumers-2023",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "Cognitive Architectures for Language Agents",
+    "authors": [
+      "Theodore R. Sumers",
+      "Shunyu Yao",
+      "Karthik Narasimhan",
+      "Thomas L. Griffiths"
+    ],
+    "year": 2023,
+    "venue": "Transactions on Machine Learning Research, 2024",
+    "url": "https://arxiv.org/abs/2309.02427",
+    "project_url": "https://github.com/ysymyth/awesome-language-agents",
+    "arxiv_id": "2309.02427",
+    "read_sources": [
+      {
+        "kind": "paper_html",
+        "url": "https://ar5iv.labs.arxiv.org/html/2309.02427v3",
+        "note": "TMLR camera-ready v3, read for framework definition, memory/action taxonomy, case studies, and actionable insights."
+      },
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2309.02427",
+        "note": "Used for bibliographic metadata, submission history, and DOI."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "CoALA turns language agents into a cognitive-architecture design problem by separating memory modules, internal and external actions, and a looping decision procedure.",
+    "thesis": "Recent LLM agents share recurring internal mechanisms, but custom terminology hides their common structure; importing cognitive-architecture concepts gives agent builders a reusable vocabulary and blueprint.",
+    "why_it_matters": "For agent infrastructure, CoALA names the runtime pieces that need explicit interfaces: working state, long-term stores, tool/environment grounding, retrieval, reasoning, learning, and the top-level decision loop."
+  },
+  "problem": {
+    "prior_state": [
+      "Early language agents often placed an LLM directly in a feedback loop with an external environment.",
+      "Newer agents added reasoning, planning, reflection, retrieval, and memory, but papers used inconsistent names for similar mechanisms.",
+      "Traditional cognitive architectures had mature notions of working memory, long-term memory, grounding, learning, and decision cycles, but required hand-specified symbolic rules."
+    ],
+    "key_gap": "The paper addresses the lack of a systematic framework for comparing existing language agents and planning new ones at the architectural level.",
+    "assumptions": [
+      "LLMs can be usefully viewed as probabilistic production systems over text.",
+      "Text can act as a shared internal representation across memory, reasoning, and grounding procedures.",
+      "Conceptual decomposition is useful even when the paper does not provide a new empirical benchmark."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "probabilistic-production-system",
+      "name": "LLM as probabilistic production system",
+      "definition": "A language model defines a distribution over text completions or rewrites, making each model call analogous to selecting a production under a probabilistic controller."
+    },
+    {
+      "id": "memory-hierarchy",
+      "name": "CoALA memory hierarchy",
+      "definition": "The agent state is organized into working memory plus long-term episodic, semantic, and procedural memories."
+    },
+    {
+      "id": "internal-external-actions",
+      "name": "Internal and external actions",
+      "definition": "External actions ground the agent in environments; internal actions operate on memory through retrieval, reasoning, and learning."
+    },
+    {
+      "id": "decision-cycle",
+      "name": "Decision cycle",
+      "definition": "The top-level agent program repeatedly uses reasoning and retrieval to plan, then executes a selected grounding or learning action before looping."
+    }
+  ],
+  "method": {
+    "core_idea": "Map language agents onto a cognitive architecture: keep active state in working memory, persist experience and knowledge in long-term memories, expose grounding/retrieval/reasoning/learning as actions, and run a repeated decision cycle that plans before executing environment or memory-changing actions.",
+    "action_grammar": [
+      "Grounding action: external interaction such as robot control, web navigation, API use, or communication.",
+      "Retrieval action: read from long-term memory into working memory.",
+      "Reasoning action: use the LLM to update working memory with inferred facts, plans, critiques, or candidate actions.",
+      "Learning action: write experience, knowledge, code, prompts, or parameters into long-term memory."
+    ],
+    "steps": [
+      "Frame LLM calls and prompt chains as production-like operations over text.",
+      "Import cognitive-architecture concepts to define memory modules and action types.",
+      "Classify recent agents by their long-term memory, external grounding, internal actions, and decision-making procedure.",
+      "Use the classification to identify reusable abstractions and underexplored design directions."
+    ],
+    "pseudocode": "while true:\n    working_memory.update(observe_environment())\n    candidates = reason_and_retrieve(working_memory, long_term_memory)\n    selected = select_action(candidates)\n    if selected.kind == \"grounding\":\n        working_memory.update(environment.step(selected))\n    elif selected.kind == \"learning\":\n        long_term_memory.write(selected)"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "framework",
+      "status": "paper-supported",
+      "statement": "CoALA organizes language agents around three architectural dimensions: information storage, action space, and decision-making procedure.",
+      "scope": "Framework definition in the introduction and Section 4.",
+      "evidence_refs": ["E-framework-definition"],
+      "caveats": ["This is a conceptual organization, not an experimentally validated optimal architecture."]
+    },
+    {
+      "id": "C2",
+      "type": "taxonomy",
+      "status": "paper-supported",
+      "statement": "The framework separates working memory from long-term episodic, semantic, and procedural memory.",
+      "scope": "Memory taxonomy in Section 4.1.",
+      "evidence_refs": ["E-memory-taxonomy"],
+      "caveats": ["The paper mainly discusses text-centric memories and leaves non-text modalities as allowed but less developed."]
+    },
+    {
+      "id": "C3",
+      "type": "taxonomy",
+      "status": "paper-supported",
+      "statement": "CoALA divides agent actions into external grounding actions and internal retrieval, reasoning, and learning actions.",
+      "scope": "Action-space definition in Section 4 and Figure 5.",
+      "evidence_refs": ["E-action-taxonomy"],
+      "caveats": ["The boundary between reasoning and learning can blur in implementations that both generate and persist new procedures."]
+    },
+    {
+      "id": "C4",
+      "type": "mechanism",
+      "status": "paper-supported",
+      "statement": "The top-level agent controller is modeled as a repeated decision cycle with planning and execution stages.",
+      "scope": "Decision-making procedure in Sections 4.6 and Figure 4B.",
+      "evidence_refs": ["E-decision-cycle"],
+      "caveats": ["The paper describes the control loop abstractly; concrete schedulers, retry semantics, and failure handling remain implementation choices."]
+    },
+    {
+      "id": "C5",
+      "type": "case-study",
+      "status": "paper-supported",
+      "statement": "CoALA can express a range of existing agents, including SayCan, ReAct, Voyager, Generative Agents, and Tree of Thoughts, by comparing their memory, grounding, internal actions, and decision-making.",
+      "scope": "Case studies and Table 2.",
+      "evidence_refs": ["E-case-studies"],
+      "caveats": ["The table is a retrospective classification; it does not prove that the classification improves those agents' performance."]
+    },
+    {
+      "id": "C6",
+      "type": "design-guidance",
+      "status": "paper-supported",
+      "statement": "The paper argues for modular, reusable language-agent abstractions such as Memory, Action, and Agent classes to reduce technical debt and improve compatibility.",
+      "scope": "Actionable insights in Section 6.",
+      "evidence_refs": ["E-actionable-insights"],
+      "caveats": ["The paper gives design direction, not a production-ready library or compatibility standard."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-framework-definition",
+      "kind": "framework_formulation",
+      "source": "paper",
+      "locator": "Introduction and Section 4",
+      "result": "The paper states that CoALA organizes agents by information storage, action space, and decision-making procedure, then develops those concepts in Section 4.",
+      "metric": "conceptual framework",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-memory-taxonomy",
+      "kind": "taxonomy",
+      "source": "paper",
+      "locator": "Section 4.1",
+      "result": "CoALA defines short-term working memory and long-term episodic, semantic, and procedural memories. Working memory persists active state across LLM calls and connects LLM prompts, long-term memory, and grounding interfaces.",
+      "metric": "memory module taxonomy",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-action-taxonomy",
+      "kind": "taxonomy",
+      "source": "paper",
+      "locator": "Section 4, Figure 5",
+      "result": "The paper separates external grounding actions from internal memory actions, and decomposes internal actions into retrieval, reasoning, and learning.",
+      "metric": "action-space taxonomy",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-decision-cycle",
+      "kind": "mechanism_description",
+      "source": "paper",
+      "locator": "Sections 4.6 and Figure 4B",
+      "result": "The decision procedure repeatedly uses reasoning and retrieval to propose, evaluate, and select alternatives during planning, then executes a grounding or learning action and loops after observation.",
+      "metric": "decision-cycle structure",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-case-studies",
+      "kind": "case_study_table",
+      "source": "paper",
+      "locator": "Section 5, Table 2",
+      "result": "Table 2 casts SayCan, ReAct, Voyager, Generative Agents, and Tree of Thoughts into the CoALA dimensions, showing differences in long-term memory, external grounding, internal actions, and decision-making.",
+      "metric": "retrospective classification",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-actionable-insights",
+      "kind": "design_guidance",
+      "source": "paper",
+      "locator": "Section 6",
+      "result": "The paper recommends systematic modular design, argues for standardized abstractions analogous to MDP/Gym concepts in reinforcement learning, and suggests company-wide agent libraries for reuse and testing.",
+      "metric": "actionable design recommendation",
+      "claim_refs": ["C6"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "Treat agent memory as typed runtime state, not only prompt text: working, episodic, semantic, and procedural stores have different persistence and mutation semantics.",
+    "Separate internal actions from external side effects. Retrieval, reasoning, and learning should be inspectable runtime operations before a grounding action touches the world.",
+    "The decision loop is the agent's main procedure, so production runtimes need explicit scheduling, observation capture, action parsing, and replay boundaries.",
+    "Procedural memory is broader than model weights: prompts, parsers, code skills, retrieval procedures, and learning policies can all become mutable agent state.",
+    "The framework is useful as a schema for reviews because it forces each paper to say which memory, action, and decision components it actually changes."
+  ],
+  "caveats": [
+    "CoALA is primarily a conceptual framework and survey, not a new empirical agent with benchmark results.",
+    "The framework does not by itself solve safety, permissions, persistence, or exactly-once execution for side-effecting agents.",
+    "The paper's categories are intentionally broad, so implementations still need concrete interface contracts and failure handling.",
+    "Autonomous updates to source code, retrieval, learning, or decision-making are flagged as risky and underexplored.",
+    "The paper assumes text is the dominant internal representation, while multimodal and embodied settings may require richer state."
+  ],
+  "related_work": [
+    {
+      "title": "Soar",
+      "relation": "historical-foundation",
+      "note": "Traditional cognitive architecture used to explain working memory, long-term memory, productions, and decision cycles.",
+      "url": "https://arxiv.org/abs/2205.03854"
+    },
+    {
+      "title": "ReAct",
+      "relation": "classified-example",
+      "note": "CoALA classifies ReAct as using internal reasoning plus external grounding but lacking long-term semantic or episodic memory.",
+      "url": "https://arxiv.org/abs/2210.03629"
+    },
+    {
+      "title": "Voyager",
+      "relation": "classified-example",
+      "note": "Used as an example of procedural memory and learning by adding code-based grounding skills.",
+      "url": "https://arxiv.org/abs/2305.16291"
+    },
+    {
+      "title": "Generative Agents",
+      "relation": "classified-example",
+      "note": "Used as an example of episodic and semantic memory with reflection over experiences.",
+      "url": "https://arxiv.org/abs/2304.03442"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A useful local PoC would implement a tiny CoALA runtime skeleton with typed working, episodic, semantic, and procedural stores plus logged internal/external actions."
+  },
+  "slide_plan": {
+    "title": "CoALA",
+    "subtitle": "Memory, action, and decision loops as the agent architecture map",
+    "sections": [
+      "summary",
+      "problem",
+      "method",
+      "memory_taxonomy",
+      "action_taxonomy",
+      "decision_cycle",
+      "case_studies",
+      "infra_takeaways",
+      "caveats",
+      "run_it",
+      "references"
+    ]
+  }
+}

@@ -1,0 +1,276 @@
+{
+  "schema_version": 1,
+  "slug": "gorilla-patil-2023",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "Gorilla: Large Language Model Connected with Massive APIs",
+    "authors": [
+      "Shishir G. Patil",
+      "Tianjun Zhang",
+      "Xin Wang",
+      "Joseph E. Gonzalez"
+    ],
+    "year": 2023,
+    "venue": "arXiv 2023; NeurIPS 2024",
+    "url": "https://arxiv.org/abs/2305.15334",
+    "project_url": "https://gorilla.cs.berkeley.edu",
+    "arxiv_id": "2305.15334",
+    "read_sources": [
+      {
+        "kind": "paper_html",
+        "url": "https://ar5iv.labs.arxiv.org/html/2305.15334",
+        "note": "Read for original APIBench construction, Gorilla finetuning, retrieval-aware training, AST matching, evaluation, and limitations."
+      },
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2305.15334",
+        "note": "Used for arXiv metadata, original abstract framing, DOI, and project link."
+      },
+      {
+        "kind": "venue_page",
+        "url": "https://proceedings.neurips.cc/paper/2024/hash/e4c61f578ff07830f5c37378dd3ecb0d-Abstract-Conference.html",
+        "note": "Used to confirm NeurIPS 2024 proceedings venue and accepted abstract."
+      },
+      {
+        "kind": "conference_pdf",
+        "url": "https://proceedings.neurips.cc/paper_files/paper/2024/file/e4c61f578ff07830f5c37378dd3ecb0d-Paper-Conference.pdf",
+        "note": "Read for accepted paper details, RAT explanation, updated tables, documentation-change examples, constraint results, and AST validation."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "Gorilla turns API use into a retrieval-aware function-calling problem: pick the right API from a large changing catalog, generate a valid call, and avoid hallucinated tools.",
+    "thesis": "Tool use at API-catalog scale requires more than prompting: the model needs APIBench-style training data, retrieval-aware finetuning, and structural evaluation that distinguishes wrong calls from invented APIs.",
+    "why_it_matters": "Gorilla makes API documentation and catalog freshness part of the agent stack. The model is not only choosing an action; it is choosing from a mutable registry whose entries, arguments, versions, and constraints change over time."
+  },
+  "problem": {
+    "prior_state": [
+      "Prompted LLMs could call small, well-described tool sets, but the prompt context cannot hold web-scale API catalogs.",
+      "State-of-the-art models such as GPT-4 still made wrong API calls or hallucinated nonexistent API usage.",
+      "API calls are hard to evaluate with ordinary unit tests because many APIs can be functionally similar and many arguments are optional."
+    ],
+    "key_gap": "The paper asks how to train and evaluate an LLM that maps natural-language goals to correct API calls across a large, overlapping, frequently updated API corpus.",
+    "assumptions": [
+      "API documentation can be normalized into structured records with fields such as API name, call, arguments, requirements, examples, performance, and description.",
+      "Synthetic instructions can be generated from API documentation using self-instruct.",
+      "A retriever can provide candidate API documentation at inference time, but may retrieve irrelevant or stale documentation.",
+      "The target output is a single API call or small code snippet rather than a complete multi-step program."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "apibench",
+      "name": "APIBench",
+      "definition": "A benchmark and training corpus of API documentation plus synthetic instruction/API pairs from TorchHub, TensorHub, and HuggingFace APIs."
+    },
+    {
+      "id": "retriever-aware-training",
+      "name": "Retriever-aware training",
+      "definition": "Instruction finetuning where retrieved API documentation is appended to the prompt so the model learns to use relevant docs and ignore irrelevant ones."
+    },
+    {
+      "id": "ast-subtree-matching",
+      "name": "AST subtree matching",
+      "definition": "An evaluation method that parses generated API code and checks whether the relevant call and arguments match a subtree in the reference API database."
+    }
+  ],
+  "method": {
+    "core_idea": "Collect API documentation from model hubs, generate instruction/API pairs with self-instruct, finetune a LLaMA-7B model into Gorilla with and without retrieved documentation, and evaluate generated calls using AST subtree matching plus hallucination/error accounting.",
+    "action_grammar": [
+      "User instruction: a natural-language request for an ML model or API capability.",
+      "API document: a structured record containing domain, provider, API call, arguments, requirements, example code, performance, and description.",
+      "Retriever: BM25, GPT-Index, or oracle retrieval over API documents.",
+      "Gorilla response: domain, API provider, API call, explanation, and optional supporting code.",
+      "Hallucination: an API call that is not a subtree of any API in the database.",
+      "Error: a non-hallucinated but incorrect API choice or argument match."
+    ],
+    "steps": [
+      "Curate API documentation from TorchHub, TensorHub, and HuggingFace.",
+      "Generate synthetic user instructions and reference API answers with self-instruct.",
+      "Convert each example into a one-turn user/agent instruction-tuning conversation.",
+      "Optionally append retrieved API documentation to the user prompt for retriever-aware training.",
+      "At inference, run Gorilla zero-shot or append top retrieved API documentation.",
+      "Evaluate the generated API call by AST subtree matching against the API database."
+    ],
+    "pseudocode": "api_docs = collect_model_hub_docs()\nexamples = self_instruct(api_docs)\nfor example in examples:\n    prompt = example.instruction\n    if retriever_aware:\n        prompt += retrieve_oracle_doc(example.api)\n    train_pair = chat(prompt, example.reference_api_call)\nfinetune(llama_7b, train_pairs)\n\nquery_doc = retrieve(user_query)\ncall = gorilla(user_query, query_doc)\nscore = ast_subtree_match(call, reference_api_database)"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "dataset",
+      "status": "paper-supported",
+      "statement": "APIBench covers 1,645 ML APIs across TorchHub, TensorHub, and HuggingFace, with 10 generated instructions per API for 16,450 instruction/API pairs.",
+      "scope": "Section 3.1 and Appendix A.1 in the accepted paper.",
+      "evidence_refs": ["E-dataset"],
+      "caveats": ["The API corpus is ML-centric, not a general web API corpus."]
+    },
+    {
+      "id": "C2",
+      "type": "method",
+      "status": "paper-supported",
+      "statement": "Gorilla is a LLaMA-7B model instruction-finetuned for API calls, with retriever-aware training that teaches it to use or ignore retrieved API documentation.",
+      "scope": "Section 3.2 and Figure 3.",
+      "evidence_refs": ["E-method-rat"],
+      "caveats": ["RAT depends on retrieval quality; the paper explicitly reports that bad retrieval can hurt."]
+    },
+    {
+      "id": "C3",
+      "type": "evaluation",
+      "status": "paper-supported",
+      "statement": "The paper evaluates API-call correctness with AST subtree matching and defines hallucination as a generated API call that matches no API in the database.",
+      "scope": "Section 3.3 and Figure 4.",
+      "evidence_refs": ["E-ast"],
+      "caveats": ["AST matching is a structural offline proxy; the paper separately samples manual execution because executing every generated call is impractical."]
+    },
+    {
+      "id": "C4",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "In zero-shot API generation, Gorilla reports higher overall accuracy and lower hallucination than GPT-4 across TorchHub, HuggingFace, and TensorHub in Table 1.",
+      "scope": "Section 4.1 and Table 1.",
+      "evidence_refs": ["E-main-results"],
+      "caveats": ["For HuggingFace, the paper notes that non-Gorilla models are evaluated on correct domain names because the dataset is not exhaustive."]
+    },
+    {
+      "id": "C5",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "Retriever-aware training can adapt to test-time documentation changes and improves with strong retrievers, but weak retrieval at inference can sharply degrade accuracy.",
+      "scope": "Section 4.1, Section 4.2, Figure 6, and Table 2.",
+      "evidence_refs": ["E-retrieval", "E-doc-change"],
+      "caveats": ["The strongest retrieval results use oracle retrieval, which is an upper bound rather than a deployed retriever."]
+    },
+    {
+      "id": "C6",
+      "type": "limitation",
+      "status": "paper-supported",
+      "statement": "Gorilla focuses on selecting and generating single API calls for ML APIs; API execution, multi-step tool workflows, and general web API side effects are outside the main paper scope.",
+      "scope": "Methodology, inference note, Appendix dataset/task definition, and limitations/social impact section.",
+      "evidence_refs": ["E-scope-limits"],
+      "caveats": ["This is still a strong benchmark for function-calling correctness, but not a full agent runtime benchmark."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-dataset",
+      "kind": "dataset",
+      "source": "paper",
+      "locator": "Section 3.1, Figure 3, Appendix A.1",
+      "result": "The accepted paper describes 1,645 API calls: 94 from TorchHub, 626 from TensorHub, and 925 from HuggingFace, with 10 generated instructions per API, yielding 16,450 instruction/API pairs.",
+      "metric": "API count and instruction/API pair count",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-method-rat",
+      "kind": "method_formulation",
+      "source": "paper",
+      "locator": "Section 3.2, Figure 3",
+      "result": "Gorilla is a retriever-aware finetuned LLaMA-7B model. During RAT, the prompt includes retrieved API documentation, and the model is trained to use relevant documentation or fall back to learned API knowledge when retrieval is irrelevant.",
+      "metric": "training pipeline",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-ast",
+      "kind": "evaluation_method",
+      "source": "paper",
+      "locator": "Section 3.3, Figure 4, Table 3",
+      "result": "Generated API calls are parsed into ASTs and matched against reference API subtrees. A sampled manual check reports 78% AST accuracy, 78% human-evaluated API accuracy, and 72% executable supporting code.",
+      "metric": "AST/human/execution agreement",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-main-results",
+      "kind": "result_table",
+      "source": "paper",
+      "locator": "Section 4.1, Table 1",
+      "result": "In zero-shot mode, Gorilla scores 59.13 TorchHub, 71.68 HuggingFace, and 83.79 TensorHub overall accuracy with hallucination rates 6.98, 10.95, and 5.40. GPT-4 zero-shot scores 38.70, 19.80, and 18.20 accuracy with hallucination rates 36.55, 37.16, and 78.65.",
+      "metric": "overall accuracy and hallucination rate",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-retrieval",
+      "kind": "ablation",
+      "source": "paper",
+      "locator": "Section 4.1, Table 2",
+      "result": "With oracle retrieval, RAT-trained Gorilla reaches 67.20 TorchHub, 91.26 HuggingFace, and 94.16 TensorHub overall accuracy. The paper also reports that using non-oracle retrieval at evaluation can produce large degradation, including 29.20% for GPT-Index and 52.27% for BM25 in one comparison.",
+      "metric": "retrieval-aware training ablation",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-doc-change",
+      "kind": "qualitative_result",
+      "source": "paper",
+      "locator": "Section 4.2, Figure 6",
+      "result": "The accepted paper shows Gorilla responding to test-time documentation changes such as upgrading FCN from ResNet-50 to ResNet-101 and changing the model registry from pytorch/vision to NVIDIA/DeepLearningExamples:torchhub.",
+      "metric": "documentation-change examples",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-scope-limits",
+      "kind": "scope_note",
+      "source": "paper",
+      "locator": "Section 3.2 inference note, Appendix A.1, Appendix A.1 API Call Task, Section 6",
+      "result": "The paper says API execution exists but is not the focus, defines the API-call task as generating a single line of code or leveraging an API reference, and notes that the dataset is ML API focused.",
+      "metric": "declared scope",
+      "claim_refs": ["C6"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "API catalogs are first-class infrastructure. Agent quality depends on normalized docs, versioning, retriever freshness, and schema fields for arguments and constraints.",
+    "Function-calling evaluation needs structural checks. AST subtree matching separates invented APIs from wrong-but-existing APIs more cleanly than text similarity.",
+    "Retrieval is not automatically helpful. A runtime must measure retriever precision and teach models when to ignore irrelevant retrieved documentation.",
+    "Hallucination should be typed. Gorilla distinguishes nonexistent tools from incorrect API choices, which maps naturally to different remediation paths.",
+    "Constraint handling belongs in the API schema: performance, parameter count, latency, cost, and requirements need to be queryable if agents must choose among tools.",
+    "This is a tool-selection layer, not an execution runtime. Side effects, permissions, retries, rollback, and multi-step plans still need separate infrastructure."
+  ],
+  "caveats": [
+    "The core benchmark is centered on ML APIs, not arbitrary REST, SaaS, or operating-system APIs.",
+    "The main task generates one API call or small code snippet rather than a full multi-step workflow.",
+    "Oracle retrieval is an upper bound; BM25 and GPT-Index retrieval can degrade accuracy when irrelevant docs are appended.",
+    "AST matching checks structural API-call equivalence and does not prove complete program execution for every output.",
+    "For HuggingFace, non-Gorilla baseline evaluation is relaxed because the API set is not exhaustive.",
+    "The work does not solve side-effect safety, authentication, authorization, or sandboxing for real API execution."
+  ],
+  "related_work": [
+    {
+      "title": "Toolformer",
+      "relation": "extends",
+      "note": "Toolformer teaches a model to emit calls for a small fixed tool set; Gorilla moves toward large API catalogs, retrieval, and hallucination measurement.",
+      "url": "https://arxiv.org/abs/2302.04761"
+    },
+    {
+      "title": "ToolLLM",
+      "relation": "precedes",
+      "note": "ToolLLM scales from API-call selection toward multi-step real-world API trajectories and search over tool-use sequences.",
+      "url": "https://arxiv.org/abs/2307.16789"
+    },
+    {
+      "title": "Model Context Protocol",
+      "relation": "connects-to",
+      "note": "MCP addresses the protocol and interoperability layer that Gorilla's API-catalog setting makes operationally important.",
+      "url": "https://modelcontextprotocol.io"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A useful local PoC would build a tiny APIBench-style catalog, generate candidate API calls from natural-language requests, and score them with AST subtree matching."
+  },
+  "slide_plan": {
+    "title": "Gorilla",
+    "subtitle": "API-catalog scale function calling with retrieval-aware training",
+    "sections": [
+      "summary",
+      "problem",
+      "apibench",
+      "method",
+      "rat",
+      "ast_metric",
+      "main_results",
+      "retrieval_tradeoffs",
+      "documentation_change",
+      "infra_takeaways",
+      "caveats",
+      "references"
+    ]
+  }
+}

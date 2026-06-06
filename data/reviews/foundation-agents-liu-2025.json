@@ -1,0 +1,347 @@
+{
+  "schema_version": 1,
+  "slug": "foundation-agents-liu-2025",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "Advances and Challenges in Foundation Agents: From Brain-Inspired Intelligence to Evolutionary, Collaborative, and Safe Systems",
+    "authors": [
+      "Bang Liu",
+      "Xinfeng Li",
+      "Jiayi Zhang",
+      "Jinlin Wang",
+      "Tanjin He",
+      "Sirui Hong",
+      "Hongzhang Liu",
+      "Shaokun Zhang",
+      "Kaitao Song",
+      "Kunlun Zhu",
+      "Yuheng Cheng",
+      "Suyuchen Wang",
+      "Xiaoqiang Wang",
+      "Yuyu Luo",
+      "Haibo Jin",
+      "Peiyan Zhang",
+      "Ollie Liu",
+      "Jiaqi Chen",
+      "Huan Zhang",
+      "Zhaoyang Yu",
+      "Haochen Shi",
+      "Boyan Li",
+      "Dekun Wu",
+      "Fengwei Teng",
+      "Xiaojun Jia",
+      "Jiawei Xu",
+      "Jinyu Xiang",
+      "Yizhang Lin",
+      "Tianming Liu",
+      "Tongliang Liu",
+      "Yu Su",
+      "Huan Sun",
+      "Glen Berseth",
+      "Jianyun Nie",
+      "Ian Foster",
+      "Logan Ward",
+      "Qingyun Wu",
+      "Yu Gu",
+      "Mingchen Zhuge",
+      "Xinbing Liang",
+      "Xiangru Tang",
+      "Haohan Wang",
+      "Jiaxuan You",
+      "Chi Wang",
+      "Jian Pei",
+      "Qiang Yang",
+      "Xiaoliang Qi",
+      "Chenglin Wu"
+    ],
+    "year": 2025,
+    "venue": "arXiv 2025",
+    "url": "https://arxiv.org/abs/2504.01990",
+    "project_url": "https://foundationagents.org/papers/",
+    "code_url": "https://github.com/FoundationAgents/awesome-foundation-agents",
+    "arxiv_id": "2504.01990",
+    "read_sources": [
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2504.01990",
+        "note": "Used for metadata, author list, version history, abstract, and the four-part survey structure."
+      },
+      {
+        "kind": "project_page",
+        "url": "https://foundationagents.org/papers/",
+        "note": "Used to confirm the Foundation Agents project page, paper listing, and companion resources."
+      },
+      {
+        "kind": "project_repo",
+        "url": "https://github.com/FoundationAgents/awesome-foundation-agents",
+        "note": "Used to confirm the companion taxonomy: cognition, memory, perception, world model, action, reward, emotion, self-enhancement, multi-agent systems, and safety."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "This survey reframes agents as foundation-agent systems with brain-inspired modules, self-evolution, multi-agent collaboration, and safety as coequal design axes.",
+    "thesis": "The paper's contribution is a broad 2025 synthesis: move beyond LLM-as-controller toward modular agents with perception, cognition, action, memory, world models, reward/goals, emotion-like state, adaptive self-enhancement, social coordination, and safety mechanisms.",
+    "why_it_matters": "For agent infrastructure, this is a roadmap paper. It shows which state, learning, coordination, and safety surfaces future agent runtimes will have to expose and govern."
+  },
+  "problem": {
+    "prior_state": [
+      "Earlier LLM-agent taxonomies often centered on prompting, memory, tools, and applications.",
+      "2024-2025 work expanded the agent field into multimodal perception, self-improvement, reinforcement learning, world models, scientific agents, and multi-agent societies.",
+      "Agent systems increasingly need continuous improvement, collaboration, and safety properties rather than one-shot task execution.",
+      "The field lacked a single synthesis that connected brain-inspired modular design with evolutionary, collaborative, and safe systems."
+    ],
+    "key_gap": "The survey asks how to organize foundation agents as modular, adaptive, collaborative, and safe systems rather than isolated LLM wrappers.",
+    "assumptions": [
+      "Brain-inspired functional modules can be useful as a design and gap-analysis framework for intelligent agents.",
+      "Foundation agents require a perception-cognition-action loop with internal state that changes over time.",
+      "Self-enhancement and multi-agent collaboration are central research directions, not optional add-ons.",
+      "Safety must cover intrinsic model risks and extrinsic deployment risks across agent modules and societies."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "foundation-agent",
+      "name": "Foundation agent",
+      "definition": "A general-purpose intelligent agent built around modular perception, cognition, action, internal state, adaptation, collaboration, and safety."
+    },
+    {
+      "id": "perception-cognition-action",
+      "name": "Perception-cognition-action loop",
+      "definition": "A loop in which observations feed perception, cognition updates internal state and reasons, and actions affect the world."
+    },
+    {
+      "id": "mental-state",
+      "name": "Mental state",
+      "definition": "The agent's evolving internal state, including memory, world model, goals, reward/learning signals, and emotion-like state."
+    },
+    {
+      "id": "world-model",
+      "name": "World model",
+      "definition": "A component that represents or simulates environmental dynamics, possible futures, and the consequences of actions."
+    },
+    {
+      "id": "self-enhancement",
+      "name": "Self-enhancement",
+      "definition": "Mechanisms by which an agent autonomously improves capabilities, adapts to environments, or performs continual learning and optimization."
+    },
+    {
+      "id": "collaborative-evolutionary-systems",
+      "name": "Collaborative and evolutionary systems",
+      "definition": "Multi-agent settings where agents interact, cooperate, compete, specialize, or evolve collective behavior."
+    },
+    {
+      "id": "safe-beneficial-agents",
+      "name": "Safe and beneficial agents",
+      "definition": "The design goal of mitigating intrinsic and extrinsic risks, including security threats, alignment failures, robustness gaps, and societal harm."
+    }
+  ],
+  "method": {
+    "core_idea": "Synthesize foundation-agent research into four connected layers: modular brain-inspired components, self-enhancement, collaborative/evolutionary multi-agent systems, and safety.",
+    "action_grammar": [
+      "perception: multimodal sensing and observation intake.",
+      "cognition: learning, reasoning, planning, decision-making, and internal state update.",
+      "memory: persistent and working state used for continuity and retrieval.",
+      "world model: predictive or simulator-like representation of environment dynamics.",
+      "goal/reward: objectives and feedback signals that shape learning and behavior.",
+      "emotion-like state: internal modulatory signals inspired by human affect and motivation.",
+      "action: external or internal action produced by reasoning.",
+      "self-evolution: optimization, continual learning, and automated improvement.",
+      "collaboration: multi-agent interaction, cooperation, and societal structures.",
+      "safety: intrinsic/extrinsic threats, ethics, robustness, and mitigation strategies."
+    ],
+    "steps": [
+      "Define foundation agents as modular intelligent systems rather than just LLM-driven applications.",
+      "Map core agent components to brain-inspired functional analogies.",
+      "Survey cognition, memory, perception, world models, action, reward, and emotion-like systems.",
+      "Survey self-enhancement and adaptive evolution mechanisms for autonomous improvement.",
+      "Survey collaborative and evolutionary multi-agent systems and their collective intelligence.",
+      "Survey safety, security, alignment, robustness, and mitigation strategies for trustworthy deployment.",
+      "Use the modular view to expose open challenges and research gaps."
+    ],
+    "pseudocode": "mental_state = {\n  memory,\n  world_model,\n  goals,\n  reward_signals,\n  emotion_like_state\n}\n\nwhile agent_is_active:\n  observation = perceive(environment)\n  mental_state = learn(mental_state, previous_action, observation)\n  action = reason_and_plan(mental_state)\n  environment = execute(action)\n\n# Foundation-agent infrastructure has to make this loop inspectable, controllable, and safe."
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "taxonomy",
+      "status": "paper-supported",
+      "statement": "The survey frames foundation agents with a modular, brain-inspired architecture integrating cognitive, perceptual, and operational modules.",
+      "scope": "Abstract and companion repository taxonomy.",
+      "evidence_refs": ["E-brain-inspired"],
+      "caveats": ["The brain mapping is a design analogy and organizing framework, not a claim of biological equivalence."]
+    },
+    {
+      "id": "C2",
+      "type": "taxonomy",
+      "status": "paper-supported",
+      "statement": "Core components include cognition, memory, perception, world models, action, reward, and emotion-like systems.",
+      "scope": "Abstract and companion repository table of contents.",
+      "evidence_refs": ["E-core-components"],
+      "caveats": ["Some components are more mature than others; the survey is intentionally broad."]
+    },
+    {
+      "id": "C3",
+      "type": "architecture",
+      "status": "paper-supported",
+      "statement": "The paper emphasizes a perception-cognition-action loop with evolving internal state rather than a stateless prompt-response model.",
+      "scope": "Abstract and paper framework summaries.",
+      "evidence_refs": ["E-agent-loop"],
+      "caveats": ["The review uses external summaries for the detailed formal loop because the ar5iv HTML was unavailable."]
+    },
+    {
+      "id": "C4",
+      "type": "research_direction",
+      "status": "paper-supported",
+      "statement": "Self-enhancement and adaptive evolution are treated as central mechanisms for agents that refine capabilities and adapt to dynamic environments.",
+      "scope": "Abstract and repository taxonomy.",
+      "evidence_refs": ["E-self-enhancement"],
+      "caveats": ["Autonomous self-improvement remains a research direction with unresolved reliability and safety constraints."]
+    },
+    {
+      "id": "C5",
+      "type": "multi_agent",
+      "status": "paper-supported",
+      "statement": "The survey treats collaborative and evolutionary multi-agent systems as a major axis, focusing on collective intelligence, cooperation, and societal structures.",
+      "scope": "Abstract and repository taxonomy.",
+      "evidence_refs": ["E-multi-agent"],
+      "caveats": ["Collective behavior can also amplify coordination failures and safety risks."]
+    },
+    {
+      "id": "C6",
+      "type": "safety",
+      "status": "paper-supported",
+      "statement": "The survey explicitly places safe and beneficial AI alongside agent architecture, covering intrinsic and extrinsic security threats, ethical alignment, robustness, and mitigation.",
+      "scope": "Abstract and repository taxonomy.",
+      "evidence_refs": ["E-safety"],
+      "caveats": ["A survey can identify safety categories, but production safety requires concrete mechanisms, audits, and enforcement layers."]
+    },
+    {
+      "id": "C7",
+      "type": "agent_infrastructure",
+      "status": "inference",
+      "statement": "For this project, the paper suggests that future review schemas should track not only memory/tools/planning, but also world models, reward signals, self-evolution, multi-agent coordination, and safety controls.",
+      "scope": "Application to agent-readings data model.",
+      "evidence_refs": ["E-schema-extension"],
+      "caveats": ["This is a reviewer inference from the survey's scope and the existing review database design."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-brain-inspired",
+      "kind": "taxonomy",
+      "source": "paper",
+      "locator": "Abstract",
+      "result": "The survey frames intelligent agents within a modular, brain-inspired architecture that integrates cognitive science, neuroscience, and computational research.",
+      "metric": "brain-inspired modular architecture",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-core-components",
+      "kind": "taxonomy",
+      "source": "paper_and_project_repo",
+      "locator": "Abstract and FoundationAgents repository table of contents",
+      "result": "The survey and companion repository organize core components around cognition, memory, perception, world model, action, reward, and emotion.",
+      "metric": "core component categories",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-agent-loop",
+      "kind": "architecture",
+      "source": "paper_and_secondary_summary",
+      "locator": "Abstract and framework summaries",
+      "result": "The framework is described as a perception-cognition-action loop with evolving internal mental-state components such as memory, world model, goals, reward, and emotion-like state.",
+      "metric": "agent loop with internal state",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-self-enhancement",
+      "kind": "research_direction",
+      "source": "paper_and_project_repo",
+      "locator": "Abstract and repository table of contents",
+      "result": "The survey's second part covers self-enhancement and adaptive evolution, including continual learning and automated optimization paradigms.",
+      "metric": "self-enhancement axis",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-multi-agent",
+      "kind": "research_direction",
+      "source": "paper_and_project_repo",
+      "locator": "Abstract and repository table of contents",
+      "result": "The survey's third part covers collaborative and evolutionary multi-agent systems, including collective intelligence, cooperation, and societal structures.",
+      "metric": "multi-agent systems axis",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-safety",
+      "kind": "safety_taxonomy",
+      "source": "paper_and_project_repo",
+      "locator": "Abstract and repository table of contents",
+      "result": "The survey's fourth part covers safe and beneficial AI, emphasizing intrinsic and extrinsic security threats, ethical alignment, robustness, and mitigation.",
+      "metric": "safety axis",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-schema-extension",
+      "kind": "inference",
+      "source": "reviewer",
+      "locator": "Agent-readings review context",
+      "result": "The review database should be able to represent world models, reward/goals, self-evolution, multi-agent protocols, and safety controls as first-class review fields or concepts.",
+      "metric": "schema coverage implication",
+      "claim_refs": ["C7"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "The paper is useful as a forward-looking schema stress test: it adds world models, reward/goals, emotion-like state, and self-evolution to the usual memory/tool/planning checklist.",
+    "Foundation-agent infrastructure needs inspectable internal state, not just logs of external tool calls.",
+    "World models and reward signals create new audit surfaces because they can shape future behavior without an obvious immediate tool call.",
+    "Self-evolving agents need versioning, rollback, evaluation gates, and provenance for every optimization step.",
+    "Collaborative agent systems need protocol-level safety, coordination invariants, and containment of cross-agent error propagation.",
+    "The safety axis reinforces the repo's runtime framing: capability, learning, and collaboration are only useful if paired with enforceable trust boundaries."
+  ],
+  "caveats": [
+    "This is a very broad 2025 survey/book, not a single empirical contribution.",
+    "The brain-inspired framing is useful for gap analysis but can overstate biological analogy if read too literally.",
+    "The detailed ar5iv HTML was unavailable during this review, so the review relies on the arXiv abstract plus companion project materials and accessible summaries.",
+    "Some sections describe aspirational research directions rather than mature production patterns.",
+    "Because the paper was revised after initial submission, exact internal sectioning may change across versions."
+  ],
+  "related_work": [
+    {
+      "title": "A Survey on Large Language Model Based Autonomous Agents",
+      "relation": "prior_survey",
+      "note": "Wang et al. provide a profile-memory-planning-action taxonomy; Liu et al. broaden the frame to world models, reward, emotion, self-evolution, multi-agent systems, and safety.",
+      "url": "https://arxiv.org/abs/2308.11432"
+    },
+    {
+      "title": "The Rise and Potential of Large Language Model Based Agents",
+      "relation": "prior_survey",
+      "note": "Xi et al. provide a 2023 broad field map; Foundation Agents updates the map with 2025 self-evolution and safety themes.",
+      "url": "https://arxiv.org/abs/2309.07864"
+    },
+    {
+      "title": "CoALA",
+      "relation": "cognitive_architecture",
+      "note": "CoALA is a more concise cognitive-architecture framework; Foundation Agents is a book-length extension across brain-inspired components and systems concerns.",
+      "url": "https://arxiv.org/abs/2309.02427"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet. A useful future PoC would be a tiny inspectable perception-cognition-action loop with versioned mental state and rollback around self-improvement steps."
+  },
+  "slide_plan": {
+    "title": "Foundation Agents",
+    "subtitle": "Brain-inspired modules, evolution, collaboration, safety",
+    "sections": [
+      "summary",
+      "problem",
+      "foundation_agent_loop",
+      "core_components",
+      "self_enhancement",
+      "collaboration",
+      "safety",
+      "schema_implications",
+      "references"
+    ]
+  }
+}

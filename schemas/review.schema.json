@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-readings.local/schemas/review.schema.json",
+  "title": "agent-readings structured review",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "slug",
+    "paper",
+    "summary",
+    "problem",
+    "method",
+    "claims",
+    "evidence",
+    "agent_infra_takeaways",
+    "caveats",
+    "slide_plan"
+  ],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "slug": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "review_status": { "type": "string" },
+    "paper": {
+      "type": "object",
+      "required": ["title", "authors", "year", "venue", "url"],
+      "properties": {
+        "title": { "type": "string" },
+        "authors": { "type": "array", "items": { "type": "string" } },
+        "year": { "type": "integer" },
+        "venue": { "type": "string" },
+        "url": { "type": "string" },
+        "project_url": { "type": "string" },
+        "arxiv_id": { "type": "string" },
+        "read_sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["kind", "url"],
+            "properties": {
+              "kind": { "type": "string" },
+              "url": { "type": "string" },
+              "note": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["one_sentence", "thesis", "why_it_matters"],
+      "properties": {
+        "one_sentence": { "type": "string" },
+        "thesis": { "type": "string" },
+        "why_it_matters": { "type": "string" }
+      }
+    },
+    "problem": {
+      "type": "object",
+      "required": ["prior_state", "key_gap", "assumptions"],
+      "properties": {
+        "prior_state": { "type": "array", "items": { "type": "string" } },
+        "key_gap": { "type": "string" },
+        "assumptions": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "concepts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "definition"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "definition": { "type": "string" }
+        }
+      }
+    },
+    "method": {
+      "type": "object",
+      "required": ["core_idea", "action_grammar", "steps"],
+      "properties": {
+        "core_idea": { "type": "string" },
+        "action_grammar": { "type": "array", "items": { "type": "string" } },
+        "steps": { "type": "array", "items": { "type": "string" } },
+        "pseudocode": { "type": "string" }
+      }
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "statement", "type", "status", "scope", "evidence_refs"],
+        "properties": {
+          "id": { "type": "string" },
+          "statement": { "type": "string" },
+          "type": { "type": "string" },
+          "status": { "type": "string" },
+          "scope": { "type": "string" },
+          "evidence_refs": { "type": "array", "items": { "type": "string" } },
+          "caveats": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "source", "locator", "result", "claim_refs"],
+        "properties": {
+          "id": { "type": "string" },
+          "kind": { "type": "string" },
+          "source": { "type": "string" },
+          "locator": { "type": "string" },
+          "result": { "type": "string" },
+          "metric": { "type": "string" },
+          "claim_refs": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "agent_infra_takeaways": { "type": "array", "items": { "type": "string" } },
+    "caveats": { "type": "array", "items": { "type": "string" } },
+    "related_work": { "type": "array", "items": { "type": "object" } },
+    "poc": { "type": "object" },
+    "slide_plan": {
+      "type": "object",
+      "required": ["title", "subtitle", "sections"],
+      "properties": {
+        "title": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "sections": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}
+

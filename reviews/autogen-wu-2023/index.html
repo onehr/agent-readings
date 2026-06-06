@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/autogen-wu-2023/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Multi-Agent Systems</p>
+        <h1>AutoGen</h1>
+        <p class="hero-lede">AutoGen turns LLM applications into programmable conversations among agents backed by models, tools, and humans.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>7</strong><span>Claims</span></div>
+          <div class="metric"><strong>7</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2023 · arXiv 2023; ICLR 2024 LLM Agents Workshop Best Paper</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>4</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/autogen-wu-2023/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2308.08155">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>AutoGen made 'conversation' the primary orchestration API for LLM agents. That gives developers a simple way to compose specialist agents, tool executors, human input, and dynamic group chats, but it also makes conversation history the runtime state.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Complex LLM applications needed different ad hoc wrappers for prompts, tool execution, human feedback, and multi-step control flow.</li><li>Single-agent loops made it awkward to separate roles such as assistant, tool executor, critic, retriever, and human proxy.</li><li>Developers needed both natural-language control and regular programmatic control over agent interactions.</li><li>Multi-agent demos lacked a generic reusable abstraction for message passing and workflow composition.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks how to make multi-agent LLM applications easier to build across domains without hard-coding every workflow as a bespoke orchestrator.</p>
+
+      <h2>Method</h2>
+      <p>Represent each workflow participant as a conversable agent, then program the workflow through auto-reply functions, termination conditions, human-input modes, tool execution, custom reply functions, and optional group-chat speaker selection.</p>
+      <ul><li>Define a set of agents with roles and capabilities.</li><li>Configure each agent's LLM, tool, human-input, code-execution, and reply behavior.</li><li>Initialize a conversation with a task message.</li><li>Let auto-reply and custom reply functions drive message passing.</li><li>Use natural-language instructions and Python code for control transitions.</li><li>Terminate when the conversation hits a programmatic or model-signaled stopping condition.</li><li>Evaluate the same abstraction across math, retrieval QA, ALFWorld, optimization guidance, chat games, and conversational chess.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>AutoGen's core abstraction is the conversable agent, configurable with LLM, human, and tool capabilities and able to send and receive messages.</p>
+  <p><strong>Scope:</strong> Abstract, Introduction, and Section 2.1.</p>
+  <ul><li><strong>E-conversable-agent</strong>: AutoGen agents are described as customizable and conversable, with capabilities backed by LLMs, human input, tools, or combinations. The built-in AssistantAgent and UserProxyAgent demonstrate LLM-backed and human/tool-backed roles.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>Conversation programming expresses LLM application workflows as conversation-centric computation and control flow.</p>
+  <p><strong>Scope:</strong> Introduction and Section 2.2.</p>
+  <ul><li><strong>E-conversation-programming</strong>: The paper defines conversation programming as first defining conversable agents with roles and capabilities, then programming their interaction behavior through conversation-centric computation and control.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>AutoGen uses unified send/receive/generate_reply interfaces and auto-reply mechanisms to induce decentralized workflow execution.</p>
+  <p><strong>Scope:</strong> Section 2.2.</p>
+  <ul><li><strong>E-auto-reply</strong>: Agents expose send, receive, and generate_reply functions. By default, an agent receiving a message invokes generate_reply and sends a reply unless a termination condition is met; developers can register custom reply functions.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>Control can move between natural language and code: prompts guide LLM-backed agents, while Python configures termination, human input, tool execution, custom replies, and dynamic group chat.</p>
+  <p><strong>Scope:</strong> Section 2.2.</p>
+  <ul><li><strong>E-control-modes</strong>: AutoGen supports natural-language control via system prompts, programming-language control via Python configuration and custom functions, transitions between the two through function calls, and dynamic group chat through GroupChatManager.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>The paper demonstrates six application patterns spanning math, retrieval-augmented QA/code, ALFWorld decision-making, optimization guidance, dynamic chat, and conversational chess.</p>
+  <p><strong>Scope:</strong> Section 3 and Appendix D.</p>
+  <ul><li><strong>E-applications</strong>: The six applications are math problem solving, retrieval-augmented code generation and QA, ALFWorld decision making, OptiGuide operations research coding, dynamic group chat, and conversational chess.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>A modular extra grounding agent improves ALFWorld performance by supplying commonsense constraints when the base two-agent loop repeats errors.</p>
+  <p><strong>Scope:</strong> Section 3, A3.</p>
+  <ul><li><strong>E-alfworld</strong>: On 134 unseen ALFWorld tasks, the paper reports that introducing a grounding agent adds commonsense guidance at recurring-error points and brings an average 15% performance gain over the two-agent system.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · paper-supported</h3>
+  <p>AutoGen simplifies orchestration but leaves many hard production questions to developers: termination, role design, safety of code execution, tool policy, and evaluation.</p>
+  <p><strong>Scope:</strong> Section 2, Section 3, and framework design implications.</p>
+  <ul><li><strong>E-limits</strong>: The framework gives developers configurable max auto-replies, termination messages, human input modes, code execution, function execution, custom replies, and group-chat routing, which implies these policies must be explicitly designed for each application.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Conversation is a message bus. AutoGen made agent orchestration look like typed roles sending messages, not one monolithic prompt.</li><li>Separate the assistant from the executor. The UserProxyAgent pattern keeps code execution and human approval outside the pure LLM role.</li><li>Natural-language control is useful for shaping behavior, but runtime invariants need programmatic controls such as max turns, termination predicates, and tool policies.</li><li>Multi-agent is most defensible when roles add different capabilities: retrieval, execution, grounding, critique, or human input.</li><li>The transcript is the workflow state. Production systems need persistence, replay, and audit around inter-agent messages.</li><li>Group chat needs routing policy. Speaker selection is an orchestration problem, not just a prompt.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The 2023 paper describes an early AutoGen architecture; the open-source project has since evolved.</li><li>Benchmarks and demonstrations are heterogeneous, so they should not be read as one uniform proof that multi-agent designs always win.</li><li>The framework enables code execution, which requires sandboxing and explicit trust boundaries.</li><li>Conversation control can be brittle if termination markers, speaker routing, or human-input modes are underspecified.</li><li>More agents can add coordination cost and error propagation; specialization needs evidence.</li><li>The paper focuses on developer ergonomics and application breadth more than formal safety or reliability guarantees.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/autogen-wu-2023.json.</span>
+  </footer>
+</body>
+</html>

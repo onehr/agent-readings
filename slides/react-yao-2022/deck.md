@@ -1,0 +1,212 @@
+<!-- .slide: class="title-slide apple-title" -->
+
+<div class="slide-frame slide-frame--center">
+  <p class="deck-kicker">agent-readings / Reasoning, Acting, and Reflection</p>
+  <h1>ReAct</h1>
+  <p class="deck-subtitle">Reasoning traces plus actions as the basic LLM agent loop</p>
+
+  <div class="deck-meta-strip">
+    <div class="deck-meta-pill"><strong>2022</strong><span>ICLR 2023</span></div>
+    <div class="deck-meta-pill"><strong>6</strong><span>claims</span></div>
+    <div class="deck-meta-pill"><strong>6</strong><span>evidence refs</span></div>
+    <div class="deck-meta-pill"><strong>paper-read</strong><span>status</span></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="statement-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">The one sentence</p>
+  <h2>ReAct prompts a frozen LLM to interleave natural-language thoughts with task actions and observations, making tool use and environment interaction part of the reasoning loop.</h2>
+  <p class="deck-note">This paper gives a compact blueprint for the modern LLM agent loop: model proposes intent and action, host runtime executes the action, observation returns to context, and the trace remains inspectable.</p>
+</div>
+
+---
+
+<!-- .slide: class="problem-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Before this paper</p>
+  <h2>The friction was structural.</h2>
+  <div class="apple-card-grid apple-card-grid--three">
+    <div class="apple-card"><p>Chain-of-thought style reasoning was useful but static: the model reasoned from internal representations without grounding in external state.</p></div>
+<div class="apple-card"><p>Language-model acting/planning work often predicted domain actions without abstract goal reasoning or working-memory style progress tracking.</p></div>
+<div class="apple-card"><p>Knowledge-intensive QA and fact verification needed both multi-hop reasoning and fresh retrieval, while interactive environments needed long-horizon subgoal tracking.</p></div>
+  </div>
+  <div class="deck-callout">
+    <span>Key gap</span>
+    <p>The paper targets the missing closed-loop pattern that combines reasoning, action, and observation for general task solving rather than treating reasoning and acting as isolated capabilities.</p>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="idea-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Core idea</p>
+  <h2>Augment the agent's action space with free-form language thoughts.</h2>
+  <p class="deck-note">Augment the agent's action space with free-form language thoughts. Thoughts do not affect the external environment directly, but they update the context used to choose later thoughts or actions.</p>
+  <div class="idea-loop" aria-label="Agent loop">
+    <div><strong>Model</strong><span>reason</span></div>
+    <div><strong>Runtime</strong><span>act</span></div>
+    <div><strong>World</strong><span>observe</span></div>
+  </div>
+  <div class="step-strip">
+    <div class="step-item">
+  <span>01</span>
+  <p>Provide a few ReAct-format trajectories as in-context examples.</p>
+</div>
+<div class="step-item">
+  <span>02</span>
+  <p>Let the model generate thoughts and actions in an interleaved trajectory.</p>
+</div>
+<div class="step-item">
+  <span>03</span>
+  <p>Execute actions through the environment or tool API, then append observations to context.</p>
+</div>
+<div class="step-item">
+  <span>04</span>
+  <p>Use dense thoughts for knowledge tasks and sparse thoughts for longer-horizon decision tasks.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="grammar-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Action grammar</p>
+  <h2>The agent is an interface contract.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>Thought: model-generated natural language that decomposes goals, extracts observation facts, handles exceptions, or...</p></div>
+<div class="apple-card"><p>Action: a constrained task command such as search[entity], lookup[string], finish[answer], go to object, choose option,...</p></div>
+<div class="apple-card"><p>Observation: environment output appended after an action so the next model step can reason over external state.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="code-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Executable shape</p>
+  <h2>The mechanism should fit on one screen.</h2>
+
+```python
+context = [task, examples]
+while not done:
+    thought_or_action = llm(context)
+    if is_action(thought_or_action):
+        observation = environment.step(thought_or_action)
+        context.append(observation)
+    else:
+        context.append(thought_or_action)
+```
+</div>
+
+---
+
+<!-- .slide: class="proof-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Evidence</p>
+  <h2>The proof objects.</h2>
+  <div class="proof-grid">
+    <div class="proof-card">
+  <span>E-method</span>
+  <p>The paper augments the action space with language thoughts that update context without environment feedback, then prompts a frozen LLM with human trajectories.</p>
+</div>
+<div class="proof-card">
+  <span>E-hotpot-fever</span>
+  <p>ReAct beats Act on HotpotQA and FEVER (27.4 vs 25.7 EM; 60.9 vs 58.9 Acc). Hybrid methods reach 35.1 HotpotQA EM and 64.6 FEVER Acc.</p>
+</div>
+<div class="proof-card">
+  <span>E-failure-modes</span>
+  <p>ReAct has lower false positives than CoT in sampled successes (6% vs 14%) and no hallucination-labeled failures, but higher reasoning-error failures (47% vs 16%) and 23%...</p>
+</div>
+<div class="proof-card">
+  <span>E-alfworld</span>
+  <p>Best-of-six ReAct reaches 71% ALFWorld success, compared with 45% for best-of-six Act and 37% for BUTLER.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="claim-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Claim map</p>
+  <h2>What the review actually supports.</h2>
+  <div class="claim-grid">
+    <div class="claim-card">
+  <span>C1 · paper-supported</span>
+  <p>Adding language thoughts to the action space lets the model use reasoning as context for future actions without directly mutating the environment.</p>
+  <small>E-method</small>
+</div>
+<div class="claim-card">
+  <span>C2 · paper-supported</span>
+  <p>On HotpotQA and FEVER, ReAct is consistently better than acting-only prompting, while ReAct plus CoT self-consistency gives the strongest prompting results in...</p>
+  <small>E-hotpot-fever</small>
+</div>
+<div class="claim-card">
+  <span>C3 · paper-supported</span>
+  <p>External actions make ReAct trajectories more grounded than CoT, but the action structure introduces its own reasoning and retrieval failure modes.</p>
+  <small>E-failure-modes</small>
+</div>
+<div class="claim-card">
+  <span>C4 · paper-supported</span>
+  <p>On ALFWorld, ReAct substantially improves over acting-only and imitation-learning baselines in success rate.</p>
+  <small>E-alfworld</small>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="takeaway-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Agent infrastructure</p>
+  <h2>What changes if you build systems.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>The model should not directly execute tools; the host runtime should parse constrained actions and append observations.</p></div>
+<div class="apple-card"><p>Thoughts are useful as inspectable state, but they should not be treated as proof of correctness.</p></div>
+<div class="apple-card"><p>A review should record both positive evidence and failure modes, because retrieval and looping failures are part of the design contract.</p></div>
+<div class="apple-card"><p>Hybrid control is a real design knob: the paper's CoT-SC/ReAct switches show that internal reasoning and external retrieval can be routed based on...</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="caveat-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Caveats</p>
+  <h2>What this does not prove.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>ReAct is a prompting paradigm in this paper, not a new model architecture.</p></div>
+<div class="apple-card"><p>Standalone ReAct is not uniformly best: it trails CoT on HotpotQA exact match and needs hybrid routing for the strongest QA result.</p></div>
+<div class="apple-card"><p>Search quality is load-bearing; non-informative search accounts for a meaningful share of ReAct errors in the manual analysis.</p></div>
+<div class="apple-card"><p>The method can loop or repeat thoughts/actions under greedy decoding.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="closing-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Run it</p>
+  <h2>No PoC yet.</h2>
+  <p class="deck-note">No PoC yet - contributions welcome. A useful PoC would implement a tiny local ReAct loop over a deterministic search corpus and expose action parsing plus observation injection.</p>
+  <div class="reference-list">
+    <ul><li>Paper: <a href="https://arxiv.org/abs/2210.03629">ReAct: Synergizing Reasoning and Acting in Language Models</a></li><li>Project/code: <a href="https://react-lm.github.io/">https://react-lm.github.io/</a></li><li>contrasts: <a href="https://arxiv.org/abs/2201.11903">Chain-of-Thought Prompting</a></li><li>contrasts: <a href="https://arxiv.org/abs/2112.09332">WebGPT</a></li><li>evaluates-on: <a href="https://arxiv.org/abs/2207.01206">WebShop</a></li></ul>
+  </div>
+</div>
+
+Note: This deck is synthesized from `data/reviews/react-yao-2022.json`. Update the review record, then run `bun run build`.

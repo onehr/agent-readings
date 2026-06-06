@@ -1,0 +1,265 @@
+{
+  "schema_version": 1,
+  "slug": "reliable-distributed-systems-armstrong-2003",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "Making Reliable Distributed Systems in the Presence of Software Errors",
+    "authors": [
+      "Joe Armstrong"
+    ],
+    "year": 2003,
+    "venue": "Doctoral dissertation, Royal Institute of Technology",
+    "url": "https://worrydream.com/refs/Armstrong_2003_-_Making_reliable_distributed_systems_in_the_presence_of_software_errors.pdf",
+    "project_url": "https://www.erlang.org/",
+    "arxiv_id": "",
+    "read_sources": [
+      {
+        "kind": "thesis_pdf",
+        "url": "https://worrydream.com/refs/Armstrong_2003_-_Making_reliable_distributed_systems_in_the_presence_of_software_errors.pdf",
+        "note": "Read for thesis statement, telecom requirements, error-isolation philosophy, let-it-crash rule, supervisor hierarchies, OTP behaviours, and AXD301 case evidence."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "Armstrong's thesis argues that reliable systems can be built from faulty software by isolating concurrent processes, letting failed workers crash, and delegating recovery to explicit supervision hierarchies.",
+    "thesis": "The core claim is not that errors disappear; it is that runtime architecture must assume errors, contain them, detect them, and restart the smallest safe unit of work.",
+    "why_it_matters": "Modern agents are long-running programs made of model calls, tools, memory updates, and side effects. Armstrong gives the older systems vocabulary for making that shape survivable: isolation boundaries, restart specifications, supervisors, degraded service, and protocol-level fault detection."
+  },
+  "problem": {
+    "prior_state": [
+      "Large telecom systems had to run continuously despite shipping with software defects.",
+      "Traditional defensive programming mixed business logic and error recovery in the same code path.",
+      "Distributed programs needed to tolerate process, message, software, and hardware failures without stopping the entire system.",
+      "Reliability requirements were operational, not cosmetic: phone switches were expected to provide acceptable service over years of continuous operation."
+    ],
+    "key_gap": "The thesis asks how to program systems that behave reasonably even when the components implementing them contain software errors.",
+    "assumptions": [
+      "Large systems will contain software errors after deployment.",
+      "Fault isolation is more realistic than proving all application code correct.",
+      "Processes can be isolated and connected through message passing.",
+      "A runtime can detect process exits and restart workers or dependent groups.",
+      "Some degraded service is better than whole-system failure."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "fault-isolation",
+      "name": "Fault isolation",
+      "definition": "The runtime property that a software error in one process should not corrupt or directly crash unrelated work."
+    },
+    {
+      "id": "let-it-crash",
+      "name": "Let it crash",
+      "definition": "The coding rule that when a worker encounters an error it cannot handle, it should fail and let a supervising process perform recovery."
+    },
+    {
+      "id": "supervisor",
+      "name": "Supervisor",
+      "definition": "A process responsible for monitoring workers or other supervisors and starting, stopping, or restarting them according to a specification."
+    },
+    {
+      "id": "supervision-tree",
+      "name": "Supervision tree",
+      "definition": "A hierarchy of supervisors and workers that encodes restart relationships and failure domains."
+    },
+    {
+      "id": "and-or-supervision",
+      "name": "AND/OR supervision",
+      "definition": "A distinction between dependent groups that restart together and independent children where only the failed child restarts."
+    },
+    {
+      "id": "otp-behaviour",
+      "name": "OTP behaviour",
+      "definition": "A reusable Erlang/OTP pattern such as gen_server, gen_event, gen_fsm, supervisor, or application that separates generic runtime structure from application logic."
+    }
+  ],
+  "method": {
+    "core_idea": "Organize the system as isolated tasks with explicit goals; when a task cannot achieve its goal, abort that task and delegate recovery to a supervisor that knows how to restart the right process or subtree.",
+    "action_grammar": [
+      "worker: a process that performs application work.",
+      "supervisor: a process that watches workers or lower supervisors.",
+      "exit signal: runtime notification that a process failed or stopped.",
+      "restart specification: data describing how to start, stop, or restart a child.",
+      "OR supervision: restart only the failed independent child.",
+      "AND supervision: restart a dependent group when one child fails.",
+      "restart frequency: limit beyond which the supervisor itself fails upward."
+    ],
+    "steps": [
+      "Partition the application into isolated processes that communicate by message passing.",
+      "Define the goals and acceptable degraded modes of the system as a task hierarchy.",
+      "Write workers so that unrecoverable local errors crash instead of tangling business logic with generic recovery.",
+      "Attach workers and lower supervisors to supervision trees with start/stop/restart specifications.",
+      "Use OR supervision for independent workers and AND supervision for dependent process groups.",
+      "Escalate failure upward when a subtree restarts too often or cannot reestablish a good state.",
+      "Use reusable OTP behaviours so runtime mechanics are not reimplemented in every application module."
+    ],
+    "pseudocode": "supervisor = Supervisor(strategy=\"one_for_one\", max_restarts=5, window_seconds=1000)\nsupervisor.child(\"packet\", start=packet_assembler.start, restart=\"permanent\")\nsupervisor.child(\"server\", start=kv.start, restart=\"permanent\")\nsupervisor.child(\"logger\", start=simple_logger.start, restart=\"permanent\")\n\nwhile supervisor.running:\n    event = wait_for_child_exit()\n    if event.reason != \"normal\":\n        supervisor.restart(event.child)\n    if supervisor.restart_rate_exceeded():\n        crash_to_parent_supervisor()"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "architecture",
+      "status": "paper-supported",
+      "statement": "The thesis treats software errors as expected in large deployed systems and designs for acceptable behavior despite them.",
+      "scope": "Abstract and Chapter 1.",
+      "evidence_refs": ["E-errors-assumed"],
+      "caveats": ["The empirical setting is telecom systems, not LLM agents."]
+    },
+    {
+      "id": "C2",
+      "type": "architecture",
+      "status": "paper-supported",
+      "statement": "Fault isolation is the central runtime requirement: errors in one task must not propagate arbitrarily to unrelated tasks.",
+      "scope": "Chapter 2, Philosophy.",
+      "evidence_refs": ["E-fault-isolation"],
+      "caveats": ["The thesis relies on Erlang's process model; other runtimes must recreate equivalent boundaries explicitly."]
+    },
+    {
+      "id": "C3",
+      "type": "method",
+      "status": "paper-supported",
+      "statement": "The let-it-crash rule separates application work from generic recovery by letting workers fail and supervisors repair the system.",
+      "scope": "Chapter 4, Let it crash.",
+      "evidence_refs": ["E-let-it-crash"],
+      "caveats": ["Crash-and-restart is safe only when state, side effects, and idempotency are handled by the runtime design."]
+    },
+    {
+      "id": "C4",
+      "type": "architecture",
+      "status": "paper-supported",
+      "statement": "Supervisors encode restart policy in a hierarchy and can restart one child, a dependent group, or fail upward when restart limits are exceeded.",
+      "scope": "Chapter 5 and Chapter 6.",
+      "evidence_refs": ["E-supervision"],
+      "caveats": ["Restart policy is not automatic correctness; bad restart specifications can recreate the same failure."]
+    },
+    {
+      "id": "C5",
+      "type": "method",
+      "status": "paper-supported",
+      "statement": "OTP behaviours package generic runtime structure so application modules do not each implement servers, event handlers, finite-state machines, and supervisors from scratch.",
+      "scope": "Chapter 6.",
+      "evidence_refs": ["E-otp-behaviours"],
+      "caveats": ["The thesis focuses on Erlang/OTP and does not prescribe direct API designs for modern workflow engines."]
+    },
+    {
+      "id": "C6",
+      "type": "case_study",
+      "status": "paper-supported",
+      "statement": "The AXD301 case study reports a large deployed OTP system with a supervision tree of 141 nodes and 191 behaviour instances.",
+      "scope": "Chapter 8.",
+      "evidence_refs": ["E-axd301"],
+      "caveats": ["This is case-study evidence, not a controlled comparison against other reliability architectures."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-errors-assumed",
+      "kind": "thesis_statement",
+      "source": "thesis",
+      "locator": "Abstract and Chapter 1",
+      "result": "Armstrong states that large programs will probably contain errors when put into service and asks how to build systems that behave reasonably despite those errors.",
+      "metric": "design premise",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-fault-isolation",
+      "kind": "architecture",
+      "source": "thesis",
+      "locator": "Chapter 2.3 Philosophy",
+      "result": "The thesis identifies fault isolation as the essential problem: isolate code for each goal so errors can be detected and prevented from propagating to other simultaneous goals.",
+      "metric": "fault isolation requirement",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-let-it-crash",
+      "kind": "method",
+      "source": "thesis",
+      "locator": "Chapter 4.4",
+      "result": "The thesis explicitly says workers should crash on errors they cannot handle, while separate supervisor processes are responsible for correction and recovery.",
+      "metric": "error-handling separation",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-supervision",
+      "kind": "architecture",
+      "source": "thesis",
+      "locator": "Chapter 5.2 and Chapter 6.5",
+      "result": "Supervisors monitor workers or other supervisors, keep start/stop/restart specifications, restart failed children under OR supervision, restart groups under AND supervision, and can fail upward after exceeding restart frequency limits.",
+      "metric": "supervision hierarchy semantics",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-otp-behaviours",
+      "kind": "implementation",
+      "source": "thesis",
+      "locator": "Chapter 6",
+      "result": "The thesis presents primitive behaviours such as client-server, event handling, and FSM behaviours, then uses supervisor behaviours to compose them into supervision hierarchies.",
+      "metric": "reusable runtime pattern",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-axd301",
+      "kind": "case_study",
+      "source": "thesis",
+      "locator": "Chapter 8.3",
+      "result": "In the AXD301 analysis, the thesis reports a supervision tree with 141 nodes and 191 OTP behaviour instances, including gen_server, gen_event, supervisor, gen_fsm, and application behaviours.",
+      "metric": "deployed supervision tree size",
+      "claim_refs": ["C6"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "A serious agent runtime needs a supervision tree, even if it calls it a workflow, retry policy, task graph, or orchestration plan.",
+    "Letting an agent step fail is only safe when the runtime knows what state to discard, what state to replay, and which side effects are already committed.",
+    "Agent workers should be small failure domains: model call, tool call, parser, verifier, memory update, and finalizer are different restart units.",
+    "Generic recovery belongs in the runtime layer; task-specific reasoning belongs in the worker.",
+    "Restart budgets matter. Infinite retry loops are not supervision; they are unbounded failure amplification.",
+    "Capability-style process names in Armstrong's model rhyme with modern tool permissions: if a worker cannot name or reach a resource, it cannot affect it."
+  ],
+  "caveats": [
+    "The thesis predates cloud workflow engines, containers, LLMs, and modern exactly-once execution patterns.",
+    "Crash-only recovery can duplicate external side effects unless the runtime records and deduplicates them.",
+    "Erlang process isolation is stronger and more uniform than many agent frameworks' in-process task abstractions.",
+    "The telecom case studies prove practical viability in that domain, not universal superiority for every distributed architecture.",
+    "Supervision handles failure recovery; it does not by itself solve prompt injection, authorization, or semantic task correctness."
+  ],
+  "related_work": [
+    {
+      "title": "Durable Execution",
+      "relation": "ancestor",
+      "note": "Durable execution adds persisted step results to the restart-oriented reliability story, making replay safe across process and machine crashes.",
+      "url": "https://docs.dbos.dev/why-dbos"
+    },
+    {
+      "title": "DBOS",
+      "relation": "connects",
+      "note": "DBOS pushes the runtime state that supervisors need into database tables and transactions.",
+      "url": "https://people.eecs.berkeley.edu/~matei/papers/2022/vldb_dbos.pdf"
+    },
+    {
+      "title": "ReAct",
+      "relation": "runtime_for",
+      "note": "A ReAct loop needs supervision because each thought-action-observation step can fail, block, duplicate, or corrupt state.",
+      "url": "https://arxiv.org/abs/2210.03629"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A minimal PoC could model an agent task as workers under a supervisor with bounded restart counts and idempotent step logs."
+  },
+  "slide_plan": {
+    "title": "Reliable Distributed Systems",
+    "subtitle": "Supervision trees before agent runtimes",
+    "sections": [
+      "summary",
+      "problem",
+      "fault_isolation",
+      "let_it_crash",
+      "supervision_tree",
+      "otp_behaviours",
+      "case_study",
+      "agent_runtime_takeaways",
+      "caveats",
+      "references"
+    ]
+  }
+}

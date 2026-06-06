@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Indirect Prompt Injection</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/highlight/monokai.css" />
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <section data-markdown
+               data-separator="^\n---\n$"
+               data-separator-vertical="^\n--\n$"
+               data-separator-notes="^Note:">
+        <textarea data-template>
+<!-- .slide: class="title-slide apple-title" -->
+
+<div class="slide-frame slide-frame--center">
+  <p class="deck-kicker">agent-readings / Security, Safety, and Trust</p>
+  <h1>Indirect Prompt Injection</h1>
+  <p class="deck-subtitle">The attacker controls what the agent reads</p>
+
+  <div class="deck-meta-strip">
+    <div class="deck-meta-pill"><strong>2023</strong><span>arXiv 2023</span></div>
+    <div class="deck-meta-pill"><strong>7</strong><span>claims</span></div>
+    <div class="deck-meta-pill"><strong>7</strong><span>evidence refs</span></div>
+    <div class="deck-meta-pill"><strong>paper-read</strong><span>status</span></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="statement-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">The one sentence</p>
+  <h2>Indirect prompt injection lets an attacker hide instructions in content that an LLM application later retrieves, causing the model to treat untrusted data as control input.</h2>
+  <p class="deck-note">For agents, this is the confused-deputy problem in natural language. The model acts with the user's authority while consuming text controlled by other parties.</p>
+</div>
+
+---
+
+<!-- .slide: class="problem-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Before this paper</p>
+  <h2>The friction was structural.</h2>
+  <div class="apple-card-grid apple-card-grid--three">
+    <div class="apple-card"><p>Early prompt-injection discussions mostly assumed the attacker directly prompts their own model session.</p></div>
+<div class="apple-card"><p>LLM-integrated applications increasingly retrieve webpages, documents, emails, code, and search results at inference time.</p></div>
+<div class="apple-card"><p>Agents and application-integrated LLMs can call tools or APIs on behalf of a user.</p></div>
+  </div>
+  <div class="deck-callout">
+    <span>Key gap</span>
+    <p>The paper asks what happens when the attacker is not the user, but controls data that the user's LLM application will later retrieve and process.</p>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="idea-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Core idea</p>
+  <h2>Model LLM applications as systems that retrieve untrusted text and call tools, classify indirect injection delivery and impacts, then demonstrate attacks...</h2>
+  <p class="deck-note">Model LLM applications as systems that retrieve untrusted text and call tools, classify indirect injection delivery and impacts, then demonstrate attacks against controlled synthetic applications and real-world systems.</p>
+  <div class="idea-loop" aria-label="Agent loop">
+    <div><strong>Model</strong><span>reason</span></div>
+    <div><strong>Runtime</strong><span>act</span></div>
+    <div><strong>World</strong><span>observe</span></div>
+  </div>
+  <div class="step-strip">
+    <div class="step-item">
+  <span>01</span>
+  <p>Define indirect prompt injection as malicious prompt delivery through retrieved external data.</p>
+</div>
+<div class="step-item">
+  <span>02</span>
+  <p>Map injection methods: passive retrieval, active delivery such as email, user-driven copy/paste, hidden content, encoded payloads, and multi-stage...</p>
+</div>
+<div class="step-item">
+  <span>03</span>
+  <p>Map threat classes including data theft, remote control, persistence, worming, fraud, disinformation, and availability attacks.</p>
+</div>
+<div class="step-item">
+  <span>04</span>
+  <p>Build synthetic LLM applications with tools such as search, view, URL retrieval, email, address book, and memory.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="grammar-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Action grammar</p>
+  <h2>The agent is an interface contract.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>attacker content: webpage, email, code comment, file, or other data containing hidden or visible instructions.</p></div>
+<div class="apple-card"><p>retrieval event: user query or application workflow pulls attacker content into the model context.</p></div>
+<div class="apple-card"><p>model ingestion: the LLM processes retrieved text as part of the same context as trusted instructions.</p></div>
+<div class="apple-card"><p>tool/API action: the LLM decides whether and how to call search, email, memory, URL retrieval, code completion, or other...</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="code-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Executable shape</p>
+  <h2>The mechanism should fit on one screen.</h2>
+
+```python
+attacker.publish(content_with_hidden_instruction)
+
+user.ask(agent, task)
+retrieved = search_or_tool_fetch(task)
+context = trusted_system_prompt + user_task + retrieved
+
+action = llm(context)
+if action.calls_tool:
+    tool.execute(action, user_authority)
+
+# The attacker did not prompt the model directly; retrieved data crossed the control boundary.
+```
+</div>
+
+---
+
+<!-- .slide: class="proof-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Evidence</p>
+  <h2>The proof objects.</h2>
+  <div class="proof-grid">
+    <div class="proof-card">
+  <span>E-data-instruction</span>
+  <p>The authors argue that retrieval-augmented LLM applications blur data and instruction boundaries, making untrusted external text capable of steering model behavior.</p>
+</div>
+<div class="proof-card">
+  <span>E-indirect-attack</span>
+  <p>Adversaries can place prompts in data likely to be retrieved, remotely affecting a victim's application without directly prompting it.</p>
+</div>
+<div class="proof-card">
+  <span>E-injection-methods</span>
+  <p>The paper describes passive retrieval, active email-like delivery, user-driven injection, hidden prompt content, multi-stage payloads, and Base64/encoded injections.</p>
+</div>
+<div class="proof-card">
+  <span>E-impact-taxonomy</span>
+  <p>The paper and repository describe impacts including remote control, leaking user data, persistent compromise, spreading injections, social engineering, code-completion attacks,...</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="claim-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Claim map</p>
+  <h2>What the review actually supports.</h2>
+  <div class="claim-grid">
+    <div class="claim-card">
+  <span>C1 · paper-supported</span>
+  <p>LLM-integrated applications blur the line between data and instructions when they retrieve untrusted content into the model context.</p>
+  <small>E-data-instruction</small>
+</div>
+<div class="claim-card">
+  <span>C2 · paper-supported</span>
+  <p>Indirect prompt injection enables remote attackers without direct model access to influence a victim's LLM application by poisoning likely retrieved data.</p>
+  <small>E-indirect-attack</small>
+</div>
+<div class="claim-card">
+  <span>C3 · paper-supported</span>
+  <p>The attack surface includes passive retrieval, active delivery through channels like email, user-driven delivery, hidden prompts, encoded prompts, and...</p>
+  <small>E-injection-methods</small>
+</div>
+<div class="claim-card">
+  <span>C4 · paper-supported</span>
+  <p>Indirect prompt injection can enable remote control, data theft, persistence, worming, social engineering, misinformation, and availability attacks in...</p>
+  <small>E-impact-taxonomy</small>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="takeaway-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Agent infrastructure</p>
+  <h2>What changes if you build systems.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>Treat retrieved content as hostile data, never as authority-bearing instructions.</p></div>
+<div class="apple-card"><p>A model should not be the only boundary between untrusted text and privileged tools.</p></div>
+<div class="apple-card"><p>Tool calls need capability scoping, confirmation, policy checks, audit logs, and least privilege independent of prompt intent.</p></div>
+<div class="apple-card"><p>Memory can make prompt injection persistent; stored notes and retrieved history need the same distrust as webpages or emails.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="caveat-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Caveats</p>
+  <h2>What this does not prove.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>Many demonstrations are qualitative proof-of-concepts rather than statistically measured benchmark results.</p></div>
+<div class="apple-card"><p>The real-world systems tested were black boxes and have changed since 2023.</p></div>
+<div class="apple-card"><p>The paper intentionally avoided seeding public sources with live malicious prompts for ethical reasons.</p></div>
+<div class="apple-card"><p>Some mitigations and product defenses have improved since publication, but no general clean fix is established by the paper.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="closing-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Run it</p>
+  <h2>No PoC yet.</h2>
+  <p class="deck-note">No PoC yet - contributions welcome. A safe PoC could use a local mock search result and a non-networked toy tool to show why retrieved text must not authorize side effects.</p>
+  <div class="reference-list">
+    <ul><li>Paper: <a href="https://arxiv.org/abs/2302.12173">Not what you've signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection</a></li><li>Project/code: <a href="https://github.com/greshake/llm-security">https://github.com/greshake/llm-security</a></li><li>tool_loop_risk: <a href="https://arxiv.org/abs/2210.03629">ReAct</a></li><li>security_model: <a href="https://srl.cs.jhu.edu/pubs/SRL2003-02.pdf">Capability Myths Demolished</a></li><li>risk_testing: <a href="https://arxiv.org/abs/2309.15817">ToolEmu</a></li></ul>
+  </div>
+</div>
+
+Note: This deck is synthesized from `data/reviews/indirect-prompt-injection-greshake-2023.json`. Update the review record, then run `bun run build`.
+
+        </textarea>
+      </section>
+    </div>
+  </div>
+  <script type="module" src="../../assets/deck.js"></script>
+</body>
+</html>

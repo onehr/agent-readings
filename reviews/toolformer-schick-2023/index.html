@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Toolformer: Language Models Can Teach Themselves to Use Tools</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/toolformer-schick-2023/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Tool Use and Interoperability</p>
+        <h1>Toolformer</h1>
+        <p class="hero-lede">Toolformer teaches a language model to insert and consume API calls by sampling possible calls, executing them, and keeping only those that reduce next-token loss.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>6</strong><span>Claims</span></div>
+          <div class="metric"><strong>7</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2023 · NeurIPS 2023</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>4</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/toolformer-schick-2023/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2302.04761">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>Toolformer is the bridge from hand-written tool-use prompts to tool-use data pipelines: APIs become textual actions, execution results become training signals, and tool invocation becomes part of the language model's decoding loop.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Large language models could follow instructions and solve many text tasks, but still struggled with arithmetic, factual lookup, translation, and temporal awareness.</li><li>Earlier tool-use approaches often depended on human annotations or task-specific prompting where the user already knew which tool should be used.</li><li>A general-purpose tool-using LM needs to decide when to call a tool, which tool to call, what arguments to pass, and how to use the result without losing ordinary language-modeling ability.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks whether a frozen pretrained LM can bootstrap its own tool-use training data from a few demonstrations per API plus a self-supervised usefulness filter.</p>
+
+      <h2>Method</h2>
+      <p>Prompt the base LM with a few examples for each API, sample candidate call positions and calls over plain text, execute the calls, filter out calls whose results do not reduce future-token loss, interleave surviving calls into the text, and finetune the LM on that augmented corpus.</p>
+      <ul><li>Write a handful of demonstrations for each tool.</li><li>Use the pretrained LM to annotate plain language-modeling text with candidate API calls.</li><li>Execute each candidate API call to obtain a text response.</li><li>Keep only calls where the response lowers weighted next-token loss by the filtering threshold.</li><li>Merge surviving calls from all tools into an augmented corpus.</li><li>Finetune the LM with a standard language-modeling objective on the augmented corpus.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>Toolformer learns tool use self-supervised from a few demonstrations per API by generating, executing, filtering, and finetuning on API calls inserted into ordinary text.</p>
+  <p><strong>Scope:</strong> Abstract, Introduction, and Section 2.</p>
+  <ul><li><strong>E-method</strong>: The paper describes using a handful of demonstrations to prompt an LM to propose API calls over a language-modeling corpus, executing those calls, filtering them by usefulness, and finetuning the LM on the augmented corpus.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>The central filtering criterion is whether providing the API result lowers weighted loss on future tokens compared with no call or a call without the result.</p>
+  <p><strong>Scope:</strong> Section 2 filtering formulation and Figure 2.</p>
+  <ul><li><strong>E-loss-filter</strong>: A candidate API call is kept only if adding both the call and its result lowers weighted cross-entropy loss over future tokens by at least the threshold, compared with no call or a call without the response.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>Toolformer represents calls and responses as text in the model stream and uses inference-time decoding hooks to execute tools when the model emits the API marker.</p>
+  <p><strong>Scope:</strong> Section 2 representation and inference procedure.</p>
+  <ul><li><strong>E-runtime</strong>: During decoding, the system proceeds normally until the model produces the API response marker; decoding is interrupted, the API is called, the response and closing marker are inserted, and decoding continues.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>A 6.7B-parameter GPT-J Toolformer improves zero-shot factual lookup and math results over same-size baselines and often beats much larger OPT 66B and GPT-3 175B baselines on those tasks.</p>
+  <p><strong>Scope:</strong> Section 4.2 downstream tasks, especially LAMA and math datasets.</p>
+  <ul><li><strong>E-lama</strong>: On LAMA subsets, Toolformer scores 33.8 on SQuAD, 11.5 on Google-RE, and 53.5 on T-REx, compared with GPT-J + CC at 19.2, 5.6, and 33.2 and GPT-3 175B at 26.8, 7.0, and 39.8.</li><li><strong>E-math</strong>: On zero-shot math datasets, the paper reports Toolformer using the calculator API to improve over GPT-J baselines and compete with or exceed much larger models on ASDiv, SVAMP, and MAWPS.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>Finetuning with API calls does not materially sacrifice core language modeling ability in the paper's perplexity checks.</p>
+  <p><strong>Scope:</strong> Section 4.3 language-modeling evaluation.</p>
+  <ul><li><strong>E-lm-retention</strong>: The paper checks perplexity on WikiText and a subset of CCNet and reports that Toolformer's language-modeling ability remains comparable to GPT-J finetuned on the same corpus without API calls.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>Toolformer does not learn chained or interactive tool use in its current form because calls are generated independently and there are no multi-call trajectories in the finetuning data.</p>
+  <p><strong>Scope:</strong> Section 5/6 analysis and limitation discussion.</p>
+  <ul><li><strong>E-limitations</strong>: The paper states that the current approach cannot use tools in a chain because API calls for each tool are generated independently and the finetuning data contains no multiple-call examples. It also limits downstream decoding to at most one API call per input to avoid loops.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Tool use begins with a protocol: every tool must have a textual call format, a textual result format, and examples showing intended use.</li><li>The loss filter is an early form of execution-derived supervision: a runtime can log which calls actually reduce uncertainty or improve downstream checks.</li><li>Tool invocation needs an execution boundary in decoding. The model can propose calls, but infrastructure must pause, authorize, execute, insert results, and resume.</li><li>The paper's single-call setup is not enough for agent workflows; multi-step plans require trajectories, dependency tracking, and loop prevention.</li><li>Tool datasets become stale when APIs, search indexes, calendars, or factual stores change, so catalog freshness is an infrastructure problem.</li><li>A perplexity-improving call is not necessarily a safe or policy-compliant call; permissioning and sandboxing are outside Toolformer's objective.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>Toolformer is finetuned for a fixed set of tools, not a dynamic tool-discovery protocol.</li><li>The method needs executable tools during data generation and inference.</li><li>The paper's main downstream setup permits at most one API call per input.</li><li>Loss reduction is a local proxy for usefulness and does not encode user authorization, safety, or side-effect policy.</li><li>The approach does not cover chained tool use, tool outputs as later tool inputs, or interactive recovery from failed calls.</li><li>Several tools rely on specific external systems or snapshots, such as Atlas, BM25 Wikipedia search over KILT, NLLB, and a calendar/date extraction setup.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/toolformer-schick-2023.json.</span>
+  </footer>
+</body>
+</html>

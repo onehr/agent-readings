@@ -1,0 +1,318 @@
+{
+  "schema_version": 1,
+  "slug": "llm-agents-survey-xi-2023",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "The Rise and Potential of Large Language Model Based Agents: A Survey",
+    "authors": [
+      "Zhiheng Xi",
+      "Wenxiang Chen",
+      "Xin Guo",
+      "Wei He",
+      "Yiwen Ding",
+      "Boyang Hong",
+      "Ming Zhang",
+      "Junzhe Wang",
+      "Senjie Jin",
+      "Enyu Zhou",
+      "Rui Zheng",
+      "Xiaoran Fan",
+      "Xiao Wang",
+      "Limao Xiong",
+      "Yuhao Zhou",
+      "Weiran Wang",
+      "Changhao Jiang",
+      "Yicheng Zou",
+      "Xiangyang Liu",
+      "Zhangyue Yin",
+      "Shihan Dou",
+      "Rongxiang Weng",
+      "Wensen Cheng",
+      "Qi Zhang",
+      "Wenjuan Qin",
+      "Yongyan Zheng",
+      "Xipeng Qiu",
+      "Xuanjing Huang",
+      "Tao Gui"
+    ],
+    "year": 2023,
+    "venue": "arXiv 2023",
+    "url": "https://arxiv.org/abs/2309.07864",
+    "project_url": "https://github.com/WooooDyy/LLM-Agent-Paper-List",
+    "arxiv_id": "2309.07864",
+    "read_sources": [
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2309.07864",
+        "note": "Used for metadata, abstract, author list, revision history, and paper framing."
+      },
+      {
+        "kind": "paper_pdf",
+        "url": "https://xuanjing-huang.github.io/files/agent.pdf",
+        "note": "Read for the brain-perception-action framework, application taxonomy, agent-society section, risks, evaluation discussion, and conclusion."
+      },
+      {
+        "kind": "project_repo",
+        "url": "https://github.com/WooooDyy/LLM-Agent-Paper-List",
+        "note": "Used to confirm the maintained companion paper list and repository taxonomy."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "Xi et al. map LLM-based agents around a broad brain-perception-action framework, then survey single-agent, multi-agent, human-agent, and agent-society applications.",
+    "thesis": "The survey is best used as a field map: it argues that LLMs can serve as the agent brain, while perception/action modules and social interaction patterns determine what kinds of agent systems are possible.",
+    "why_it_matters": "For this reading list, the paper supplies breadth and vocabulary. It is less about one new mechanism and more about organizing the agent stack from model cognition through tools, embodiment, multi-agent coordination, and risk."
+  },
+  "problem": {
+    "prior_state": [
+      "Classical agent research had many algorithms and task-specific training setups, but no general foundation model that could adapt broadly across scenarios.",
+      "Early LLM-agent work was scattered across prompting, tools, memory, embodiment, multi-agent systems, and simulation.",
+      "The field lacked a single map connecting construction, application, agent societies, evaluation, and risks.",
+      "Many agent surveys were still focused on narrower capability or application slices."
+    ],
+    "key_gap": "The survey asks how to organize the rapidly expanding LLM-agent literature into a general conceptual framework and application taxonomy.",
+    "assumptions": [
+      "LLMs are a plausible foundation for the agent brain because of language interaction, knowledge, memory-like context use, reasoning, planning, and generalization.",
+      "Agents require more than a base model: perception and action channels determine the environment they can sense and affect.",
+      "Agent applications should be understood across single-agent, multi-agent, and human-agent settings.",
+      "Agent societies and risks deserve analysis alongside task performance."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "brain-perception-action",
+      "name": "Brain-perception-action framework",
+      "definition": "The survey's top-level construction model for LLM-based agents: an LLM-centered brain, perception modules for input, and action modules for external effects."
+    },
+    {
+      "id": "agent-brain",
+      "name": "Agent brain",
+      "definition": "The central LLM component that supports language interaction, knowledge use, memory, reasoning/planning, and transfer/generalization."
+    },
+    {
+      "id": "perception-module",
+      "name": "Perception module",
+      "definition": "The agent interface that receives textual, visual, auditory, or other multimodal inputs from the environment."
+    },
+    {
+      "id": "action-module",
+      "name": "Action module",
+      "definition": "The agent interface for producing text, using tools, or taking embodied actions."
+    },
+    {
+      "id": "agent-society",
+      "name": "Agent society",
+      "definition": "A multi-agent simulation or environment where LLM-based agents exhibit social behavior, personality, and emergent group phenomena."
+    },
+    {
+      "id": "application-scenarios",
+      "name": "Application scenarios",
+      "definition": "The survey's grouping of LLM-agent applications into single-agent deployment, multi-agent interaction, and human-agent interaction."
+    }
+  ],
+  "method": {
+    "core_idea": "Synthesize the LLM-agent literature into a construction framework, then classify applications and open problems by the agent's components, interaction setting, society behavior, evaluation needs, and risks.",
+    "action_grammar": [
+      "brain: LLM-centered cognition, memory, reasoning, planning, and generalization.",
+      "perception: text, vision, audio, or other environmental inputs.",
+      "action: textual output, tool use, or embodied execution.",
+      "single-agent deployment: task-oriented, innovation-oriented, or lifecycle-oriented usage.",
+      "multi-agent interaction: cooperative or adversarial coordination among agents.",
+      "human-agent interaction: instructor-executor or equal partnership patterns.",
+      "agent society: social behavior, environment, and simulated social phenomena.",
+      "open problems: evaluation, security, trustworthiness, scaling agents, and Agent-as-a-Service."
+    ],
+    "steps": [
+      "Trace the concept of agents from philosophical and AI origins.",
+      "Explain why LLMs are suitable as the primary component of an agent brain.",
+      "Introduce the brain-perception-action framework for LLM-based agent construction.",
+      "Survey applications across single agents, multi-agent systems, and human-agent cooperation.",
+      "Survey agent societies, including behavior, personality, environments, and social simulation.",
+      "Discuss evaluation dimensions and risks such as adversarial robustness, trustworthiness, misuse, and large-scale deployment."
+    ],
+    "pseudocode": "agent = {\n  brain: llm + memory + reasoning + planning,\n  perception: text | vision | audio | other_inputs,\n  action: text_output | tool_use | embodied_action\n}\n\napplication = single_agent | multi_agent | human_agent\nrisk_review = evaluate(agent.utility, sociability, values, evolution, robustness, trustworthiness)"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "taxonomy",
+      "status": "paper-supported",
+      "statement": "The survey proposes brain, perception, and action as the main construction components of LLM-based agents.",
+      "scope": "Abstract and Section 3.",
+      "evidence_refs": ["E-framework"],
+      "caveats": ["This is a high-level taxonomy, not a formal architecture specification."]
+    },
+    {
+      "id": "C2",
+      "type": "taxonomy",
+      "status": "paper-supported",
+      "statement": "The agent brain is organized around natural-language interaction, knowledge, memory, reasoning/planning, and transfer/generalization.",
+      "scope": "Section 3.1.",
+      "evidence_refs": ["E-brain"],
+      "caveats": ["The survey summarizes many papers; it does not prove all capabilities are reliable in deployed agents."]
+    },
+    {
+      "id": "C3",
+      "type": "taxonomy",
+      "status": "paper-supported",
+      "statement": "The perception/action split highlights that LLM agents become more than chatbots when they receive multimodal inputs and can use tools or embodied actions.",
+      "scope": "Sections 3.2 and 3.3.",
+      "evidence_refs": ["E-perception-action"],
+      "caveats": ["Tool use and embodiment introduce safety and runtime constraints that the taxonomy only surveys broadly."]
+    },
+    {
+      "id": "C4",
+      "type": "application_taxonomy",
+      "status": "paper-supported",
+      "statement": "The survey groups applications into single-agent, multi-agent, and human-agent scenarios, with multi-agent interaction split into cooperative and adversarial patterns.",
+      "scope": "Section 4.",
+      "evidence_refs": ["E-application-taxonomy"],
+      "caveats": ["Application examples date quickly as agent frameworks and benchmarks evolve."]
+    },
+    {
+      "id": "C5",
+      "type": "perspective",
+      "status": "paper-supported",
+      "statement": "The paper treats agent societies as a distinct research area covering behavior, personality, social environments, and simulation.",
+      "scope": "Section 5.",
+      "evidence_refs": ["E-agent-society"],
+      "caveats": ["Simulated social behavior does not automatically imply faithful human social modeling."]
+    },
+    {
+      "id": "C6",
+      "type": "risk",
+      "status": "paper-supported",
+      "statement": "The survey identifies evaluation, adversarial robustness, trustworthiness, misuse, and scaling the number of agents as important open problems.",
+      "scope": "Section 6.",
+      "evidence_refs": ["E-open-problems"],
+      "caveats": ["The treatment is broad; later specialized papers give stronger evidence on each risk category."]
+    },
+    {
+      "id": "C7",
+      "type": "agent_infrastructure",
+      "status": "inference",
+      "statement": "For an infrastructure reading list, the paper is useful mainly as a component map: each box in brain-perception-action implies storage, I/O, tool protocol, evaluation, and safety machinery.",
+      "scope": "Application to agent infrastructure.",
+      "evidence_refs": ["E-infra-map"],
+      "caveats": ["This is a reviewer inference from the survey framework, not a claim the survey tests empirically."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-framework",
+      "kind": "taxonomy",
+      "source": "paper",
+      "locator": "Abstract and Section 3",
+      "result": "The paper presents a general conceptual framework with three main components: brain, perception, and action.",
+      "metric": "three-component framework",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-brain",
+      "kind": "taxonomy",
+      "source": "paper_and_project_repo",
+      "locator": "Section 3.1 and companion repository table of contents",
+      "result": "The brain section is organized around natural-language interaction, knowledge, memory, reasoning/planning, and transfer/generalization.",
+      "metric": "agent-brain subcomponents",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-perception-action",
+      "kind": "taxonomy",
+      "source": "paper",
+      "locator": "Sections 3.2 and 3.3",
+      "result": "The paper surveys perception inputs such as text, vision, and audio, and action outputs including text generation, tool use, and embodied actions.",
+      "metric": "perception/action channels",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-application-taxonomy",
+      "kind": "taxonomy",
+      "source": "paper_and_project_repo",
+      "locator": "Section 4 and repository table of contents",
+      "result": "Applications are grouped into single-agent deployment, multi-agent coordination, and human-agent interaction; multi-agent systems include cooperative and adversarial interaction patterns.",
+      "metric": "application categories",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-agent-society",
+      "kind": "perspective",
+      "source": "paper",
+      "locator": "Section 5",
+      "result": "The paper surveys LLM-agent societies through behavior/personality, text/virtual/physical environments, and social simulation.",
+      "metric": "agent society dimensions",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-open-problems",
+      "kind": "discussion",
+      "source": "paper",
+      "locator": "Section 6",
+      "result": "The discussion covers evaluation dimensions, adversarial robustness, trustworthiness, misuse, unemployment/social risks, scaling up agent counts, Agent-as-a-Service, and AGI framing.",
+      "metric": "open problem categories",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-infra-map",
+      "kind": "inference",
+      "source": "reviewer",
+      "locator": "Agent-infrastructure reading context",
+      "result": "Brain-perception-action maps naturally to runtime concerns: memory/state for the brain, input adapters for perception, capability control for action, and evaluation/security around all three.",
+      "metric": "infrastructure mapping",
+      "claim_refs": ["C7"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "Use this survey as a map of the agent stack rather than as evidence for any one mechanism.",
+    "The brain-perception-action frame makes infrastructure boundaries visible: memory/state, input adapters, tool protocols, and effect control.",
+    "The action module is where agent infrastructure becomes safety-critical because text generation turns into tool use or embodied side effects.",
+    "Multi-agent and human-agent patterns require message protocols, role boundaries, logging, and coordination policies, not just prompts.",
+    "Agent-society work is useful for thinking about emergent behavior, but it needs stronger evaluation before operational claims should be trusted.",
+    "The risks section connects directly to later readings on prompt injection, adversarial attacks, sandboxing, and benchmark validity."
+  ],
+  "caveats": [
+    "This is a broad 2023 survey; many systems and benchmarks have changed since publication.",
+    "The paper is strongest as taxonomy and orientation, not as a source of primary empirical evidence.",
+    "The AGI framing is more aspirational than operational for production agent infrastructure.",
+    "Because the survey is very broad, readers should follow primary-source papers for mechanisms, numbers, and failure modes."
+  ],
+  "related_work": [
+    {
+      "title": "Cognitive Architectures for Language Agents",
+      "relation": "complementary_framework",
+      "note": "CoALA provides a tighter cognitive-architecture decomposition; Xi et al. provide a broader field survey.",
+      "url": "https://arxiv.org/abs/2309.02427"
+    },
+    {
+      "title": "A Survey on Large Language Model Based Autonomous Agents",
+      "relation": "neighboring_survey",
+      "note": "The Wang et al. survey covers construction and applications from another taxonomy centered on autonomous agents.",
+      "url": "https://arxiv.org/abs/2308.11432"
+    },
+    {
+      "title": "Generative Agents",
+      "relation": "agent_society_example",
+      "note": "Generative Agents is one of the primary works behind the survey's agent-society discussion.",
+      "url": "https://arxiv.org/abs/2304.03442"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet. This survey is best represented by review/schema coverage rather than a runnable reproduction."
+  },
+  "slide_plan": {
+    "title": "LLM Agent Survey",
+    "subtitle": "Brain, perception, action, and society",
+    "sections": [
+      "summary",
+      "problem",
+      "brain_perception_action",
+      "applications",
+      "agent_society",
+      "open_problems",
+      "infra_mapping",
+      "caveats",
+      "references"
+    ]
+  }
+}

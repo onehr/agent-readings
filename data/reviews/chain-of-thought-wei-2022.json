@@ -1,0 +1,287 @@
+{
+  "schema_version": 1,
+  "slug": "chain-of-thought-wei-2022",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models",
+    "authors": [
+      "Jason Wei",
+      "Xuezhi Wang",
+      "Dale Schuurmans",
+      "Maarten Bosma",
+      "Brian Ichter",
+      "Fei Xia",
+      "Ed H. Chi",
+      "Quoc V. Le",
+      "Denny Zhou"
+    ],
+    "year": 2022,
+    "venue": "NeurIPS 2022",
+    "url": "https://arxiv.org/abs/2201.11903",
+    "project_url": "",
+    "arxiv_id": "2201.11903",
+    "read_sources": [
+      {
+        "kind": "paper_html",
+        "url": "https://ar5iv.labs.arxiv.org/html/2201.11903",
+        "note": "Read for method definition, arithmetic/commonsense/symbolic results, ablations, limitations, and reproducibility statement."
+      },
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2201.11903",
+        "note": "Used for metadata, version history, DOI, and abstract claim."
+      },
+      {
+        "kind": "proceedings_page",
+        "url": "https://proceedings.neurips.cc/paper_files/paper/2022/hash/9d5609613524ecf4f15af0f7b31abca4-Abstract-Conference.html",
+        "note": "Used to confirm NeurIPS 2022 venue."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "Chain-of-thought prompting shows that large language models can be induced to solve harder reasoning tasks by generating intermediate natural-language steps before the final answer.",
+    "thesis": "Few-shot exemplars containing input, reasoning trace, and output can unlock reasoning behavior in sufficiently large frozen LMs without task-specific finetuning.",
+    "why_it_matters": "CoT is the precondition for many agent loops: it turns an LLM call from answer selection into an inspectable intermediate-state update that later systems reuse for planning, tool use, critique, and search."
+  },
+  "problem": {
+    "prior_state": [
+      "Large language models scaled well on many NLP tasks but still struggled with arithmetic, commonsense, and symbolic reasoning.",
+      "Rationale-augmented training and finetuning could teach intermediate steps, but required many high-quality rationales.",
+      "Standard few-shot prompting used input-output examples and often failed to improve substantially on reasoning tasks with scale alone."
+    ],
+    "key_gap": "The paper tests whether a small number of natural-language reasoning exemplars can elicit multi-step reasoning from off-the-shelf LMs.",
+    "assumptions": [
+      "The model is sufficiently large to produce coherent reasoning traces from examples.",
+      "The task can be expressed in natural language and benefits from intermediate steps.",
+      "At inference time, extra tokens and latency are acceptable for harder reasoning problems."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "chain-of-thought",
+      "name": "Chain of thought",
+      "definition": "A series of intermediate natural-language reasoning steps generated before the final answer."
+    },
+    {
+      "id": "few-shot-cot",
+      "name": "Few-shot CoT prompting",
+      "definition": "Prompting with exemplars formatted as input, chain-of-thought rationale, and output, then asking the model to follow that format at test time."
+    },
+    {
+      "id": "emergent-scale",
+      "name": "Emergent scale behavior",
+      "definition": "The paper reports that CoT improves reasoning mainly for models around or above 100B parameters, while smaller models often produce fluent but illogical traces."
+    }
+  ],
+  "method": {
+    "core_idea": "Replace ordinary input-output few-shot exemplars with input-rationale-output triples. At test time, let the model generate intermediate reasoning text before the answer, allocating more inference-time tokens to problems that need multi-step reasoning.",
+    "action_grammar": [
+      "Question/input: the task instance.",
+      "Chain of thought: natural-language intermediate steps that decompose and solve the problem.",
+      "Answer/output: the final predicted answer after the reasoning trace."
+    ],
+    "steps": [
+      "Manually compose a small set of chain-of-thought exemplars for each task family.",
+      "Prompt off-the-shelf LMs with those exemplars instead of finetuning.",
+      "Decode model completions and evaluate only the final answer against benchmark labels.",
+      "Compare against standard few-shot input-output prompting across arithmetic, commonsense, and symbolic tasks.",
+      "Run ablations that remove natural-language reasoning or move it after the answer."
+    ],
+    "pseudocode": "prompt = examples.map(input, rationale, answer) + test_input\ncompletion = lm(prompt)\ntrace, answer = parse_reasoning_and_answer(completion)\nscore(answer, target)"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "method",
+      "status": "paper-supported",
+      "statement": "CoT prompting requires only few-shot exemplars with intermediate reasoning steps and does not finetune the model.",
+      "scope": "Method definition and reproducibility statement.",
+      "evidence_refs": ["E-method", "E-reproducibility"],
+      "caveats": ["The paper still manually composes rationales for exemplars, so the prompting setup is not annotation-free."]
+    },
+    {
+      "id": "C2",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "On arithmetic reasoning, CoT improves large-model performance substantially and lets PaLM 540B set new state of the art on GSM8K, SVAMP, and MAWPS in the paper's comparison.",
+      "scope": "Five math word-problem benchmarks using GPT-3, LaMDA, PaLM, UL2, and Codex models.",
+      "evidence_refs": ["E-arithmetic-results"],
+      "caveats": ["For SVAMP, the paper notes standard prompting already passed the prior best; for AQuA and ASDiv, PaLM CoT was within 2% of prior state of the art rather than setting it."]
+    },
+    {
+      "id": "C3",
+      "type": "scaling",
+      "status": "paper-supported",
+      "statement": "The paper finds CoT to be an emergent ability of scale: it helps around 100B+ parameter models but not smaller ones.",
+      "scope": "Arithmetic and symbolic scaling curves, especially PaLM/LaMDA/GPT model families.",
+      "evidence_refs": ["E-scale-emergence", "E-symbolic-results"],
+      "caveats": ["This is an empirical observation over the evaluated model families, not a formal threshold for all model architectures."]
+    },
+    {
+      "id": "C4",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "CoT also improves several commonsense reasoning tasks, including StrategyQA and sports understanding for PaLM 540B.",
+      "scope": "CSQA, StrategyQA, Date Understanding, Sports Understanding, and SayCan evaluations.",
+      "evidence_refs": ["E-commonsense-results"],
+      "caveats": ["The paper explicitly notes minimal gain on CSQA."]
+    },
+    {
+      "id": "C5",
+      "type": "ablation",
+      "status": "paper-supported",
+      "statement": "Natural-language intermediate reasoning matters: equation-only, variable-compute-only, and reasoning-after-answer ablations do not match full CoT on GSM8K.",
+      "scope": "Ablation study using LaMDA 137B and PaLM 540B, with additional datasets in appendix tables.",
+      "evidence_refs": ["E-ablation"],
+      "caveats": ["Equation-only can help on simpler one- or two-step datasets where deriving an equation is easy."]
+    },
+    {
+      "id": "C6",
+      "type": "limitation",
+      "status": "paper-supported",
+      "statement": "CoT traces are useful for inspection but are not guaranteed to be faithful or correct reasoning paths, and serving them is costly because the effect appears at large model scales.",
+      "scope": "Manual error analysis and discussion limitations.",
+      "evidence_refs": ["E-error-analysis", "E-limitations"],
+      "caveats": ["The paper argues traces provide an interpretable window, but leaves whether the network is actually reasoning as an open question."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-method",
+      "kind": "method_formulation",
+      "source": "paper",
+      "locator": "Sections 1-3.1, Figure 1",
+      "result": "The paper defines CoT prompting as few-shot exemplars consisting of input, chain of thought, and output, with eight manually composed math exemplars used across most math benchmarks and four AQuA exemplars from training data.",
+      "metric": "prompt format",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-reproducibility",
+      "kind": "reproducibility_statement",
+      "source": "paper",
+      "locator": "Appendix E.1-E.2",
+      "result": "The authors state that all experiments use prompting-based inference only, no finetuning was done, exact prompts are provided, GPT-3 API experiments are included, and PaLM 540B inference used TPU v4 4x4x12 with 192 chips / 384 cores.",
+      "metric": "no finetuning; compute disclosure",
+      "claim_refs": ["C1", "C6"]
+    },
+    {
+      "id": "E-arithmetic-results",
+      "kind": "result_figure",
+      "source": "paper",
+      "locator": "Section 3.2, Figures 2 and 4, Appendix Table 2",
+      "result": "CoT more than doubled GSM8K performance for the largest GPT and PaLM models; PaLM 540B with CoT achieved new state of the art on GSM8K, SVAMP, and MAWPS, while AQuA and ASDiv were within 2% of prior state of the art.",
+      "metric": "math word-problem solve rate",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-scale-emergence",
+      "kind": "scaling_analysis",
+      "source": "paper",
+      "locator": "Section 3.2, Figure 4",
+      "result": "The authors report that CoT does not positively affect smaller models and only yields performance gains for models of roughly 100B parameters; smaller models produced fluent but illogical chains of thought.",
+      "metric": "performance by model scale",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-commonsense-results",
+      "kind": "result_figure",
+      "source": "paper",
+      "locator": "Section 4, Figure 7",
+      "result": "For PaLM 540B, CoT improves commonsense evaluations and reaches 75.6% on StrategyQA versus a 69.4% prior supervised best, and 95.4% on Sports Understanding versus an 84% unaided sports enthusiast baseline; gain on CSQA is described as minimal.",
+      "metric": "commonsense solve rate",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-symbolic-results",
+      "kind": "result_figure",
+      "source": "paper",
+      "locator": "Section 5, Figure 8",
+      "result": "On last-letter concatenation and coin-flip toy tasks, PaLM 540B with CoT reaches almost 100% in-domain solve rates and shows upward scaling curves on longer out-of-domain sequences, while standard prompting fails on OOD variants.",
+      "metric": "symbolic in-domain and OOD solve rate",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-ablation",
+      "kind": "ablation",
+      "source": "paper",
+      "locator": "Section 3.3, Figure 5",
+      "result": "Equation-only prompting does not help much for GSM8K, variable-compute-only performs about the same as baseline, and placing reasoning after the answer also performs about the same as baseline.",
+      "metric": "GSM8K solve-rate ablation",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-error-analysis",
+      "kind": "manual_analysis",
+      "source": "paper",
+      "locator": "Section 3.2, Appendix D",
+      "result": "Among 50 correct LaMDA 137B GSM8K examples, all generated chains were logically and mathematically correct except two coincidental correct answers; among 50 wrong answers, 46% were almost correct with minor mistakes and 54% had major semantic or coherence errors.",
+      "metric": "manual trace quality sample",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-limitations",
+      "kind": "limitations",
+      "source": "paper",
+      "locator": "Section 6 Discussion",
+      "result": "The paper states that CoT does not settle whether the model is actually reasoning, has no guarantee of correct reasoning paths, can produce wrong paths, and is costly in real applications because it emerges only at large model scales.",
+      "metric": "limitation statement",
+      "claim_refs": ["C6"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "CoT turns reasoning into explicit per-call runtime state: the trace becomes something downstream agents can inspect, critique, route, or continue.",
+    "Inference-time compute is a control knob. Harder tasks can spend more tokens on intermediate reasoning, but this directly affects latency and serving cost.",
+    "Trace text is not a correctness proof. Agent runtimes should pair reasoning traces with executable checks, tool observations, or external verifiers.",
+    "Prompted reasoning quality depends on model scale and exemplar design, so production systems should treat CoT as a capability with evaluations rather than a guaranteed behavior.",
+    "CoT creates the interface later methods extend: self-consistency samples many traces, ReAct interleaves traces with actions, and reflection methods critique traces after failure."
+  ],
+  "caveats": [
+    "The paper evaluates prompting, not a trained reasoning architecture.",
+    "The strongest results use very large models, including PaLM 540B, which makes cost and access load-bearing.",
+    "The paper uses manually written exemplar rationales and does not eliminate prompt construction effort.",
+    "Reasoning traces can be wrong or coincidentally lead to correct answers.",
+    "Arithmetic and symbolic gains are strongest on tasks where answers are easy to grade; open-ended agent tasks still need external validation."
+  ],
+  "related_work": [
+    {
+      "title": "Self-Consistency Improves Chain of Thought Reasoning",
+      "relation": "extends",
+      "note": "Samples multiple CoT traces and marginalizes over final answers.",
+      "url": "https://arxiv.org/abs/2203.11171"
+    },
+    {
+      "title": "ReAct",
+      "relation": "extends",
+      "note": "Interleaves reasoning traces with external actions and observations.",
+      "url": "https://arxiv.org/abs/2210.03629"
+    },
+    {
+      "title": "GSM8K",
+      "relation": "evaluates-on",
+      "note": "Math word-problem benchmark where PaLM 540B CoT sets a new state of the art in the paper.",
+      "url": "https://arxiv.org/abs/2110.14168"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A useful local PoC would compare direct answering vs CoT prompting on a small deterministic arithmetic fixture with exact-answer grading."
+  },
+  "slide_plan": {
+    "title": "Chain of Thought",
+    "subtitle": "Reasoning traces as inference-time scratch work",
+    "sections": [
+      "summary",
+      "problem",
+      "method",
+      "arithmetic_results",
+      "commonsense_results",
+      "symbolic_results",
+      "ablation",
+      "trace_quality",
+      "infra_takeaways",
+      "caveats",
+      "run_it",
+      "references"
+    ]
+  }
+}

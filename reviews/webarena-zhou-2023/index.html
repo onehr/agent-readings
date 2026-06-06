@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · WebArena: A Realistic Web Environment for Building Autonomous Agents</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/webarena-zhou-2023/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Evaluation and Benchmarks</p>
+        <h1>WebArena</h1>
+        <p class="hero-lede">WebArena is a self-hosted web benchmark where agents perform long-horizon tasks across realistic sites and are graded by functional correctness rather than matching reference actions.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>6</strong><span>Claims</span></div>
+          <div class="metric"><strong>6</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2023 · ICLR 2024; arXiv 2023</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>3</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/webarena-zhou-2023/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2307.13854">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>For agents, WebArena captures a production-shaped task class: navigate, search, click, read, edit, coordinate multiple sites, and recover from mistakes in a stateful web environment.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Many web-agent environments were simplified, synthetic, or static snapshots rather than fully functional websites.</li><li>Action-sequence matching fails when multiple valid paths can achieve the same web task.</li><li>Live public websites are not reproducible because content, CAPTCHAs, bot defenses, and configuration drift over time.</li><li>Agents need evaluation on realistic, long-horizon tasks involving external tools and knowledge resources.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks how to build a realistic and reproducible web environment for evaluating autonomous agents on functional task completion.</p>
+
+      <h2>Method</h2>
+      <p>Host realistic web applications across common domains, populate them with real-world-like data, define high-level tasks, and evaluate final-state functional correctness through validators.</p>
+      <ul><li>Build four fully functional self-hosted website domains: e-commerce, discussion forums, collaborative development, and content management.</li><li>Add utility tools and external knowledge sources such as maps, calculator, scratchpad, Wikipedia, and manuals.</li><li>Package hosting through Docker containers and gym-style APIs for reproducibility.</li><li>Create 812 long-horizon natural-language web tasks.</li><li>Let agents observe the web state and issue browser actions over multiple steps.</li><li>Validate task completion by checking the final environment state against task-specific criteria.</li><li>Compare baseline agents including GPT-4-based agents and human performance.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>WebArena provides a realistic, reproducible, self-hosted web environment for language-guided agents.</p>
+  <p><strong>Scope:</strong> Abstract and Section 2.</p>
+  <ul><li><strong>E-self-hosted</strong>: The paper introduces a standalone self-hosted web environment built for realistic and reproducible autonomous-agent evaluation.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>The environment includes fully functional websites from four domains: e-commerce, forums, collaborative software development, and content management.</p>
+  <p><strong>Scope:</strong> Abstract and Section 2.</p>
+  <ul><li><strong>E-four-domains</strong>: The environment includes fully operational websites for online shopping, discussion forums, collaborative software development, and business content management.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>WebArena enriches tasks with tools and knowledge resources such as maps, calculator, scratchpad, Wikipedia, and manuals.</p>
+  <p><strong>Scope:</strong> Abstract and Section 2.</p>
+  <ul><li><strong>E-tools-knowledge</strong>: WebArena includes utility tools such as map, calculator, and scratchpad plus knowledge resources including Wikipedia and domain manuals.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>The benchmark uses functional correctness validators rather than action-sequence surface matching.</p>
+  <p><strong>Scope:</strong> Section 1 and Section 3.</p>
+  <ul><li><strong>E-functional-validation</strong>: The paper provides validators to programmatically check the functional correctness of each task and argues this better supports alternative valid paths than action-sequence matching.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>The released benchmark contains 812 long-horizon web-based tasks described as high-level natural-language intents.</p>
+  <p><strong>Scope:</strong> Section 1.</p>
+  <ul><li><strong>E-task-count</strong>: The benchmark contains 812 long-horizon web tasks described as high-level natural-language intents.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>The best GPT-4-based baseline reaches 14.41% end-to-end task success, far below human performance of 78.24%.</p>
+  <p><strong>Scope:</strong> Abstract and Section 1.</p>
+  <ul><li><strong>E-results</strong>: The best GPT-4 baseline achieves 14.41% end-to-end success rate, compared with 78.24% human performance.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Web-agent evaluation needs stateful environments, not just transcript grading.</li><li>Functional validators are the important object: they let agents take different valid paths while still receiving objective success/failure.</li><li>Self-hosting trades live-web messiness for reproducibility; both dimensions matter depending on evaluation goal.</li><li>Long-horizon web tasks expose active exploration, state tracking, and failure recovery weaknesses.</li><li>Benchmark infrastructure must include reset, reproducibility, browser control, tools, knowledge resources, and validators.</li><li>Agents that can browse still need durable task state and sandboxed effects because the environment is mutable.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>Paper-era baseline results are not current SOTA.</li><li>Self-hosted sites are realistic but not the live web; CAPTCHAs, anti-bot systems, and arbitrary site drift are excluded.</li><li>Validators are only as good as their task specification.</li><li>A web benchmark can be gamed if environment internals or validator logic leak to the agent.</li><li>The task/domain mix may not represent enterprise web workflows or high-risk domains.</li><li>Functional success does not automatically measure safety, privacy, policy compliance, or user satisfaction.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/webarena-zhou-2023.json.</span>
+  </footer>
+</body>
+</html>

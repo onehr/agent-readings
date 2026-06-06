@@ -1,0 +1,254 @@
+{
+  "schema_version": 1,
+  "slug": "self-consistency-wang-2022",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "Self-Consistency Improves Chain of Thought Reasoning in Language Models",
+    "authors": [
+      "Xuezhi Wang",
+      "Jason Wei",
+      "Dale Schuurmans",
+      "Quoc Le",
+      "Ed H. Chi",
+      "Sharan Narang",
+      "Aakanksha Chowdhery",
+      "Denny Zhou"
+    ],
+    "year": 2022,
+    "venue": "ICLR 2023",
+    "url": "https://arxiv.org/abs/2203.11171",
+    "project_url": "",
+    "arxiv_id": "2203.11171",
+    "read_sources": [
+      {
+        "kind": "paper_html",
+        "url": "https://ar5iv.labs.arxiv.org/html/2203.11171",
+        "note": "Read for method, aggregation strategies, arithmetic/commonsense/symbolic tables, comparison experiments, and limitations."
+      },
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2203.11171",
+        "note": "Used for metadata, ICLR 2023 status, version history, DOI, and abstract result summary."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "Self-consistency improves chain-of-thought reasoning by sampling many reasoning paths and choosing the final answer that appears most consistently across them.",
+    "thesis": "For tasks with a fixed answer, diversity over reasoning traces is useful: wrong traces tend to disagree, while correct traces are more likely to converge on the same answer.",
+    "why_it_matters": "This paper turns inference-time sampling into a reliability primitive for agents: spend more model calls, aggregate final answers, and get a stronger signal than one greedy reasoning trace."
+  },
+  "problem": {
+    "prior_state": [
+      "Chain-of-thought prompting used greedy decoding in the original setup, producing one reasoning path and one final answer.",
+      "Greedy decoding is locally optimal and repetitive, while a single sampled trace is stochastic and unreliable.",
+      "Verifier or reranker approaches can improve generated reasoning, but add training, annotations, or auxiliary models."
+    ],
+    "key_gap": "The paper asks whether a frozen model can improve reasoning accuracy by generating multiple diverse traces and marginalizing over their answers without additional training.",
+    "assumptions": [
+      "The task has a parseable final answer or fixed answer set.",
+      "The model can generate multiple plausible reasoning paths under sampling.",
+      "Correct reasoning paths are more likely to agree on the same final answer than incorrect paths."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "self-consistency",
+      "name": "Self-consistency",
+      "definition": "A decoding strategy that samples multiple chain-of-thought outputs and selects the most frequent final answer after marginalizing over reasoning paths."
+    },
+    {
+      "id": "sample-and-marginalize",
+      "name": "Sample-and-marginalize",
+      "definition": "The procedure of generating diverse reasoning paths with decoder sampling, parsing their final answers, and aggregating answers by majority vote or weighted sums."
+    },
+    {
+      "id": "self-ensemble",
+      "name": "Self-ensemble",
+      "definition": "Using multiple sampled outputs from one model as an ensemble instead of training multiple models."
+    }
+  ],
+  "method": {
+    "core_idea": "Keep the same CoT prompt, but replace greedy decoding with sampling. Parse the final answer from each sampled reasoning path, discard the paths during aggregation, and output the answer with the highest vote or normalized weighted support.",
+    "action_grammar": [
+      "Prompt: few-shot chain-of-thought exemplars plus the test question.",
+      "Reasoning path: a sampled chain-of-thought completion.",
+      "Parsed answer: the final answer extracted from each sampled completion.",
+      "Aggregator: majority vote or probability-weighted answer selection over parsed answers."
+    ],
+    "steps": [
+      "Prompt the language model using the same CoT exemplars as prior work.",
+      "Sample a diverse set of reasoning paths from the decoder instead of taking the greedy path.",
+      "Parse the final answer from each reasoning path.",
+      "Aggregate answers by marginalizing out reasoning paths, usually via unweighted majority vote.",
+      "Return the most consistent final answer."
+    ],
+    "pseudocode": "answers = []\nfor _ in 1..N:\n    trace = sample_lm(cot_prompt + question)\n    answers.append(parse_final_answer(trace))\nreturn majority_vote(answers)"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "method",
+      "status": "paper-supported",
+      "statement": "Self-consistency is an unsupervised decoding method that needs no extra training, auxiliary verifier, or human annotation beyond the CoT prompt.",
+      "scope": "Method definition in Sections 1-2.",
+      "evidence_refs": ["E-method"],
+      "caveats": ["It still relies on manually written CoT exemplars from the underlying prompting setup."]
+    },
+    {
+      "id": "C2",
+      "type": "mechanism",
+      "status": "paper-supported",
+      "statement": "For PaLM 540B, direct majority vote performs about as well as normalized probability-weighted aggregation and far better than greedy decoding on the evaluated tasks.",
+      "scope": "Aggregation comparison in Table 1.",
+      "evidence_refs": ["E-aggregation"],
+      "caveats": ["The paper attributes this partly to model probabilities being poorly calibrated among sampled paths."]
+    },
+    {
+      "id": "C3",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "Self-consistency substantially improves arithmetic reasoning over greedy CoT across UL2, LaMDA, PaLM, and GPT-3/Codex model families.",
+      "scope": "Arithmetic benchmarks AddSub, MultiArith, ASDiv, AQuA, SVAMP, and GSM8K.",
+      "evidence_refs": ["E-arithmetic"],
+      "caveats": ["The improvement is bought with many sampled completions; main results average 10 runs with 40 samples each."]
+    },
+    {
+      "id": "C4",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "The largest arithmetic gains appear on hard tasks such as GSM8K and AQuA, with PaLM 540B gaining +17.9 on GSM8K and +12.5 on AQuA, and code-davinci-002 gaining +17.9 on GSM8K and +12.2 on AQuA.",
+      "scope": "Table 2 arithmetic results.",
+      "evidence_refs": ["E-arithmetic"],
+      "caveats": ["Some easier tasks already have high CoT accuracy, leaving less headroom, such as PaLM 540B AddSub 91.9 to 93.7."]
+    },
+    {
+      "id": "C5",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "Self-consistency improves commonsense and symbolic tasks, including StrategyQA, ARC-challenge, last-letter concatenation, and coin-flip variants.",
+      "scope": "Commonsense and symbolic experiments in Table 3 and related discussion.",
+      "evidence_refs": ["E-commonsense-symbolic"],
+      "caveats": ["The method works best where the final answer can be parsed and multiple traces can vote on a shared answer."]
+    },
+    {
+      "id": "C6",
+      "type": "limitation",
+      "status": "paper-supported",
+      "statement": "Self-consistency is limited by parseable-answer assumptions and inference cost: it is most direct for fixed-answer tasks and requires many sampled generations.",
+      "scope": "Section 2 applicability note, Section 3.2 sample count, and limitations discussion.",
+      "evidence_refs": ["E-applicability", "E-sampling-cost"],
+      "caveats": ["The authors suggest open-text generation could use self-consistency if a good consistency metric is defined, but this is outside the main fixed-answer setup."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-method",
+      "kind": "method_formulation",
+      "source": "paper",
+      "locator": "Sections 1-2, Figure 1",
+      "result": "Self-consistency prompts with CoT, samples diverse reasoning paths, parses their final answers, and chooses the most consistent answer; the paper describes it as off-the-shelf, unsupervised, and requiring no additional training, auxiliary models, finetuning, or human annotation.",
+      "metric": "decoding procedure",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-aggregation",
+      "kind": "result_table",
+      "source": "paper",
+      "locator": "Table 1",
+      "result": "For PaLM 540B, greedy decode gets 56.5 GSM8K, 94.7 MultiArith, 35.8 AQuA, 79.0 SVAMP, 79.0 CSQA, and 85.2 ARC-c; majority vote gets 74.4, 99.3, 48.3, 86.6, 80.7, and 88.7. Normalized weighted sum is nearly identical.",
+      "metric": "accuracy by aggregation strategy",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-arithmetic",
+      "kind": "result_table",
+      "source": "paper",
+      "locator": "Table 2",
+      "result": "Self-consistency improves every arithmetic row shown. Examples include PaLM 540B GSM8K 56.5 to 74.4 (+17.9), PaLM 540B AQuA 35.8 to 48.3 (+12.5), code-davinci-002 GSM8K 60.1 to 78.0 (+17.9), and code-davinci-002 AQuA 39.8 to 52.0 (+12.2).",
+      "metric": "arithmetic benchmark accuracy",
+      "claim_refs": ["C3", "C4"]
+    },
+    {
+      "id": "E-commonsense-symbolic",
+      "kind": "result_table",
+      "source": "paper",
+      "locator": "Table 3 and abstract result summary",
+      "result": "The abstract reports improvements including StrategyQA +6.4 and ARC-challenge +3.9. The experiments also include symbolic last-letter concatenation and coin-flip tasks from the CoT paper.",
+      "metric": "commonsense and symbolic accuracy",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-applicability",
+      "kind": "scope_note",
+      "source": "paper",
+      "locator": "Section 2",
+      "result": "The paper states self-consistency can be applied only to problems where the final answer is from a fixed answer set, while open-text generation would need a consistency metric between generations.",
+      "metric": "applicability condition",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-sampling-cost",
+      "kind": "experimental_setup",
+      "source": "paper",
+      "locator": "Section 3.2",
+      "result": "Main results are averaged over 10 runs, sampling 40 outputs independently from the decoder in each run.",
+      "metric": "sample count and inference cost",
+      "claim_refs": ["C3", "C6"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "Self-consistency makes inference-time compute a reliability knob: run multiple traces, parse answers, and aggregate instead of trusting one trajectory.",
+    "The method creates a clean separation between trace generation and answer aggregation; an agent runtime can store all sampled traces but act only on the aggregated answer.",
+    "Majority voting works only after a task-specific answer parser, so structured output and answer normalization become part of the runtime contract.",
+    "Sampling improves reliability but multiplies model calls; schedulers and serving stacks must budget for parallel or batched trace generation.",
+    "For open-ended agent work, the missing piece is a consistency metric: exact-answer voting does not directly apply to free-form plans or side-effecting actions."
+  ],
+  "caveats": [
+    "The method is a decoding strategy layered on CoT, not a new reasoning model.",
+    "It assumes a fixed or parseable final answer; open-text generation needs a separate agreement metric.",
+    "It increases inference cost substantially because the main setup samples 40 outputs per run.",
+    "It can amplify biases shared across sampled traces if many wrong traces converge on the same wrong answer.",
+    "The strongest results use large models and benchmark-style tasks with automatic answer checking."
+  ],
+  "related_work": [
+    {
+      "title": "Chain-of-Thought Prompting",
+      "relation": "extends",
+      "note": "Self-consistency replaces greedy decoding in CoT with sample-and-marginalize decoding.",
+      "url": "https://arxiv.org/abs/2201.11903"
+    },
+    {
+      "title": "Training Verifiers to Solve Math Word Problems",
+      "relation": "contrasts",
+      "note": "Verifier/reranker approaches use additional training or models, while self-consistency is unsupervised decoding.",
+      "url": "https://arxiv.org/abs/2110.14168"
+    },
+    {
+      "title": "Tree of Thoughts",
+      "relation": "connects",
+      "note": "Both spend extra inference-time compute over reasoning paths; Tree of Thoughts adds explicit search over intermediate states.",
+      "url": "https://arxiv.org/abs/2305.10601"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A useful local PoC would sample multiple reasoning traces from a local model on deterministic arithmetic fixtures, parse final answers, and compare greedy vs majority-vote accuracy."
+  },
+  "slide_plan": {
+    "title": "Self-Consistency",
+    "subtitle": "Sample many reasoning paths, vote on the answer",
+    "sections": [
+      "summary",
+      "problem",
+      "method",
+      "aggregation",
+      "arithmetic_results",
+      "commonsense_symbolic_results",
+      "runtime_cost",
+      "infra_takeaways",
+      "caveats",
+      "run_it",
+      "references"
+    ]
+  }
+}

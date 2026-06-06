@@ -1,0 +1,226 @@
+<!-- .slide: class="title-slide apple-title" -->
+
+<div class="slide-frame slide-frame--center">
+  <p class="deck-kicker">agent-readings / Inference and Serving Infrastructure</p>
+  <h1>PagedAttention</h1>
+  <p class="deck-subtitle">Virtual memory for the KV cache</p>
+
+  <div class="deck-meta-strip">
+    <div class="deck-meta-pill"><strong>2023</strong><span>SOSP 2023</span></div>
+    <div class="deck-meta-pill"><strong>6</strong><span>claims</span></div>
+    <div class="deck-meta-pill"><strong>6</strong><span>evidence refs</span></div>
+    <div class="deck-meta-pill"><strong>paper-read</strong><span>status</span></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="statement-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">The one sentence</p>
+  <h2>PagedAttention applies virtual-memory paging to the LLM KV cache so serving systems can batch more requests with far less fragmentation and share prefixes through copy-on-write blocks.</h2>
+  <p class="deck-note">For agents, serving cost is dominated by long, branching, repeated contexts. PagedAttention made high-throughput LLM serving practical by treating context memory as an OS memory-management problem.</p>
+</div>
+
+---
+
+<!-- .slide: class="problem-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Before this paper</p>
+  <h2>The friction was structural.</h2>
+  <div class="apple-card-grid apple-card-grid--three">
+    <div class="apple-card"><p>High-throughput LLM serving requires batching many concurrent requests.</p></div>
+<div class="apple-card"><p>Each request's KV cache is large, grows dynamically with generated tokens, and shrinks when a request finishes.</p></div>
+<div class="apple-card"><p>Contiguous allocation wastes GPU memory through fragmentation and over-reservation, limiting batch size.</p></div>
+  </div>
+  <div class="deck-callout">
+    <span>Key gap</span>
+    <p>The paper asks how to manage KV-cache memory dynamically so the serving system can keep GPUs full without wasting memory or duplicating shared prefixes.</p>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="idea-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Core idea</p>
+  <h2>Split KV caches into fixed-size blocks, allocate physical blocks on demand, map logical sequence blocks to physical GPU blocks, and make the attention kernel...</h2>
+  <p class="deck-note">Split KV caches into fixed-size blocks, allocate physical blocks on demand, map logical sequence blocks to physical GPU blocks, and make the attention kernel follow those mappings while the serving engine handles sharing, allocation, and eviction.</p>
+  <div class="idea-loop" aria-label="Agent loop">
+    <div><strong>Model</strong><span>reason</span></div>
+    <div><strong>Runtime</strong><span>act</span></div>
+    <div><strong>World</strong><span>observe</span></div>
+  </div>
+  <div class="step-strip">
+    <div class="step-item">
+  <span>01</span>
+  <p>Partition each sequence's KV cache into logical token blocks.</p>
+</div>
+<div class="step-item">
+  <span>02</span>
+  <p>Allocate physical KV blocks only as needed instead of reserving a contiguous maximum-length cache.</p>
+</div>
+<div class="step-item">
+  <span>03</span>
+  <p>Maintain a block table for each sequence.</p>
+</div>
+<div class="step-item">
+  <span>04</span>
+  <p>Modify attention kernels to read KV tensors by following block-table entries.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="grammar-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Action grammar</p>
+  <h2>The agent is an interface contract.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>sequence: one active request or decoding branch.</p></div>
+<div class="apple-card"><p>block size: fixed number of tokens represented by each KV block.</p></div>
+<div class="apple-card"><p>logical block id: sequence-local block index.</p></div>
+<div class="apple-card"><p>physical block id: GPU-memory block index.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="code-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Executable shape</p>
+  <h2>The mechanism should fit on one screen.</h2>
+
+```python
+for request in active_requests:
+    needed = ceil(request.tokens / block_size)
+    while request.block_table.len < needed:
+        request.block_table.push(alloc_physical_block())
+
+attention(query, request):
+    for logical_block in range(request.num_blocks):
+        phys = request.block_table[logical_block]
+        keys, values = kv_pool[phys]
+        attend(query, keys, values)
+
+fork_for_parallel_sampling(request, n):
+    children = []
+    for _ in range(n):
+        child = request.share_blocks_refcounted()
+        children.push(child)
+    return children
+
+before_write(child, block):
+    if refcount(block) > 1:
+        child.block_table[block] = copy_block(block)
+```
+</div>
+
+---
+
+<!-- .slide: class="proof-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Evidence</p>
+  <h2>The proof objects.</h2>
+  <div class="proof-grid">
+    <div class="proof-card">
+  <span>E-kv-cache-problem</span>
+  <p>The paper states that KV-cache memory for each request is huge, grows and shrinks dynamically, and can be wasted by fragmentation and duplicate copies when managed inefficiently.</p>
+</div>
+<div class="proof-card">
+  <span>E-pagedattention</span>
+  <p>The paper proposes PagedAttention, an attention algorithm inspired by virtual memory and paging techniques from operating systems.</p>
+</div>
+<div class="proof-card">
+  <span>E-vllm-memory</span>
+  <p>vLLM is described as achieving near-zero waste in KV-cache memory by building on PagedAttention.</p>
+</div>
+<div class="proof-card">
+  <span>E-sharing</span>
+  <p>The paper says vLLM flexibly shares KV cache within and across requests to further reduce memory usage.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="claim-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Claim map</p>
+  <h2>What the review actually supports.</h2>
+  <div class="claim-grid">
+    <div class="claim-card">
+  <span>C1 · paper-supported</span>
+  <p>KV-cache memory is huge, dynamically sized, and can be significantly wasted by fragmentation and redundant duplication in existing serving systems.</p>
+  <small>E-kv-cache-problem</small>
+</div>
+<div class="claim-card">
+  <span>C2 · paper-supported</span>
+  <p>PagedAttention borrows classical virtual-memory paging ideas by allowing non-contiguous KV-cache storage through block mappings.</p>
+  <small>E-pagedattention</small>
+</div>
+<div class="claim-card">
+  <span>C3 · paper-supported</span>
+  <p>vLLM builds on PagedAttention to achieve near-zero KV-cache memory waste.</p>
+  <small>E-vllm-memory</small>
+</div>
+<div class="claim-card">
+  <span>C4 · paper-supported</span>
+  <p>vLLM supports flexible KV-cache sharing within and across requests, including cases such as parallel sampling and shared prompts.</p>
+  <small>E-sharing</small>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="takeaway-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Agent infrastructure</p>
+  <h2>What changes if you build systems.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>Agent serving needs memory virtualization because long prompts, tool traces, and branchy reasoning make KV cache the scarce resource.</p></div>
+<div class="apple-card"><p>PagedAttention is the same OS move as virtual memory: stable logical context, flexible physical placement.</p></div>
+<div class="apple-card"><p>Copy-on-write KV sharing is directly useful for self-consistency, Tree of Thoughts, retries, and parallel tool-plan candidates that share a prefix.</p></div>
+<div class="apple-card"><p>Serving engines should expose memory pressure as a scheduler signal, not hide it below the request API.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="caveat-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Caveats</p>
+  <h2>What this does not prove.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>The review uses the arXiv paper text and public metadata; detailed per-table benchmark interpretation should still be rechecked before quoting...</p></div>
+<div class="apple-card"><p>PagedAttention improves memory management; it does not reduce model arithmetic per token by itself.</p></div>
+<div class="apple-card"><p>Block-table indirection and allocator details matter for actual kernel performance.</p></div>
+<div class="apple-card"><p>The 2-4x throughput result is workload/baseline-specific.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="closing-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Run it</p>
+  <h2>No PoC yet.</h2>
+  <p class="deck-note">No PoC yet - contributions welcome. A small PoC could simulate contiguous KV allocation versus fixed-block paging under variable-length requests and compare memory waste.</p>
+  <div class="reference-list">
+    <ul><li>Paper: <a href="https://arxiv.org/abs/2309.06180">Efficient Memory Management for Large Language Model Serving with PagedAttention</a></li><li>Project/code: <a href="https://github.com/vllm-project/vllm">https://github.com/vllm-project/vllm</a></li><li>builds_on_workload: <a href="https://www.usenix.org/conference/osdi22/presentation/yu">Orca</a></li><li>same_os_metaphor: <a href="https://arxiv.org/abs/2310.08560">MemGPT</a></li><li>complements: <a href="https://arxiv.org/abs/2312.07104">SGLang</a></li></ul>
+  </div>
+</div>
+
+Note: This deck is synthesized from `data/reviews/paged-attention-kwon-2023.json`. Update the review record, then run `bun run build`.

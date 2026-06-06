@@ -1,0 +1,254 @@
+{
+  "schema_version": 1,
+  "slug": "tree-of-thoughts-yao-2023",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "Tree of Thoughts: Deliberate Problem Solving with Large Language Models",
+    "authors": [
+      "Shunyu Yao",
+      "Dian Yu",
+      "Jeffrey Zhao",
+      "Izhak Shafran",
+      "Thomas L. Griffiths",
+      "Yuan Cao",
+      "Karthik Narasimhan"
+    ],
+    "year": 2023,
+    "venue": "NeurIPS 2023",
+    "url": "https://arxiv.org/abs/2305.10601",
+    "project_url": "https://github.com/princeton-nlp/tree-of-thought-llm",
+    "arxiv_id": "2305.10601",
+    "read_sources": [
+      {
+        "kind": "paper_html",
+        "url": "https://ar5iv.labs.arxiv.org/html/2305.10601",
+        "note": "Read for framework definition, BFS/DFS algorithms, Game of 24, Creative Writing, Mini Crosswords, ablations, and limitations."
+      },
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2305.10601",
+        "note": "Used for metadata, NeurIPS 2023 camera-ready status, code link, and headline Game of 24 result."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "Tree of Thoughts generalizes chain-of-thought prompting into explicit search over intermediate language states, letting an LLM generate, evaluate, and backtrack among multiple reasoning paths.",
+    "thesis": "Some problems need deliberate exploration rather than a single left-to-right trace; treating thoughts as search nodes lets language models use planning algorithms such as BFS or DFS at inference time.",
+    "why_it_matters": "ToT makes the reasoning loop look like a planner: the runtime must manage state frontiers, candidate generation, heuristic evaluation, pruning, and search budget."
+  },
+  "problem": {
+    "prior_state": [
+      "Input-output prompting makes one left-to-right completion.",
+      "Chain-of-thought prompting gives a single sequential reasoning trace without local exploration or backtracking.",
+      "Self-consistency samples multiple full traces, but does not explore alternatives within each intermediate step and works best when answers can be voted over."
+    ],
+    "key_gap": "The paper targets tasks where early decisions matter and problem solving requires exploration, lookahead, or backtracking over intermediate states.",
+    "assumptions": [
+      "A task can be decomposed into meaningful thought units that are large enough to evaluate and small enough to branch on.",
+      "The LLM can propose diverse candidate thoughts and approximately evaluate partial states.",
+      "The user can afford multiple LLM calls per problem for generation, evaluation, and search."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "thought-node",
+      "name": "Thought as search node",
+      "definition": "A coherent language sequence that represents an intermediate step or partial solution in a search tree."
+    },
+    {
+      "id": "state-evaluator",
+      "name": "LLM state evaluator",
+      "definition": "A prompt-driven heuristic that scores or votes among partial states to decide which branches to keep exploring."
+    },
+    {
+      "id": "deliberate-search",
+      "name": "Deliberate search",
+      "definition": "An inference procedure that combines thought generation, thought evaluation, and a search algorithm such as BFS or DFS."
+    }
+  ],
+  "method": {
+    "core_idea": "Represent problem solving as search over a tree of language thoughts. For each task, choose the thought granularity, generate candidate thoughts, evaluate partial states with the LLM, and apply a search algorithm such as breadth-first or depth-first search to explore, prune, and backtrack.",
+    "action_grammar": [
+      "State: the original input plus the sequence of thoughts selected so far.",
+      "Thought generation: sample or propose candidate next thoughts from the current state.",
+      "State evaluation: score states independently or vote among states using the LLM.",
+      "Search step: keep, prune, expand, or backtrack based on a BFS/DFS policy and value thresholds."
+    ],
+    "steps": [
+      "Decompose the task into thought units such as equations, writing plans, or crossword words.",
+      "Generate candidate next thoughts from each frontier state.",
+      "Evaluate candidate states with value prompts or vote prompts.",
+      "Use BFS for shallow fixed-depth problems or DFS for deeper variable-depth problems.",
+      "Return a final solution once a complete state satisfies the task."
+    ],
+    "pseudocode": "frontier = [initial_state]\nfor step in search_budget:\n    candidates = generate_thoughts(frontier)\n    scored = evaluate_states(candidates)\n    frontier = keep_best_or_backtrack(scored)\nreturn best_complete_solution(frontier)"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "framework",
+      "status": "paper-supported",
+      "statement": "ToT defines LLM problem solving as search over a tree whose nodes are partial solutions expressed as language thoughts.",
+      "scope": "Framework definition in Sections 1-3.",
+      "evidence_refs": ["E-framework"],
+      "caveats": ["The framework still needs task-specific choices of thought granularity, generator prompts, evaluator prompts, and search algorithm."]
+    },
+    {
+      "id": "C2",
+      "type": "mechanism",
+      "status": "paper-supported",
+      "statement": "A ToT implementation must answer four design questions: thought decomposition, thought generation, state evaluation, and search algorithm.",
+      "scope": "Section 3 method definition.",
+      "evidence_refs": ["E-four-questions"],
+      "caveats": ["The paper explores relatively simple BFS and DFS; more advanced algorithms such as A* and MCTS are left for future work."]
+    },
+    {
+      "id": "C3",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "On Game of 24, ToT strongly outperforms IO, CoT, and CoT self-consistency baselines.",
+      "scope": "100 relatively hard Game of 24 instances indexed 901-1000 from 4nums.com.",
+      "evidence_refs": ["E-game24"],
+      "caveats": ["The task has a crisp verifier for valid equations, which is friendlier to search than open-ended agent tasks."]
+    },
+    {
+      "id": "C4",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "On the Creative Writing task, ToT uses planning plus voting to improve passage coherence relative to IO and CoT baselines.",
+      "scope": "Four-sentence constrained creative writing task evaluated by GPT-4 preference scoring.",
+      "evidence_refs": ["E-creative-writing"],
+      "caveats": ["The metric relies on model-based evaluation rather than a human or executable verifier."]
+    },
+    {
+      "id": "C5",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "On Mini Crosswords, ToT with DFS and state pruning improves over IO and CoT but still solves only a minority of full puzzles.",
+      "scope": "5x5 crossword task with 10 clues and exact-letter constraints.",
+      "evidence_refs": ["E-crosswords"],
+      "caveats": ["The reported crossword task remains hard; ToT improves the baseline without making the task solved."]
+    },
+    {
+      "id": "C6",
+      "type": "limitation",
+      "status": "paper-supported",
+      "statement": "ToT trades accuracy for inference cost and task engineering: it requires multiple LLM calls for generation/evaluation and task-specific search design.",
+      "scope": "Method setup, experiments, and discussion.",
+      "evidence_refs": ["E-search-cost"],
+      "caveats": ["The paper argues modularity and adaptability are benefits, but that same modularity leaves many runtime choices to the implementer."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-framework",
+      "kind": "framework_formulation",
+      "source": "paper",
+      "locator": "Sections 1-3, Figure 1",
+      "result": "The paper defines each thought as a coherent language sequence and frames a state as a partial solution containing the input and thoughts so far, enabling exploration over a tree of thoughts.",
+      "metric": "search-state formulation",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-four-questions",
+      "kind": "method_formulation",
+      "source": "paper",
+      "locator": "Section 3, Algorithms 1-2",
+      "result": "A ToT instantiation chooses how to decompose thoughts, how to generate candidate thoughts, how to evaluate states, and what search algorithm to use; the paper explores BFS and DFS.",
+      "metric": "method design dimensions",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-game24",
+      "kind": "result_table",
+      "source": "paper",
+      "locator": "Section 4.1, Table 2",
+      "result": "On Game of 24, IO prompting solves 7.3%, CoT 4.0%, CoT-SC with k=100 solves 9.0%, ToT with breadth 1 solves 45%, and ToT with breadth 5 solves 74%. Best-of-100 CoT reaches 49%.",
+      "metric": "success rate across 100 games",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-creative-writing",
+      "kind": "result_section",
+      "source": "paper",
+      "locator": "Section 4.2, Figure 4 and related results",
+      "result": "The Creative Writing setup asks for a coherent four-paragraph passage ending in four provided sentences; ToT generates writing plans and uses voting to choose plans before final writing, improving coherence scores relative to IO and CoT in the paper's evaluation.",
+      "metric": "GPT-4 preference/coherence score",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-crosswords",
+      "kind": "result_section",
+      "source": "paper",
+      "locator": "Section 4.3, Figure 6 and crossword results",
+      "result": "The Mini Crosswords task uses 5x5 puzzles with horizontal and vertical clues. ToT applies DFS with pruning by state value and improves over IO/CoT baselines while still solving only a limited share of complete puzzles.",
+      "metric": "crossword success rate and letter/word-level accuracy",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-search-cost",
+      "kind": "experimental_setup",
+      "source": "paper",
+      "locator": "Sections 3-4",
+      "result": "ToT repeatedly calls the LLM for thought generation and state evaluation, uses breadth limits, value samples, and thresholds, and adapts decomposition/search choices separately for Game of 24, Creative Writing, and Crosswords.",
+      "metric": "LLM-call and task-engineering cost",
+      "claim_refs": ["C6"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "ToT turns reasoning into an explicit search workload: the runtime owns frontier state, branch expansion, scoring, pruning, and backtracking.",
+    "Thought granularity is an interface decision. A good runtime needs task-specific state representations that are neither token-level nor whole-solution level.",
+    "LLM-as-heuristic is useful but not authoritative; value prompts should be logged and paired with verifiers when available.",
+    "Search raises serving costs sharply because every branch can trigger generation and evaluation calls; batching and budget controls become part of the agent design.",
+    "ToT is the bridge from prompt engineering to planning: later agent systems can reuse the same generate/evaluate/search pattern around tool actions, code edits, or environment states."
+  ],
+  "caveats": [
+    "The paper evaluates three custom tasks, not broad production-agent workloads.",
+    "The strongest Game of 24 result benefits from an exact success verifier and task-specific decomposition.",
+    "Creative Writing evaluation uses GPT-4 judgments, which are weaker evidence than executable checks or human studies.",
+    "The framework increases latency and model-call cost compared with a single CoT trace.",
+    "The implementation requires task-specific prompts and search parameters, so adding a new task is not just turning on a generic algorithm."
+  ],
+  "related_work": [
+    {
+      "title": "Chain-of-Thought Prompting",
+      "relation": "generalizes",
+      "note": "ToT treats CoT as a special case with limited depth and breadth.",
+      "url": "https://arxiv.org/abs/2201.11903"
+    },
+    {
+      "title": "Self-Consistency",
+      "relation": "generalizes",
+      "note": "ToT adds local exploration and state evaluation rather than only voting over complete traces.",
+      "url": "https://arxiv.org/abs/2203.11171"
+    },
+    {
+      "title": "Reasoning with Language Model is Planning with World Model",
+      "relation": "related-planning",
+      "note": "Related work connecting language-model reasoning with planning/search.",
+      "url": "https://arxiv.org/abs/2305.14992"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A useful local PoC would implement Game of 24 with a small deterministic verifier and compare IO, CoT, best-of-N, and ToT search under a fixed call budget."
+  },
+  "slide_plan": {
+    "title": "Tree of Thoughts",
+    "subtitle": "Language-model reasoning as explicit search",
+    "sections": [
+      "summary",
+      "problem",
+      "method",
+      "search_loop",
+      "game24_results",
+      "creative_writing",
+      "crosswords",
+      "runtime_cost",
+      "infra_takeaways",
+      "caveats",
+      "run_it",
+      "references"
+    ]
+  }
+}

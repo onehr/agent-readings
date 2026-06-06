@@ -1,0 +1,217 @@
+<!-- .slide: class="title-slide apple-title" -->
+
+<div class="slide-frame slide-frame--center">
+  <p class="deck-kicker">agent-readings / Multi-Agent Systems</p>
+  <h1>Multiagent Debate</h1>
+  <p class="deck-subtitle">More agents help only when disagreement becomes useful evidence</p>
+
+  <div class="deck-meta-strip">
+    <div class="deck-meta-pill"><strong>2023</strong><span>arXiv 2023; ICML 2024, PMLR 235:11733-11763</span></div>
+    <div class="deck-meta-pill"><strong>7</strong><span>claims</span></div>
+    <div class="deck-meta-pill"><strong>9</strong><span>evidence refs</span></div>
+    <div class="deck-meta-pill"><strong>paper-read</strong><span>status</span></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="statement-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">The one sentence</p>
+  <h2>Multiagent Debate improves some reasoning and factuality tasks by making several model instances critique and update each other's answers before taking a final consensus.</h2>
+  <p class="deck-note">It is an important calibration paper for multi-agent systems because it gives a concrete inference-time coordination protocol, direct baselines against single-agent reflection and majority vote, and clear cost/context-length caveats.</p>
+</div>
+
+---
+
+<!-- .slide: class="problem-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Before this paper</p>
+  <h2>The friction was structural.</h2>
+  <div class="apple-card-grid apple-card-grid--three">
+    <div class="apple-card"><p>Most prompting improvements focused on a single model instance: chain-of-thought, reflection, verification, or self-consistency.</p></div>
+<div class="apple-card"><p>Single-agent generations can hallucinate facts or make reasoning jumps while still reporting high confidence.</p></div>
+<div class="apple-card"><p>Majority voting can exploit sample diversity, but does not let samples critique each other's reasoning.</p></div>
+  </div>
+  <div class="deck-callout">
+    <span>Key gap</span>
+    <p>The paper asks whether black-box LLM instances can improve factuality and reasoning by communicating before the final answer, rather than only being sampled independently.</p>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="idea-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Core idea</p>
+  <h2>Run several black-box LLM instances in parallel, give each one the task, feed each agent the other agents' answers with a debate prompt, repeat for a fixed...</h2>
+  <p class="deck-note">Run several black-box LLM instances in parallel, give each one the task, feed each agent the other agents' answers with a debate prompt, repeat for a fixed number of rounds, then use consensus or majority over the final answers.</p>
+  <div class="idea-loop" aria-label="Agent loop">
+    <div><strong>Model</strong><span>reason</span></div>
+    <div><strong>Runtime</strong><span>act</span></div>
+    <div><strong>World</strong><span>observe</span></div>
+  </div>
+  <div class="step-strip">
+    <div class="step-item">
+  <span>01</span>
+  <p>Select a task and a base language model.</p>
+</div>
+<div class="step-item">
+  <span>02</span>
+  <p>Instantiate multiple agents, typically copies of the same model.</p>
+</div>
+<div class="step-item">
+  <span>03</span>
+  <p>Ask each agent to produce an independent initial answer.</p>
+</div>
+<div class="step-item">
+  <span>04</span>
+  <p>For every round, concatenate or summarize the other agents' responses and give them to each agent with a consensus prompt.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="grammar-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Action grammar</p>
+  <h2>The agent is an interface contract.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>initial_answer: each agent independently answers the same task.</p></div>
+<div class="apple-card"><p>share: collect responses from all other agents.</p></div>
+<div class="apple-card"><p>debate_prompt: insert other responses into the agent's context as advice or candidate solutions.</p></div>
+<div class="apple-card"><p>update_answer: the agent critiques the visible responses and revises its own answer.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="code-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Executable shape</p>
+  <h2>The mechanism should fit on one screen.</h2>
+
+```python
+agents = [model.copy() for _ in range(n)]
+answers = [agent.solve(task) for agent in agents]
+
+for _round in range(rounds):
+    next_answers = []
+    for i, agent in enumerate(agents):
+        others = [answer for j, answer in enumerate(answers) if j != i]
+        prompt = consensus_prompt(task, others)
+        next_answers.append(agent.update(prompt))
+    answers = next_answers
+
+return consensus(answers) or majority_vote(answers)
+```
+</div>
+
+---
+
+<!-- .slide: class="proof-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Evidence</p>
+  <h2>The proof objects.</h2>
+  <div class="proof-grid">
+    <div class="proof-card">
+  <span>E-black-box-method</span>
+  <p>The paper describes multiple model instances generating candidate answers, reading and critiquing other agents' responses, and updating their own answers over multiple rounds,...</p>
+</div>
+<div class="proof-card">
+  <span>E-consensus</span>
+  <p>The authors state that convergence is not guaranteed in general, but empirically agents often converge; in remaining disagreement cases they take the majority answer.</p>
+</div>
+<div class="proof-card">
+  <span>E-reasoning-table</span>
+  <p>With three agents and two rounds, debate reports 81.8% arithmetic, 85.0% GSM8K, and 122.9 pawn-score chess optimality, versus single-agent 67.0%, 77.0%, and 91.4, reflection...</p>
+</div>
+<div class="proof-card">
+  <span>E-factuality-table</span>
+  <p>Debate reports 73.8 biography factuality, 71.1 MMLU, and 45.2 chess move validity, versus single-agent 66.0, 63.9, and 29.3; reflection 68.3, 57.7, and 38.8; and majority 67.0...</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="claim-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Claim map</p>
+  <h2>What the review actually supports.</h2>
+  <div class="claim-grid">
+    <div class="claim-card">
+  <span>C1 · paper-supported</span>
+  <p>The debate protocol is model-agnostic and only needs black-box access to generated text.</p>
+  <small>E-black-box-method</small>
+</div>
+<div class="claim-card">
+  <span>C2 · paper-supported</span>
+  <p>Consensus is empirical rather than guaranteed; when agents do not converge, the paper takes a majority answer.</p>
+  <small>E-consensus</small>
+</div>
+<div class="claim-card">
+  <span>C3 · paper-supported</span>
+  <p>With three agents and two rounds, debate outperforms single-agent, reflection, and majority baselines on the paper's arithmetic, GSM8K, and chess-move...</p>
+  <small>E-reasoning-table</small>
+</div>
+<div class="claim-card">
+  <span>C4 · paper-supported</span>
+  <p>Debate also improves the paper's factuality evaluations for biographies, MMLU, and chess move validity.</p>
+  <small>E-factuality-table</small>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="takeaway-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Agent infrastructure</p>
+  <h2>What changes if you build systems.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>Do not count agents; count independent evidence. Debate helps when agents expose different reasoning paths or uncertain facts.</p></div>
+<div class="apple-card"><p>Multi-agent communication is not a verifier. Without an external checker, agents can converge on the wrong answer together.</p></div>
+<div class="apple-card"><p>The protocol is inference-time reliability through redundancy, critique, and aggregation; the runtime cost scales with agents, rounds, and context...</p></div>
+<div class="apple-card"><p>Debate transcripts are valuable state. They reveal disagreement, persuasion, convergence, and failure modes that a single final answer hides.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="caveat-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Caveats</p>
+  <h2>What this does not prove.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>The README framing is right to be skeptical: some gains are debate-specific, but the method is also an expensive way to use more samples and more...</p></div>
+<div class="apple-card"><p>The main reported results use chatGPT-3.5-era models and relatively small evaluated subsets for several tasks.</p></div>
+<div class="apple-card"><p>The biography factuality evaluation uses an LLM critic and may miss generated inaccuracies outside the ground-truth bullet list.</p></div>
+<div class="apple-card"><p>Consensus is not correctness; the paper explicitly notes that convergence can land on an incorrect value.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="closing-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Run it</p>
+  <h2>No PoC yet.</h2>
+  <p class="deck-note">No PoC yet - contributions welcome. A compact PoC could run local model samples over arithmetic tasks, compare single sample, majority vote, and one debate round, and persist all prompts/responses.</p>
+  <div class="reference-list">
+    <ul><li>Paper: <a href="https://arxiv.org/abs/2305.14325">Improving Factuality and Reasoning in Language Models through Multiagent Debate</a></li><li>Project/code: <a href="https://github.com/composable-models/llm_multiagent_debate">https://github.com/composable-models/llm_multiagent_debate</a></li><li>compares: <a href="https://arxiv.org/abs/2203.11171">Self-Consistency Improves Chain of Thought Reasoning</a></li><li>compares: <a href="https://arxiv.org/abs/2303.11366">Reflexion</a></li><li>connects: <a href="https://arxiv.org/abs/2308.08155">AutoGen</a></li></ul>
+  </div>
+</div>
+
+Note: This deck is synthesized from `data/reviews/multiagent-debate-du-2023.json`. Update the review record, then run `bun run build`.

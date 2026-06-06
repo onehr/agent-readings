@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Efficient Memory Management for LLM Serving with PagedAttention</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/paged-attention-kwon-2023/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Inference and Serving Infrastructure</p>
+        <h1>PagedAttention</h1>
+        <p class="hero-lede">PagedAttention applies virtual-memory paging to the LLM KV cache so serving systems can batch more requests with far less fragmentation and share prefixes through copy-on-write blocks.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>6</strong><span>Claims</span></div>
+          <div class="metric"><strong>6</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2023 · SOSP 2023</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>3</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/paged-attention-kwon-2023/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2309.06180">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>For agents, serving cost is dominated by long, branching, repeated contexts. PagedAttention made high-throughput LLM serving practical by treating context memory as an OS memory-management problem.</p>
+
+      <h2>Problem</h2>
+      <ul><li>High-throughput LLM serving requires batching many concurrent requests.</li><li>Each request's KV cache is large, grows dynamically with generated tokens, and shrinks when a request finishes.</li><li>Contiguous allocation wastes GPU memory through fragmentation and over-reservation, limiting batch size.</li><li>Parallel sampling, beam search, and shared prompts duplicate large KV regions even when prefixes are identical.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks how to manage KV-cache memory dynamically so the serving system can keep GPUs full without wasting memory or duplicating shared prefixes.</p>
+
+      <h2>Method</h2>
+      <p>Split KV caches into fixed-size blocks, allocate physical blocks on demand, map logical sequence blocks to physical GPU blocks, and make the attention kernel follow those mappings while the serving engine handles sharing, allocation, and eviction.</p>
+      <ul><li>Partition each sequence's KV cache into logical token blocks.</li><li>Allocate physical KV blocks only as needed instead of reserving a contiguous maximum-length cache.</li><li>Maintain a block table for each sequence.</li><li>Modify attention kernels to read KV tensors by following block-table entries.</li><li>Share physical KV blocks for common prefixes or decoding branches.</li><li>Use copy-on-write when a shared block needs modification by one branch.</li><li>Integrate the allocator with continuous batching so memory pressure informs admission and scheduling.</li><li>Evaluate vLLM against FasterTransformer and Orca-style serving baselines.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>KV-cache memory is huge, dynamically sized, and can be significantly wasted by fragmentation and redundant duplication in existing serving systems.</p>
+  <p><strong>Scope:</strong> Abstract.</p>
+  <ul><li><strong>E-kv-cache-problem</strong>: The paper states that KV-cache memory for each request is huge, grows and shrinks dynamically, and can be wasted by fragmentation and duplicate copies when managed inefficiently.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>PagedAttention borrows classical virtual-memory paging ideas by allowing non-contiguous KV-cache storage through block mappings.</p>
+  <p><strong>Scope:</strong> Abstract.</p>
+  <ul><li><strong>E-pagedattention</strong>: The paper proposes PagedAttention, an attention algorithm inspired by virtual memory and paging techniques from operating systems.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>vLLM builds on PagedAttention to achieve near-zero KV-cache memory waste.</p>
+  <p><strong>Scope:</strong> Abstract.</p>
+  <ul><li><strong>E-vllm-memory</strong>: vLLM is described as achieving near-zero waste in KV-cache memory by building on PagedAttention.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>vLLM supports flexible KV-cache sharing within and across requests, including cases such as parallel sampling and shared prompts.</p>
+  <p><strong>Scope:</strong> Abstract.</p>
+  <ul><li><strong>E-sharing</strong>: The paper says vLLM flexibly shares KV cache within and across requests to further reduce memory usage.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>The evaluation reports 2-4x throughput improvement at the same latency level over systems such as FasterTransformer and Orca.</p>
+  <p><strong>Scope:</strong> Abstract.</p>
+  <ul><li><strong>E-throughput</strong>: The evaluation reports that vLLM improves throughput by 2-4x at the same latency level compared with state-of-the-art systems such as FasterTransformer and Orca.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>The paper reports larger gains for longer sequences, larger models, and more complex decoding algorithms.</p>
+  <p><strong>Scope:</strong> Abstract.</p>
+  <ul><li><strong>E-long-sequence-gains</strong>: The abstract says the throughput improvement is more pronounced for longer sequences, larger models, and more complex decoding algorithms.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Agent serving needs memory virtualization because long prompts, tool traces, and branchy reasoning make KV cache the scarce resource.</li><li>PagedAttention is the same OS move as virtual memory: stable logical context, flexible physical placement.</li><li>Copy-on-write KV sharing is directly useful for self-consistency, Tree of Thoughts, retries, and parallel tool-plan candidates that share a prefix.</li><li>Serving engines should expose memory pressure as a scheduler signal, not hide it below the request API.</li><li>The cost of agent reasoning is often KV-cache residency time, not just generated-token count.</li><li>vLLM made modern continuous batching usable at higher concurrency because memory management stopped wasting so much GPU RAM.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The review uses the arXiv paper text and public metadata; detailed per-table benchmark interpretation should still be rechecked before quoting secondary numbers.</li><li>PagedAttention improves memory management; it does not reduce model arithmetic per token by itself.</li><li>Block-table indirection and allocator details matter for actual kernel performance.</li><li>The 2-4x throughput result is workload/baseline-specific.</li><li>Prefix sharing only helps when prompts or branches actually share tokens.</li><li>Later serving systems may combine PagedAttention with speculative decoding, quantization, prefix caching, and kernel-level improvements.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/paged-attention-kwon-2023.json.</span>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,277 @@
+{
+  "schema_version": 1,
+  "slug": "speculative-decoding-leviathan-2022",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "Fast Inference from Transformers via Speculative Decoding",
+    "authors": [
+      "Yaniv Leviathan",
+      "Matan Kalman",
+      "Yossi Matias"
+    ],
+    "year": 2022,
+    "venue": "ICML 2023 oral; arXiv 2022",
+    "url": "https://arxiv.org/abs/2211.17192",
+    "project_url": "https://proceedings.mlr.press/v202/leviathan23a.html",
+    "arxiv_id": "2211.17192",
+    "read_sources": [
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2211.17192",
+        "note": "Used for arXiv metadata, revision date, abstract, and ICML 2023 oral note."
+      },
+      {
+        "kind": "proceedings",
+        "url": "https://proceedings.mlr.press/v202/leviathan23a.html",
+        "note": "Used to confirm ICML/PMLR publication metadata, pages, authors, and abstract."
+      },
+      {
+        "kind": "paper_pdf",
+        "url": "https://proceedings.mlr.press/v202/leviathan23a/leviathan23a.pdf",
+        "note": "Read for speculative execution framing, target/approximation models, distribution-preserving sampling, tasks, speedups, and limitations."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "Speculative decoding uses a faster draft model to propose several tokens, then verifies them with the slow target model in parallel so generation accelerates without changing the target distribution.",
+    "thesis": "The key observation is that autoregressive decoding is serial in target-model calls, but many next-token steps are easy enough for a cheaper approximation model to guess; the target model can verify a speculative prefix in one pass.",
+    "why_it_matters": "For agents, per-step latency compounds across tool loops, search, debate, retries, and self-consistency. Speculative decoding attacks the wall-clock cost of every generation without requiring a new target model."
+  },
+  "problem": {
+    "prior_state": [
+      "Generating K tokens from an autoregressive Transformer normally requires K serial target-model invocations.",
+      "Large target-model decode steps are slow and often limited by memory bandwidth or communication rather than raw arithmetic.",
+      "Adaptive computation methods can speed some cases but often require architecture changes, retraining, or accept changed output distributions.",
+      "Serving systems need latency improvements that work with existing off-the-shelf models."
+    ],
+    "key_gap": "The paper asks whether a small approximation model can propose tokens while a large target model verifies them in a way that preserves exact target-model sampling behavior.",
+    "assumptions": [
+      "A faster approximation model is available and has enough agreement with the target model to be useful.",
+      "The target model can score multiple proposed tokens in parallel faster than running one serial decode step per token.",
+      "The sampling correction procedure is implemented exactly enough to preserve the target distribution.",
+      "Workloads benefit from lower serial target-model steps even if additional draft-model work is introduced."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "target-model",
+      "name": "Target model",
+      "definition": "The large model whose output distribution the serving system must preserve."
+    },
+    {
+      "id": "approximation-model",
+      "name": "Approximation model",
+      "definition": "The smaller or cheaper draft model used to propose a speculative continuation."
+    },
+    {
+      "id": "speculative-prefix",
+      "name": "Speculative prefix",
+      "definition": "A sequence of candidate tokens produced by the approximation model before target-model verification."
+    },
+    {
+      "id": "acceptance",
+      "name": "Acceptance step",
+      "definition": "The stochastic test that decides how many proposed tokens can be kept while preserving the target distribution."
+    },
+    {
+      "id": "correction",
+      "name": "Correction token",
+      "definition": "A token sampled from an adjusted distribution when a proposed token is rejected."
+    },
+    {
+      "id": "serial-target-runs",
+      "name": "Serial target runs",
+      "definition": "The wall-clock critical path count of expensive target-model invocations."
+    }
+  ],
+  "method": {
+    "core_idea": "Generate a speculative token block with a cheap model, run the expensive target model once over that block to score all proposed positions, accept the longest prefix allowed by a distribution-preserving rule, and sample a corrected token when a draft token is rejected.",
+    "action_grammar": [
+      "q: approximation model distribution.",
+      "p: target model distribution.",
+      "gamma: number of speculative tokens proposed per round.",
+      "draft token: token sampled from q.",
+      "target scores: p probabilities for the proposed positions computed in one target pass.",
+      "acceptance probability: min(1, p(token) / q(token)) for each proposed token under the algorithm.",
+      "residual distribution: adjusted target distribution used after rejection."
+    ],
+    "steps": [
+      "Run the approximation model autoregressively for gamma draft tokens.",
+      "Run the target model once on the prompt plus speculative tokens to obtain target probabilities for all draft positions.",
+      "Walk through proposed tokens in order and accept each according to the speculative sampling rule.",
+      "If all proposed tokens are accepted, sample one additional token from the target model's next-token distribution.",
+      "If a proposed token is rejected, sample a correction from the residual distribution and stop the round.",
+      "Append accepted and corrected tokens to the output.",
+      "Repeat until termination.",
+      "Choose approximation model and gamma to balance target-pass savings against rejected draft work."
+    ],
+    "pseudocode": "while not done:\n    draft = []\n    ctx = prefix\n    for i in range(gamma):\n        token = sample(q(. | ctx))\n        draft.append(token)\n        ctx += token\n\n    p_scores = target_model.score(prefix + draft)\n\n    accepted = []\n    for i, token in enumerate(draft):\n        if random() <= min(1, p_scores[i][token] / q_score(i, token)):\n            accepted.append(token)\n        else:\n            correction = sample(residual(p_scores[i], q_score(i)))\n            prefix += accepted + [correction]\n            break\n    else:\n        bonus = sample(p_scores_next)\n        prefix += accepted + [bonus]"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "problem",
+      "status": "paper-supported",
+      "statement": "Standard autoregressive decoding requires K serial target-model runs to generate K tokens.",
+      "scope": "Abstract and Introduction.",
+      "evidence_refs": ["E-serial-decoding"],
+      "caveats": ["Batching can improve throughput across requests, but not the serial dependency for one sequence's target-model steps."]
+    },
+    {
+      "id": "C2",
+      "type": "method",
+      "status": "paper-supported",
+      "statement": "Speculative decoding proposes several tokens with an efficient approximation model and verifies them using the target model in parallel.",
+      "scope": "Abstract and Introduction.",
+      "evidence_refs": ["E-speculative-method"],
+      "caveats": ["Speedup depends on draft-model quality and target-model verification efficiency."]
+    },
+    {
+      "id": "C3",
+      "type": "correctness",
+      "status": "paper-supported",
+      "statement": "The algorithm preserves the target model's output distribution rather than merely approximating it.",
+      "scope": "Abstract, Introduction, and method sections.",
+      "evidence_refs": ["E-distribution-preserving"],
+      "caveats": ["This requires exact implementation of the speculative sampling/correction rule."]
+    },
+    {
+      "id": "C4",
+      "type": "deployment",
+      "status": "paper-supported",
+      "statement": "The method can accelerate off-the-shelf models without retraining or architecture changes.",
+      "scope": "Abstract.",
+      "evidence_refs": ["E-off-the-shelf"],
+      "caveats": ["It still requires access to a suitable smaller approximation model and integration with the serving engine."]
+    },
+    {
+      "id": "C5",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "On T5-XXL, the paper reports 2x-3x latency acceleration versus the standard T5X implementation with identical outputs.",
+      "scope": "Abstract and Introduction.",
+      "evidence_refs": ["E-t5xxl-speedup"],
+      "caveats": ["The headline number is for the evaluated T5-XXL tasks and implementation."]
+    },
+    {
+      "id": "C6",
+      "type": "evaluation",
+      "status": "paper-supported",
+      "statement": "The paper evaluates tasks/models including a 97M GPT-like model, 11B T5-XXL for translation and summarization, and a 137B LaMDA dialog model.",
+      "scope": "Introduction.",
+      "evidence_refs": ["E-evaluation-scope"],
+      "caveats": ["The paper's public wall-clock implementation comparison is emphasized for T5-XXL."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-serial-decoding",
+      "kind": "problem",
+      "source": "paper",
+      "locator": "Abstract and Introduction",
+      "result": "The paper states that decoding K tokens takes K serial runs of the large autoregressive target model.",
+      "metric": "serial target-model steps",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-speculative-method",
+      "kind": "method",
+      "source": "paper",
+      "locator": "Abstract and Introduction",
+      "result": "The paper proposes sampling a speculative prefix from an efficient approximation model, then running the target model on those proposed tokens to verify them in parallel.",
+      "metric": "draft-then-verify algorithm",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-distribution-preserving",
+      "kind": "correctness",
+      "source": "paper",
+      "locator": "Abstract and Introduction",
+      "result": "The authors state the speculative sampling method can generate several tokens concurrently without changing the target distribution, and Figure 1 illustrates fewer target runs with unchanged probability.",
+      "metric": "unchanged output distribution",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-off-the-shelf",
+      "kind": "deployment",
+      "source": "paper",
+      "locator": "Abstract",
+      "result": "The abstract says the method accelerates existing off-the-shelf models without retraining or architecture changes.",
+      "metric": "deployment requirement",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-t5xxl-speedup",
+      "kind": "benchmark_result",
+      "source": "paper",
+      "locator": "Abstract and Introduction",
+      "result": "The paper reports 2x-3x acceleration over the standard T5X implementation on T5-XXL with identical outputs.",
+      "metric": "T5-XXL wall-clock acceleration",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-evaluation-scope",
+      "kind": "evaluation",
+      "source": "paper",
+      "locator": "Introduction",
+      "result": "The paper says it analyzes unconditional generation with a 97M GPT-like model, translation and summarization with 11B T5-XXL, and a dialog task with 137B LaMDA.",
+      "metric": "model/task coverage",
+      "claim_refs": ["C6"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "Speculative decoding is a latency primitive for agent loops: every model call can return faster without changing the requested target distribution.",
+    "The draft model becomes serving infrastructure. It must be co-located, versioned, monitored, and chosen per target/workload.",
+    "Exactness matters for agent reliability. Speculative decoding's appeal is preserving outputs, not merely making a cheaper model answer first.",
+    "Speedup depends on acceptance rate. Hard reasoning, long-tail domains, or mismatched draft models can reduce gains.",
+    "Speculative decoding complements continuous batching and PagedAttention: one attacks serial depth, the others attack concurrency and memory.",
+    "For agent search, faster decoding lowers the cost of self-consistency, debate, reflection, and tree expansion."
+  ],
+  "caveats": [
+    "The method needs a useful approximation model; a weak draft model can waste work.",
+    "The target distribution is preserved only if the sampling rule and probabilities are implemented exactly.",
+    "The headline 2x-3x speedup is workload/model/implementation-specific.",
+    "Speculative decoding reduces latency but does not reduce the semantic number of agent decisions.",
+    "Serving integration can be nontrivial because the draft and target models must share tokenization and efficient scheduling.",
+    "The method may interact with quantization, caching, batching, and structured decoding constraints in engine-specific ways."
+  ],
+  "related_work": [
+    {
+      "title": "Orca",
+      "relation": "complements",
+      "note": "Orca schedules token iterations across requests; speculative decoding reduces the number of target-model iterations on one request's critical path.",
+      "url": "https://www.usenix.org/conference/osdi22/presentation/yu"
+    },
+    {
+      "title": "PagedAttention",
+      "relation": "complements",
+      "note": "PagedAttention makes large concurrent batches memory-efficient, while speculative decoding makes each sequence's serial target path shorter.",
+      "url": "https://arxiv.org/abs/2309.06180"
+    },
+    {
+      "title": "Self-Consistency",
+      "relation": "makes_cheaper",
+      "note": "Speculative decoding can reduce the cost of sampling multiple reasoning traces from the same target model.",
+      "url": "https://arxiv.org/abs/2203.11171"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A compact PoC could implement speculative sampling over two tiny Markov models and empirically verify output-distribution preservation."
+  },
+  "slide_plan": {
+    "title": "Speculative Decoding",
+    "subtitle": "Draft fast, verify exactly",
+    "sections": [
+      "summary",
+      "problem",
+      "target_and_draft",
+      "speculative_sampling",
+      "distribution_preservation",
+      "speedup_results",
+      "agent_latency_takeaways",
+      "caveats",
+      "references"
+    ]
+  }
+}

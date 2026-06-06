@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · On the Planning Abilities of Large Language Models: A Critical Investigation</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/planning-abilities-valmeekam-2023/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Planning and Skill Acquisition</p>
+        <h1>Planning Abilities</h1>
+        <p class="hero-lede">LLMs are weak autonomous planners but useful plan sketchers when an external planner or verifier owns correctness.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>8</strong><span>Claims</span></div>
+          <div class="metric"><strong>8</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2023 · NeurIPS 2023 Spotlight</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>4</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/planning-abilities-valmeekam-2023/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2305.15771">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>This paper is the hard boundary around agent planning hype. It gives agent builders a concrete architecture lesson: keep domain models, validators, and planners in the loop, and never treat an LLM's natural-language plan as proof of executability.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Many agent demos evaluated plans by plausibility or human inspection rather than executability against a domain model.</li><li>LLMs often produce natural-language plans that look reasonable but violate action preconditions or fail to reach goals.</li><li>Human-in-the-loop iterative correction can hide who is doing the planning, creating a Clever Hans problem.</li><li>Classical planners can validate and repair plans, but LLM agent literature often underuses them.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks whether LLMs can autonomously generate executable plans in classical planning tasks, and whether their failed plans can still help sound planners or verifiers.</p>
+
+      <h2>Method</h2>
+      <p>Generate planning prompts from PDDL domains, test LLM plans autonomously with a validator, then separately test whether LLM candidate plans help external planners or verifier-backed repair.</p>
+      <ul><li>Generate planning instances from PDDL domains and translate them into natural-language and PDDL prompt variants.</li><li>Evaluate GPT-family models, BLOOM, and a fine-tuned GPT-3 variant in autonomous mode by validating generated plans.</li><li>Stress-test GPT-4 with Mystery Blocksworld name obfuscations.</li><li>Evaluate forgiving plan-validation relaxations to see whether failed plans are close to correct.</li><li>Seed LPG with LLM-generated plans and compare search steps against empty and random seed plans.</li><li>Use VAL to give mechanical feedback to GPT-4 for up to 15 backprompting rounds.</li><li>Run a human user study with and without GPT-4 suggestions and measure accuracy, time, and cognitive load.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>The paper separates LLM planning evaluation into autonomous mode and heuristic mode, using automated planning tools to avoid plausibility-only assessment.</p>
+  <p><strong>Scope:</strong> Abstract, Introduction, Figure 1, and Sections 3-5.</p>
+  <ul><li><strong>E-eval-design</strong>: The paper evaluates LLMs in autonomous mode, where generated plans are validated by VAL, and heuristic mode, where generated plans are used by external planners or verifiers.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>In autonomous mode, the best model, GPT-4, averages only about 12% executable-plan success across domains.</p>
+  <p><strong>Scope:</strong> Abstract and Section 4.</p>
+  <ul><li><strong>E-headline</strong>: The abstract states that the best model, GPT-4, has an average autonomous executable-plan success rate of about 12% across domains.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>Even in Blocksworld, GPT-4 reaches only around one-third success, and chain-of-thought or PDDL-formatted prompts do not fix the failure.</p>
+  <p><strong>Scope:</strong> Tables 1 and 2, Section 4.</p>
+  <ul><li><strong>E-blocksworld</strong>: GPT-4 solves 210/600 (34.6%) zero-shot natural-language Blocksworld instances, 214/600 (35.6%) with chain-of-thought, 106/600 (17.6%) zero-shot PDDL instances, and 75/600 (12.5%) one-shot PDDL instances. The paper says overall Blocksworld performance is still around 34%.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>Obfuscating action and predicate names causes a catastrophic drop, showing that GPT-4's apparent planning depends strongly on familiar semantics.</p>
+  <p><strong>Scope:</strong> Section 4 obfuscation experiments.</p>
+  <ul><li><strong>E-obfuscation</strong>: With zero-shot natural-language prompts, GPT-4 solves 210/600 ordinary Blocksworld instances, but only 1/600 deceptive Mystery Blocksworld instances and 0/600 randomized Mystery Blocksworld instances. With PDDL prompts, GPT-4 solves 106/600 ordinary instances but only 3/600 deceptive instances.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>Humans substantially outperform LLMs on the simple Blocksworld setting: 78% of participants produced valid plans, and 89.7% of valid human plans were optimal.</p>
+  <p><strong>Scope:</strong> Section 4 human baseline.</p>
+  <ul><li><strong>E-human-baseline</strong>: In an IRB-approved Blocksworld study, 39 of 50 participants produced valid plans (78%), and 35 of those 39 valid plans were optimal (89.7%).</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>LLM-generated plans can still be useful as seed plans for LPG local-search repair, reducing search steps in familiar domains.</p>
+  <p><strong>Scope:</strong> Section 5.1, Table 3.</p>
+  <ul><li><strong>E-lpg</strong>: LPG with a GPT-4 Blocksworld seed plan takes 8.9 average search steps versus 15.8 empty-seed and 20.07 random-seed baselines; Logistics takes 51.3 versus 77.5 and 144.39. Mystery Blocksworld shows weaker help: 16.09 versus 15.8 empty and 20.45 random.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · paper-supported</h3>
+  <p>External verifier feedback from VAL improves GPT-4 plan generation in common-sense domains but not much in obfuscated domains.</p>
+  <p><strong>Scope:</strong> Section 5.2, Table 4.</p>
+  <ul><li><strong>E-val</strong>: With VAL backprompting over 50 failed instances and at most 15 feedback rounds, GPT-4 reaches 41/50 correct on Blocksworld with 3.68 average feedback rounds, 35/50 on Logistics with 3.31 rounds, and 5/50 on deceptive Mystery Blocksworld with 7.0 rounds.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C8 · paper-supported</h3>
+  <p>LLM suggestions did not significantly improve human planning accuracy, time, or cognitive load, and some users accepted incorrect suggestions.</p>
+  <p><strong>Scope:</strong> Section 5.3.</p>
+  <ul><li><strong>E-human-assist</strong>: The LLM-assisted human study had 49 unassisted and 48 assisted participants and found no statistically significant differences in accuracy, time, or cognitive load. Three assisted participants accepted incorrect LLM suggestions, and two submitted those suggestions as their plans.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Do not let plan-shaped text bypass an executable validator. Planning outputs need machine-checkable preconditions, effects, and goals.</li><li>LLMs can be good proposal generators while still being bad autonomous planners. Architect the loop so a sound planner or verifier owns correctness.</li><li>Name obfuscation is a useful stress test: if a model collapses when labels lose semantics, it is pattern matching more than planning.</li><li>Verifier feedback beats self-critique because it comes from the domain model, not the same model that made the error.</li><li>Human review is not a free safety layer; LLM suggestions can create automation bias without improving planning performance.</li><li>Agent planning benchmarks should report executable success, not plausibility, and should separate extraction failures, invalid actions, unmet goals, and repairable sketches.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The results focus on classical deterministic planning domains.</li><li>The paper evaluates GPT-family models available at the time plus BLOOM; later reasoning models may change absolute numbers but not the architecture lesson without fresh proof.</li><li>Autonomous-mode prompts include domain descriptions, so this is not a test of discovering actions from raw environment interaction.</li><li>Heuristic mode relies on external planners and verifiers with correct domain models.</li><li>Verifier backprompting can require multiple rounds and still fails badly in obfuscated settings.</li><li>The human-assistance study is limited, but it is enough to flag automation-bias risk.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/planning-abilities-valmeekam-2023.json.</span>
+  </footer>
+</body>
+</html>

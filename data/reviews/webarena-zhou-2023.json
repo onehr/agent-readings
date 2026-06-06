@@ -1,0 +1,286 @@
+{
+  "schema_version": 1,
+  "slug": "webarena-zhou-2023",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "WebArena: A Realistic Web Environment for Building Autonomous Agents",
+    "authors": [
+      "Shuyan Zhou",
+      "Frank F. Xu",
+      "Hao Zhu",
+      "Xuhui Zhou",
+      "Robert Lo",
+      "Abishek Sridhar",
+      "Xianyi Cheng",
+      "Tianyue Ou",
+      "Yonatan Bisk",
+      "Daniel Fried",
+      "Uri Alon",
+      "Graham Neubig"
+    ],
+    "year": 2023,
+    "venue": "ICLR 2024; arXiv 2023",
+    "url": "https://arxiv.org/abs/2307.13854",
+    "project_url": "https://webarena.dev",
+    "arxiv_id": "2307.13854",
+    "read_sources": [
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2307.13854",
+        "note": "Used for arXiv metadata, authors, abstract, revision history, and project link."
+      },
+      {
+        "kind": "paper_pdf",
+        "url": "https://arxiv.org/pdf/2307.13854",
+        "note": "Read for environment design, four web domains, tools/knowledge resources, functional evaluation, task count, baseline results, and limitations."
+      },
+      {
+        "kind": "project_page",
+        "url": "https://webarena.dev",
+        "note": "Used to confirm public benchmark/environment resources."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "WebArena is a self-hosted web benchmark where agents perform long-horizon tasks across realistic sites and are graded by functional correctness rather than matching reference actions.",
+    "thesis": "The benchmark's core move is to build reproducible real-web-like applications and validators so web agents can be evaluated on whether they actually changed the environment correctly.",
+    "why_it_matters": "For agents, WebArena captures a production-shaped task class: navigate, search, click, read, edit, coordinate multiple sites, and recover from mistakes in a stateful web environment."
+  },
+  "problem": {
+    "prior_state": [
+      "Many web-agent environments were simplified, synthetic, or static snapshots rather than fully functional websites.",
+      "Action-sequence matching fails when multiple valid paths can achieve the same web task.",
+      "Live public websites are not reproducible because content, CAPTCHAs, bot defenses, and configuration drift over time.",
+      "Agents need evaluation on realistic, long-horizon tasks involving external tools and knowledge resources."
+    ],
+    "key_gap": "The paper asks how to build a realistic and reproducible web environment for evaluating autonomous agents on functional task completion.",
+    "assumptions": [
+      "Self-hosted web applications can emulate important aspects of common real websites.",
+      "Functional validators can measure whether the desired state was achieved.",
+      "High-level natural-language intents are a useful task interface for web agents.",
+      "Long-horizon web tasks reveal exploration and failure-recovery weaknesses missed by simpler benchmarks."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "self-hosted-web-environment",
+      "name": "Self-hosted web environment",
+      "definition": "A reproducible environment made of Docker-hosted websites rather than live public websites."
+    },
+    {
+      "id": "functional-correctness",
+      "name": "Functional correctness",
+      "definition": "Evaluating whether the final web state satisfies the task intent, regardless of exact action sequence."
+    },
+    {
+      "id": "natural-language-intent",
+      "name": "Natural language intent",
+      "definition": "A high-level command describing what the agent should accomplish on the web."
+    },
+    {
+      "id": "web-action",
+      "name": "Web action",
+      "definition": "An operation such as clicking, typing, navigating, or using a tool that transitions the web environment state."
+    },
+    {
+      "id": "tool-site",
+      "name": "Tool site",
+      "definition": "An auxiliary web resource such as map, calculator, scratchpad, documentation, or knowledge base used during task solving."
+    },
+    {
+      "id": "state-validator",
+      "name": "State validator",
+      "definition": "A programmatic check that inspects the final environment state and returns task success or failure."
+    }
+  ],
+  "method": {
+    "core_idea": "Host realistic web applications across common domains, populate them with real-world-like data, define high-level tasks, and evaluate final-state functional correctness through validators.",
+    "action_grammar": [
+      "environment state: all website/database states across the benchmark.",
+      "observation: browser view or accessibility representation available to the agent.",
+      "action: browser/tool command issued by the agent.",
+      "transition: deterministic website response to an action.",
+      "intent: high-level natural-language task.",
+      "validator: task-specific programmatic success check.",
+      "end-to-end success rate: percentage of tasks completed successfully."
+    ],
+    "steps": [
+      "Build four fully functional self-hosted website domains: e-commerce, discussion forums, collaborative development, and content management.",
+      "Add utility tools and external knowledge sources such as maps, calculator, scratchpad, Wikipedia, and manuals.",
+      "Package hosting through Docker containers and gym-style APIs for reproducibility.",
+      "Create 812 long-horizon natural-language web tasks.",
+      "Let agents observe the web state and issue browser actions over multiple steps.",
+      "Validate task completion by checking the final environment state against task-specific criteria.",
+      "Compare baseline agents including GPT-4-based agents and human performance."
+    ],
+    "pseudocode": "env = WebArena.start(docker=True)\nstate = env.reset(task_id)\nintent = task.intent\n\nwhile not done and steps < limit:\n    obs = env.observe()\n    action = agent.act(intent, obs, history)\n    state, obs = env.step(action)\n    history.append((action, obs))\n\nsuccess = task.validator(env.state)\nscore += int(success)"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "benchmark",
+      "status": "paper-supported",
+      "statement": "WebArena provides a realistic, reproducible, self-hosted web environment for language-guided agents.",
+      "scope": "Abstract and Section 2.",
+      "evidence_refs": ["E-self-hosted"],
+      "caveats": ["Self-hosting improves reproducibility but still abstracts from the full messiness of the live internet."]
+    },
+    {
+      "id": "C2",
+      "type": "environment",
+      "status": "paper-supported",
+      "statement": "The environment includes fully functional websites from four domains: e-commerce, forums, collaborative software development, and content management.",
+      "scope": "Abstract and Section 2.",
+      "evidence_refs": ["E-four-domains"],
+      "caveats": ["Four domains are broad but not exhaustive."]
+    },
+    {
+      "id": "C3",
+      "type": "environment",
+      "status": "paper-supported",
+      "statement": "WebArena enriches tasks with tools and knowledge resources such as maps, calculator, scratchpad, Wikipedia, and manuals.",
+      "scope": "Abstract and Section 2.",
+      "evidence_refs": ["E-tools-knowledge"],
+      "caveats": ["Tool availability and content are benchmark-controlled."]
+    },
+    {
+      "id": "C4",
+      "type": "evaluation",
+      "status": "paper-supported",
+      "statement": "The benchmark uses functional correctness validators rather than action-sequence surface matching.",
+      "scope": "Section 1 and Section 3.",
+      "evidence_refs": ["E-functional-validation"],
+      "caveats": ["Validator quality becomes part of benchmark validity."]
+    },
+    {
+      "id": "C5",
+      "type": "benchmark",
+      "status": "paper-supported",
+      "statement": "The released benchmark contains 812 long-horizon web-based tasks described as high-level natural-language intents.",
+      "scope": "Section 1.",
+      "evidence_refs": ["E-task-count"],
+      "caveats": ["Task distribution reflects the selected domains and constructed data."]
+    },
+    {
+      "id": "C6",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "The best GPT-4-based baseline reaches 14.41% end-to-end task success, far below human performance of 78.24%.",
+      "scope": "Abstract and Section 1.",
+      "evidence_refs": ["E-results"],
+      "caveats": ["These are paper-era baseline results, not current web-agent SOTA."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-self-hosted",
+      "kind": "environment",
+      "source": "paper",
+      "locator": "Abstract and Section 1",
+      "result": "The paper introduces a standalone self-hosted web environment built for realistic and reproducible autonomous-agent evaluation.",
+      "metric": "environment reproducibility",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-four-domains",
+      "kind": "environment",
+      "source": "paper",
+      "locator": "Abstract and Section 1",
+      "result": "The environment includes fully operational websites for online shopping, discussion forums, collaborative software development, and business content management.",
+      "metric": "web-domain coverage",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-tools-knowledge",
+      "kind": "environment",
+      "source": "paper",
+      "locator": "Abstract and Section 1",
+      "result": "WebArena includes utility tools such as map, calculator, and scratchpad plus knowledge resources including Wikipedia and domain manuals.",
+      "metric": "tool and knowledge-resource integration",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-functional-validation",
+      "kind": "evaluation",
+      "source": "paper",
+      "locator": "Figure 1 and Section 1",
+      "result": "The paper provides validators to programmatically check the functional correctness of each task and argues this better supports alternative valid paths than action-sequence matching.",
+      "metric": "functional success validation",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-task-count",
+      "kind": "benchmark",
+      "source": "paper",
+      "locator": "Section 1",
+      "result": "The benchmark contains 812 long-horizon web tasks described as high-level natural-language intents.",
+      "metric": "task count and task form",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-results",
+      "kind": "benchmark_result",
+      "source": "paper",
+      "locator": "Abstract and Section 1",
+      "result": "The best GPT-4 baseline achieves 14.41% end-to-end success rate, compared with 78.24% human performance.",
+      "metric": "end-to-end task success rate",
+      "claim_refs": ["C6"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "Web-agent evaluation needs stateful environments, not just transcript grading.",
+    "Functional validators are the important object: they let agents take different valid paths while still receiving objective success/failure.",
+    "Self-hosting trades live-web messiness for reproducibility; both dimensions matter depending on evaluation goal.",
+    "Long-horizon web tasks expose active exploration, state tracking, and failure recovery weaknesses.",
+    "Benchmark infrastructure must include reset, reproducibility, browser control, tools, knowledge resources, and validators.",
+    "Agents that can browse still need durable task state and sandboxed effects because the environment is mutable."
+  ],
+  "caveats": [
+    "Paper-era baseline results are not current SOTA.",
+    "Self-hosted sites are realistic but not the live web; CAPTCHAs, anti-bot systems, and arbitrary site drift are excluded.",
+    "Validators are only as good as their task specification.",
+    "A web benchmark can be gamed if environment internals or validator logic leak to the agent.",
+    "The task/domain mix may not represent enterprise web workflows or high-risk domains.",
+    "Functional success does not automatically measure safety, privacy, policy compliance, or user satisfaction."
+  ],
+  "related_work": [
+    {
+      "title": "tau-bench",
+      "relation": "adds_user_policy",
+      "note": "tau-bench adds simulated users and policy constraints to tool-agent interactions.",
+      "url": "https://arxiv.org/abs/2406.12045"
+    },
+    {
+      "title": "OSWorld",
+      "relation": "broader_computer_control",
+      "note": "OSWorld extends agent evaluation from web apps to full desktop/computer environments.",
+      "url": "https://arxiv.org/abs/2404.07972"
+    },
+    {
+      "title": "ReAct",
+      "relation": "agent_loop",
+      "note": "WebArena baselines include reasoning-before-acting style agents; ReAct is the basic loop shape.",
+      "url": "https://arxiv.org/abs/2210.03629"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A compact PoC could host one tiny web app with a validator and evaluate whether an agent/browser script reaches the target state."
+  },
+  "slide_plan": {
+    "title": "WebArena",
+    "subtitle": "Stateful web tasks with functional validators",
+    "sections": [
+      "summary",
+      "problem",
+      "environment",
+      "tools_and_knowledge",
+      "task_design",
+      "functional_validation",
+      "baseline_results",
+      "agent_eval_takeaways",
+      "caveats",
+      "references"
+    ]
+  }
+}

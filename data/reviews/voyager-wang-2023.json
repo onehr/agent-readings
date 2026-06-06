@@ -1,0 +1,316 @@
+{
+  "schema_version": 1,
+  "slug": "voyager-wang-2023",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "Voyager: An Open-Ended Embodied Agent with Large Language Models",
+    "authors": [
+      "Guanzhi Wang",
+      "Yuqi Xie",
+      "Yunfan Jiang",
+      "Ajay Mandlekar",
+      "Chaowei Xiao",
+      "Yuke Zhu",
+      "Linxi Fan",
+      "Anima Anandkumar"
+    ],
+    "year": 2023,
+    "venue": "arXiv 2023; revised 2023",
+    "url": "https://arxiv.org/abs/2305.16291",
+    "project_url": "https://github.com/MineDojo/Voyager",
+    "arxiv_id": "2305.16291",
+    "read_sources": [
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2305.16291",
+        "note": "Used for arXiv metadata, abstract metrics, author list, revision date, and project/code link."
+      },
+      {
+        "kind": "paper_html",
+        "url": "https://ar5iv.labs.arxiv.org/html/2305.16291",
+        "note": "Read for method, automatic curriculum, skill library, iterative prompting, experimental setup, baselines, results, ablations, and limitations."
+      },
+      {
+        "kind": "project_repo",
+        "url": "https://github.com/MineDojo/Voyager",
+        "note": "Used to confirm the open-source repository, codebase framing, and skill-library inference interface."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "Voyager makes agent competence compound by saving successful behaviors as executable code skills and retrieving them for harder tasks.",
+    "thesis": "Open-ended agents need a curriculum, a reusable skill library, and an execution-feedback loop; prompting alone is not enough if successful behaviors disappear after each task.",
+    "why_it_matters": "The paper is the clearest example of agent skill acquisition as standard-library construction: the agent writes executable functions, tests them in the environment, stores successful ones, and later composes them."
+  },
+  "problem": {
+    "prior_state": [
+      "Minecraft is open-ended and lacks a fixed reward or single end goal.",
+      "RL and imitation methods often operate on primitive actions, making systematic exploration and generalization difficult.",
+      "LLM agents such as ReAct, Reflexion, and AutoGPT can plan, but do not automatically accumulate reusable embodied skills.",
+      "One-shot code generation often fails because environment constraints, missing resources, syntax errors, and invalid API calls are discovered only after execution."
+    ],
+    "key_gap": "The paper asks how an LLM agent can explore an open-ended world, progressively acquire skills, and reuse those skills in new worlds without gradient updates.",
+    "assumptions": [
+      "GPT-4 can generate and debug Minecraft control programs when given state, API docs, errors, and feedback.",
+      "Executable JavaScript functions are a useful action space for temporally extended embodied behavior.",
+      "A vector-indexed skill library can retrieve relevant code skills from natural-language task and environment descriptions.",
+      "Minecraft progress is a reasonable proxy for open-ended embodied lifelong learning."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "automatic-curriculum",
+      "name": "Automatic curriculum",
+      "definition": "A GPT-4-generated stream of tasks conditioned on the agent's state, inventory, biome, prior successes, failed tasks, and the broad goal of discovering diverse things."
+    },
+    {
+      "id": "skill-library",
+      "name": "Skill library",
+      "definition": "A vector database whose keys are embeddings of skill descriptions and whose values are executable code functions that solved past tasks."
+    },
+    {
+      "id": "code-action-space",
+      "name": "Code as action space",
+      "definition": "The agent acts by generating programs over Mineflayer/MineDojo APIs rather than emitting low-level motor actions."
+    },
+    {
+      "id": "iterative-prompting",
+      "name": "Iterative prompting",
+      "definition": "A refinement loop that feeds environment feedback, execution errors, and self-verification critique back into GPT-4 until a task succeeds or the task is abandoned."
+    },
+    {
+      "id": "self-verification",
+      "name": "Self-verification",
+      "definition": "A GPT-4 critic that decides whether the current program achieved the task and, if not, suggests corrections."
+    }
+  ],
+  "method": {
+    "core_idea": "Let GPT-4 propose a reachable exploration task, generate JavaScript control code, execute it in Minecraft, refine the code from environment and interpreter feedback, verify success, then commit the resulting function to a reusable skill library.",
+    "action_grammar": [
+      "Curriculum query: generate the next feasible task from current state plus completed and failed tasks.",
+      "Skill retrieval: embed task plan and environment feedback, then retrieve the top-5 relevant skills.",
+      "Code generation: prompt GPT-4 with APIs, retrieved skills, current state, previous code, feedback, errors, and chain-of-thought guidance.",
+      "Execution: run the generated program through Mineflayer/MineDojo control APIs.",
+      "Environment feedback: report inventory gaps, nearby entities, intermediate progress, and task-specific status.",
+      "Execution error: return syntax errors, invalid API calls, or runtime failures.",
+      "Self-verification: ask GPT-4 whether the task succeeded and request critique if not.",
+      "Commit skill: after successful verification, store the code function indexed by a GPT-3.5-generated description embedding."
+    ],
+    "steps": [
+      "Start with no handcrafted task sequence beyond the high-level objective of discovering diverse things.",
+      "Use the automatic curriculum to select tasks that are challenging but reachable from the current state.",
+      "Retrieve related skills and generate executable code over control primitive APIs.",
+      "Execute the code and collect Minecraft observations plus interpreter errors.",
+      "Iterate code generation up to four rounds using feedback and self-verification critique.",
+      "If verified, add the function to the skill library and ask for the next task; if stuck, return to the curriculum later.",
+      "Evaluate exploration, tech-tree progress, map coverage, zero-shot task transfer, and ablations."
+    ],
+    "pseudocode": "while budget_remaining:\n    task = curriculum.propose(state, completed_tasks, failed_tasks)\n    query = gpt35.summarize_task_and_feedback(task, state)\n    skills = skill_library.top_k(query, k=5)\n\n    code = None\n    for round in range(4):\n        code = gpt4.generate_code(task, state, skills, code, feedback, errors)\n        feedback, errors = minecraft.execute(code)\n        verdict = gpt4.self_verify(task, state, feedback)\n        if verdict.success:\n            description = gpt35.describe_skill(code)\n            skill_library.add(description, code)\n            completed_tasks.append(task)\n            break\n    else:\n        failed_tasks.append(task)"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "architecture",
+      "status": "paper-supported",
+      "statement": "Voyager combines three modules: automatic curriculum, an ever-growing executable skill library, and iterative prompting with environment feedback, execution errors, and self-verification.",
+      "scope": "Abstract, Introduction, and Section 2.",
+      "evidence_refs": ["E-three-modules"],
+      "caveats": ["The implementation relies heavily on GPT-4 quality and a high-level Minecraft API."]
+    },
+    {
+      "id": "C2",
+      "type": "curriculum",
+      "status": "paper-supported",
+      "statement": "The automatic curriculum proposes bottom-up tasks from the agent's current state and exploration progress rather than using a fixed human-written task sequence.",
+      "scope": "Section 2.1.",
+      "evidence_refs": ["E-curriculum"],
+      "caveats": ["The curriculum can hallucinate impossible Minecraft tasks, which the paper reports as a limitation."]
+    },
+    {
+      "id": "C3",
+      "type": "memory",
+      "status": "paper-supported",
+      "statement": "Voyager's skill library stores successful behaviors as executable code indexed by embedded descriptions, then retrieves the top relevant skills for future tasks.",
+      "scope": "Section 2.2.",
+      "evidence_refs": ["E-skill-library"],
+      "caveats": ["Retrieval quality depends on the generated skill description and embedding similarity, not on formal preconditions."]
+    },
+    {
+      "id": "C4",
+      "type": "runtime",
+      "status": "paper-supported",
+      "statement": "The iterative prompting loop uses executed feedback and errors to refine code, and commits code only after self-verification says the task succeeded.",
+      "scope": "Section 2.3.",
+      "evidence_refs": ["E-iterative-prompting"],
+      "caveats": ["Self-verification can fail; the paper gives spider string as an example of a missed success signal."]
+    },
+    {
+      "id": "C5",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "Voyager outperforms ReAct, Reflexion, AutoGPT, and ablated variants on Minecraft exploration, tech-tree mastery, map traversal, and zero-shot generalization.",
+      "scope": "Section 3.3 and arXiv abstract.",
+      "evidence_refs": ["E-main-results"],
+      "caveats": ["The baselines are adapted from NLP agents because the paper states no LLM-based agent worked out of the box for Minecraft."]
+    },
+    {
+      "id": "C6",
+      "type": "generalization",
+      "status": "paper-supported",
+      "statement": "The learned skill library transfers to a new Minecraft world and can even improve AutoGPT when used as a plug-in skill source.",
+      "scope": "Section 3.3, Table 2, and project repository.",
+      "evidence_refs": ["E-zero-shot"],
+      "caveats": ["Transfer is evaluated within Minecraft and over the paper's selected four unseen tasks."]
+    },
+    {
+      "id": "C7",
+      "type": "ablation",
+      "status": "paper-supported",
+      "statement": "Ablations identify automatic curriculum, skill library, self-verification, execution feedback, execution errors, and GPT-4 code generation as load-bearing components.",
+      "scope": "Section 3.4.",
+      "evidence_refs": ["E-ablations"],
+      "caveats": ["The HTML extraction drops some figure values, so the review records the qualitative ablation conclusions rather than missing numeric cells."]
+    },
+    {
+      "id": "C8",
+      "type": "limitation",
+      "status": "paper-supported",
+      "statement": "Voyager remains expensive, text-only in the reported system, dependent on GPT-4 code quality, and vulnerable to impossible tasks, invalid code, and failed verification.",
+      "scope": "Sections 3.5 and 4.",
+      "evidence_refs": ["E-limitations"],
+      "caveats": ["The paper expects future model improvements to reduce these limitations, but does not demonstrate that in the reported experiments."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-three-modules",
+      "kind": "architecture",
+      "source": "paper",
+      "locator": "Abstract, Introduction, Section 2",
+      "result": "Voyager is described as the first LLM-powered embodied lifelong learning agent in Minecraft, with an automatic curriculum, an ever-growing executable skill library, and an iterative prompting mechanism using feedback, errors, and self-verification.",
+      "metric": "module taxonomy",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-curriculum",
+      "kind": "method",
+      "source": "paper",
+      "locator": "Section 2.1",
+      "result": "The curriculum prompt uses directives, current inventory/equipment/biome/time/health/hunger/position, completed and failed tasks, and additional GPT-3.5 self-ask/self-answer context to propose a next task.",
+      "metric": "curriculum prompt inputs",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-skill-library",
+      "kind": "method",
+      "source": "paper",
+      "locator": "Section 2.2",
+      "result": "Each skill is executable code for a temporally extended behavior. The library indexes the embedding vector of a generated program description and stores the program itself; retrieval queries the top-5 relevant skills.",
+      "metric": "skill storage and retrieval",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-iterative-prompting",
+      "kind": "method",
+      "source": "paper",
+      "locator": "Section 2.3",
+      "result": "Each generated program is executed to produce environment feedback and interpreter errors. A GPT-4 self-verifier checks task success and critiques failures. The loop repeats until success or after four rounds, at which point the curriculum can choose another task.",
+      "metric": "feedback loop",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-main-results",
+      "kind": "result",
+      "source": "paper",
+      "locator": "arXiv abstract and Section 3.3",
+      "result": "The paper reports that Voyager obtains 3.3x more unique items, travels 2.3x longer distances, and unlocks key tech-tree milestones up to 15.3x faster than prior SOTA. Section 3.3 reports 63 unique items within 160 prompting iterations and says Voyager is the only method to unlock the diamond level.",
+      "metric": "unique items, distance, tech-tree speed",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-zero-shot",
+      "kind": "transfer_result",
+      "source": "paper",
+      "locator": "Section 3.3, Table 2",
+      "result": "For zero-shot generalization, the paper resets inventory and world state, tests unseen tasks, and reports that Voyager consistently solves all tasks while ReAct, Reflexion, and AutoGPT solve none within 50 prompting iterations. AutoGPT improves when given Voyager's skill library.",
+      "metric": "unseen-task success",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-ablations",
+      "kind": "ablation",
+      "source": "paper",
+      "locator": "Section 3.4",
+      "result": "The ablation section reports that replacing the automatic curriculum hurts progress, removing the skill library causes later plateauing, removing self-verification produces the largest feedback-type drop, and GPT-4 substantially outperforms GPT-3.5 for code generation.",
+      "metric": "component ablation findings",
+      "claim_refs": ["C7"]
+    },
+    {
+      "id": "E-limitations",
+      "kind": "limitations",
+      "source": "paper",
+      "locator": "Sections 3.5 and 4",
+      "result": "The paper notes GPT-4 cost, lack of visual perception in the reported system, cases where the agent gets stuck, occasional self-verification failures, curriculum hallucinations such as nonexistent copper equipment, and code hallucinations such as invalid fuel or absent API calls.",
+      "metric": "reported limitations",
+      "claim_refs": ["C8"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "A useful agent memory can be executable: Voyager's skills are code functions, not prose summaries.",
+    "Skill acquisition is a runtime loop: propose task, retrieve skills, execute code, collect errors, verify, then commit.",
+    "Curriculum is scheduling. The agent needs a policy for choosing the next task at the edge of its current capability.",
+    "Execution feedback is the external signal that makes self-improvement concrete; without running code, the model has no reliable way to know whether a skill works.",
+    "A skill library is a shared asset. The paper shows AutoGPT can benefit from Voyager's library, which suggests skills should be portable across agent controllers.",
+    "Preconditions matter. Vector retrieval of code snippets is useful, but production skill stores also need typed requirements, effects, tests, and provenance."
+  ],
+  "caveats": [
+    "The reported system depends on GPT-4 for code generation and self-verification.",
+    "The environment uses high-level Mineflayer/MineDojo APIs rather than solving perception or low-level motor control.",
+    "Baselines had to be adapted from non-embodied NLP agent methods.",
+    "The strongest metrics are Minecraft-specific and may not transfer to physical robotics or arbitrary software tools.",
+    "Self-verification can be wrong, and the curriculum or code generator can hallucinate impossible objects or invalid APIs.",
+    "Cost and latency are material because exploration can require many GPT-4 calls."
+  ],
+  "related_work": [
+    {
+      "title": "ReAct",
+      "relation": "baseline",
+      "note": "Voyager compares against a ReAct-style Minecraft adaptation and adds curriculum, skills, and execution-feedback refinement.",
+      "url": "https://arxiv.org/abs/2210.03629"
+    },
+    {
+      "title": "Reflexion",
+      "relation": "baseline",
+      "note": "Voyager compares against Reflexion and makes reflection executable through environment feedback, errors, and self-verification.",
+      "url": "https://arxiv.org/abs/2303.11366"
+    },
+    {
+      "title": "MemGPT",
+      "relation": "parallel",
+      "note": "Both accumulate reusable state over long horizons; Voyager's durable state is executable skills while MemGPT's durable state is semantic memory.",
+      "url": "https://arxiv.org/abs/2310.08560"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A compact local PoC would use a toy grid world or file-system task environment, store successful JavaScript/Python functions in a vector-like skill index, and reuse them for harder tasks."
+  },
+  "slide_plan": {
+    "title": "Voyager",
+    "subtitle": "A standard library for embodied agents",
+    "sections": [
+      "summary",
+      "problem",
+      "three_modules",
+      "automatic_curriculum",
+      "skill_library",
+      "iterative_prompting",
+      "self_verification",
+      "results",
+      "zero_shot_transfer",
+      "infra_takeaways",
+      "caveats",
+      "references"
+    ]
+  }
+}

@@ -1,0 +1,215 @@
+<!-- .slide: class="title-slide apple-title" -->
+
+<div class="slide-frame slide-frame--center">
+  <p class="deck-kicker">agent-readings / Security, Safety, and Trust</p>
+  <h1>Trusting Trust</h1>
+  <p class="deck-subtitle">Source is not the whole trust boundary</p>
+
+  <div class="deck-meta-strip">
+    <div class="deck-meta-pill"><strong>1984</strong><span>Communications of the ACM 27(8); Turing Award Lecture</span></div>
+    <div class="deck-meta-pill"><strong>6</strong><span>claims</span></div>
+    <div class="deck-meta-pill"><strong>6</strong><span>evidence refs</span></div>
+    <div class="deck-meta-pill"><strong>paper-read</strong><span>status</span></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="statement-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">The one sentence</p>
+  <h2>Thompson shows that source review is not enough when the compiler or lower toolchain can hide and reproduce a Trojan across rebuilds.</h2>
+  <p class="deck-note">For agents, the lecture is the right security frame: if an agent's actions depend on opaque models, tools, sandboxes, or evaluators, the visible transcript is not the whole trust boundary.</p>
+</div>
+
+---
+
+<!-- .slide: class="problem-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Before this paper</p>
+  <h2>The friction was structural.</h2>
+  <div class="apple-card-grid apple-card-grid--three">
+    <div class="apple-card"><p>Security review often focuses on the visible source code of the program being run.</p></div>
+<div class="apple-card"><p>Compilers, loaders, assemblers, and other lower-level program-handling tools are frequently treated as trusted infrastructure.</p></div>
+<div class="apple-card"><p>A malicious transformation can be inserted below the source layer and survive source cleanup.</p></div>
+  </div>
+  <div class="deck-callout">
+    <span>Key gap</span>
+    <p>The lecture asks whether one can trust a claim that a program is free of Trojan horses when the program was produced by tools that may themselves be compromised.</p>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="idea-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Core idea</p>
+  <h2>Demonstrate a staged attack: build a self-reproducing payload, teach a compiler new behavior, then use a compiler Trojan that backdoors login and reinserts...</h2>
+  <p class="deck-note">Demonstrate a staged attack: build a self-reproducing payload, teach a compiler new behavior, then use a compiler Trojan that backdoors login and reinserts itself into future compiler binaries even after source cleanup.</p>
+  <div class="idea-loop" aria-label="Agent loop">
+    <div><strong>Model</strong><span>reason</span></div>
+    <div><strong>Runtime</strong><span>act</span></div>
+    <div><strong>World</strong><span>observe</span></div>
+  </div>
+  <div class="step-strip">
+    <div class="step-item">
+  <span>01</span>
+  <p>Show a self-reproducing C program that can emit source containing arbitrary extra baggage.</p>
+</div>
+<div class="step-item">
+  <span>02</span>
+  <p>Show how a self-hosting C compiler can be taught a new escape sequence through an intermediate numeric definition.</p>
+</div>
+<div class="step-item">
+  <span>03</span>
+  <p>Modify the compiler so it recognizes source for a login program and inserts a password-bypass Trojan.</p>
+</div>
+<div class="step-item">
+  <span>04</span>
+  <p>Add a second compiler-recognition rule that inserts both the login Trojan and the compiler-reproducing Trojan when compiling the compiler itself.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="grammar-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Action grammar</p>
+  <h2>The agent is an interface contract.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>source program: visible text inspected by developers.</p></div>
+<div class="apple-card"><p>compiler binary: executable tool that transforms source into machine code.</p></div>
+<div class="apple-card"><p>pattern match: compiler recognition of a target source fragment.</p></div>
+<div class="apple-card"><p>miscompile: deliberate replacement of expected compiled output with malicious output.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="code-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Executable shape</p>
+  <h2>The mechanism should fit on one screen.</h2>
+
+```python
+compile(source):
+    if matches_login_program(source):
+        emit(login_with_extra_password())
+        return
+    if matches_compiler_source(source):
+        emit(compiler_with_login_trojan_and_self_reinsertion())
+        return
+    emit(normal_compile(source))
+
+# After installation, the source can be clean; the binary keeps the payload alive.
+```
+</div>
+
+---
+
+<!-- .slide: class="proof-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Evidence</p>
+  <h2>The proof objects.</h2>
+  <div class="proof-grid">
+    <div class="proof-card">
+  <span>E-self-reproduction</span>
+  <p>Thompson presents a self-reproducing C program and notes that it can be written by another program and can reproduce arbitrary excess baggage.</p>
+</div>
+<div class="proof-card">
+  <span>E-compiler-training</span>
+  <p>The lecture shows how to teach a self-hosting C compiler a new escape sequence so future source can use the learned behavior.</p>
+</div>
+<div class="proof-card">
+  <span>E-login-trojan</span>
+  <p>Thompson describes a compiler modification that recognizes the UNIX login command and emits code accepting either the intended password or a known password.</p>
+</div>
+<div class="proof-card">
+  <span>E-self-reinsertion</span>
+  <p>A second pattern recognizes the compiler source and emits a compiler that contains both the login Trojan and the compiler self-reinsertion Trojan, even after source cleanup.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="claim-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Claim map</p>
+  <h2>What the review actually supports.</h2>
+  <div class="claim-grid">
+    <div class="claim-card">
+  <span>C1 · source-supported</span>
+  <p>A self-reproducing program can carry arbitrary extra payload along with its main algorithm.</p>
+  <small>E-self-reproduction</small>
+</div>
+<div class="claim-card">
+  <span>C2 · source-supported</span>
+  <p>A self-hosting compiler can preserve learned behavior across recompilation, creating a recursive trust dependency.</p>
+  <small>E-compiler-training</small>
+</div>
+<div class="claim-card">
+  <span>C3 · source-supported</span>
+  <p>A compiler can deliberately miscompile a target program such as login to insert hidden behavior not present in the target source.</p>
+  <small>E-login-trojan</small>
+</div>
+<div class="claim-card">
+  <span>C4 · source-supported</span>
+  <p>A compromised compiler can reinsert its own Trojan behavior when compiling a clean compiler source, leaving no visible malicious source.</p>
+  <small>E-self-reinsertion</small>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="takeaway-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Agent infrastructure</p>
+  <h2>What changes if you build systems.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>Do not confuse a clean transcript, clean prompt, or clean source file with a complete trust argument.</p></div>
+<div class="apple-card"><p>Agent tools, sandboxes, evaluators, and model-serving stacks are part of the trusted computing base.</p></div>
+<div class="apple-card"><p>Build provenance, reproducible builds, signed artifacts, isolated tool execution, and independent verification matter for agent systems.</p></div>
+<div class="apple-card"><p>If an agent can run code or call tools, the compiler/interpreter/container underneath can be the real security boundary.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="caveat-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Caveats</p>
+  <h2>What this does not prove.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>The lecture is a short conceptual demonstration, not a modern supply-chain security survey.</p></div>
+<div class="apple-card"><p>It predates reproducible builds, diverse double compilation, signed supply chains, TEEs, and modern software provenance systems.</p></div>
+<div class="apple-card"><p>The LLM-agent application is an analogy; Thompson discusses compilers, login, and lower-level program-handling tools.</p></div>
+<div class="apple-card"><p>The conclusion can sound fatalistic, but in practice it motivates reducing and checking the trusted base rather than giving up on verification.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="closing-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Run it</p>
+  <h2>No PoC yet.</h2>
+  <p class="deck-note">No PoC yet - contributions welcome. A compact PoC could implement a tiny compiler/interpreter that hides a source-invisible backdoor and reinserts it on rebuild.</p>
+  <div class="reference-list">
+    <ul><li>Paper: <a href="https://dl.acm.org/doi/10.1145/358198.358210">Reflections on Trusting Trust</a></li><li>security_model: <a href="https://srl.cs.jhu.edu/pubs/SRL2003-02.pdf">Capability Myths Demolished</a></li><li>verified_tcb: <a href="https://sel4.systems/Research/pdfs/sel4-formal-verification-os-kernel.pdf">seL4</a></li><li>mitigation: <a href="https://arxiv.org/abs/1004.5534">Fully Countering Trusting Trust through Diverse Double-Compiling</a></li></ul>
+  </div>
+</div>
+
+Note: This deck is synthesized from `data/reviews/trusting-trust-thompson-1984.json`. Update the review record, then run `bun run build`.

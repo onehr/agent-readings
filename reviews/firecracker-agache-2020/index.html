@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Firecracker: Lightweight Virtualization for Serverless Applications</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/firecracker-agache-2020/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Isolation and Sandboxing</p>
+        <h1>Firecracker</h1>
+        <p class="hero-lede">Firecracker makes hardware virtualization viable for dense serverless multi-tenancy by replacing general-purpose QEMU with a small Rust VMM specialized for Linux microVMs.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>7</strong><span>Claims</span></div>
+          <div class="metric"><strong>7</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2020 · NSDI 2020</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>2</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/firecracker-agache-2020/">Open deck</a>
+        <a class="button" href="https://www.usenix.org/conference/nsdi20/presentation/agache">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>For agent infrastructure, Firecracker is the practical default answer when untrusted agent-generated code needs a real tenant boundary without giving up cloud-scale density.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Serverless providers need to run many tenants on the same hardware while preserving security, performance isolation, and fast startup.</li><li>Linux containers are dense and fast but share the host kernel, creating a security-versus-compatibility tradeoff through seccomp and syscall restrictions.</li><li>Traditional VMs provide stronger boundaries but carry large VMM, device-model, memory, and boot-time overheads.</li><li>AWS Lambda originally used containers per function with EC2 instances per customer, which complicated packing and still left a container compatibility/security tradeoff.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks whether a VM boundary can be made cheap enough for serverless function/container density while preserving broad Linux compatibility.</p>
+
+      <h2>Method</h2>
+      <p>Keep the hardware virtualization boundary but aggressively specialize the VMM for serverless: minimal devices, one process per microVM, Rust implementation, REST configuration API, Linux/KVM host primitives, and no BIOS, PCI, migration, GPU, USB, or arbitrary-kernel support.</p>
+      <ul><li>Use KVM for hardware virtualization instead of relying only on host-kernel container isolation.</li><li>Replace QEMU with a purpose-built Rust VMM around 50k lines of code.</li><li>Expose only the devices required by serverless/container workloads.</li><li>Boot minimal Linux kernels directly, avoiding BIOS and legacy hardware emulation.</li><li>Provide a REST-over-Unix-socket API for microVM configuration and lifecycle control.</li><li>Run each microVM as a separate host process so standard Linux tools and isolation mechanisms still apply.</li><li>Integrate microVM slots into Lambda's worker placement and sticky routing architecture.</li><li>Benchmark boot time, memory overhead, IO, networking, density, and production migration behavior.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>Firecracker shifts the isolation boundary from shared host-kernel container isolation to KVM-backed virtualization with a much smaller VMM than QEMU.</p>
+  <p><strong>Scope:</strong> Sections 1-3.</p>
+  <ul><li><strong>E-isolation-boundary</strong>: The paper contrasts containers, where untrusted code calls the host kernel directly, with KVM virtualization, where untrusted code runs with a guest kernel and the VMM/KVM boundary mediates privileged host access.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>The low overhead comes from specialization: Firecracker omits BIOS, arbitrary kernels, PCI, USB, video, audio, migration, and many legacy devices.</p>
+  <p><strong>Scope:</strong> Section 1.1 and Section 3.</p>
+  <ul><li><strong>E-specialization</strong>: Firecracker intentionally does not provide BIOS, arbitrary-kernel boot, legacy devices, PCI, USB, GPU, video/audio, or migration, and exposes only a limited device set such as network, block, serial, and partial i8042.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>Firecracker is roughly 50k lines of Rust, around 96% fewer lines than QEMU in the paper's comparison.</p>
+  <p><strong>Scope:</strong> Section 2.1.3.</p>
+  <ul><li><strong>E-loc</strong>: The paper states QEMU is over 1.4 million lines of code, while Firecracker contains approximately 50k lines of Rust, about 96% fewer lines.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>With a minimal Linux guest, Firecracker offers less than 5MB memory overhead, boots to application code in under 125ms in the paper's introduction claim, and can create up to 150 microVMs per second per host.</p>
+  <p><strong>Scope:</strong> Introduction.</p>
+  <ul><li><strong>E-headline-performance</strong>: The introduction reports less than 5MB memory overhead per container, boot to application code in less than 125ms, and up to 150 microVM creations per second per host.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>In the evaluation, Firecracker has around 3MB memory overhead per microVM, compared with around 13MB for Cloud Hypervisor and around 131MB for QEMU.</p>
+  <p><strong>Scope:</strong> Section 5.2.</p>
+  <ul><li><strong>E-memory-overhead</strong>: The memory-overhead benchmark reports about 3MB for Firecracker, about 13MB for Cloud Hypervisor, and about 131MB for QEMU across measured VM sizes.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>AWS migrated Lambda to Firecracker without customer behavior changes and runs Lambda and Fargate workloads on it at massive production scale.</p>
+  <p><strong>Scope:</strong> Abstract, Section 4.3, and Conclusion.</p>
+  <ul><li><strong>E-production-migration</strong>: The paper states Firecracker is deployed in Lambda and Fargate, supports millions of workloads and trillions of requests per month, and that Lambda migration from the legacy isolation stack proceeded with no interruption to availability, latency, or behavior.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · paper-supported</h3>
+  <p>Firecracker's IO and networking paths were adequate for Lambda/Fargate but left room for improvement, including serial block IO handling and no flush-to-disk in the tested block path.</p>
+  <p><strong>Scope:</strong> Sections 5.3 and 5.4.</p>
+  <ul><li><strong>E-io-limitations</strong>: The paper reports Firecracker's block IO implementation did not implement flush-to-disk and handled IO serially in the evaluated version; network throughput was lower than Cloud Hypervisor/QEMU but adequate for production needs.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>When an agent can run arbitrary code, a VM boundary is the honest security default for multi-tenant or untrusted workloads.</li><li>Firecracker's lesson is deletion as security engineering: remove devices, firmware, compatibility paths, and management features not required by the workload.</li><li>Agent sandboxes should separate orchestration from execution. Firecracker gives a microVM, not a policy engine, scheduler, package manager, or permission system.</li><li>Cold-start and memory overhead are product constraints. Fine-grained agent tool execution needs sandbox creation and recycling to be fast enough for interactive loops.</li><li>Reuse is dangerous unless scoped. Lambda reuses a slot for one function's serial invocations; agent runtimes need similarly strict tenant/function boundaries.</li><li>Isolation is not observability. Firecracker must still be paired with logs, metrics, cgroups/rate limits, provenance, and external side-effect controls.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The paper is AWS-authored and reports AWS production experience.</li><li>Firecracker is not a general VM replacement; it intentionally omits many VM features.</li><li>Firecracker secures the compute boundary but does not solve tool authorization, data exfiltration, prompt injection, or network policy alone.</li><li>Boot and memory results depend on minimal kernel/userland configuration and may not hold for arbitrary guest images.</li><li>The 2020 IO limitations may have changed in current releases, so modern deployment decisions should rebenchmark current Firecracker.</li><li>A microVM boundary can still leak through explicitly granted capabilities such as filesystem mounts, network egress, credentials, or host APIs.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/firecracker-agache-2020.json.</span>
+  </footer>
+</body>
+</html>

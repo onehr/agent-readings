@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · Improving Factuality and Reasoning in Language Models through Multiagent Debate</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/multiagent-debate-du-2023/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Multi-Agent Systems</p>
+        <h1>Multiagent Debate</h1>
+        <p class="hero-lede">Multiagent Debate improves some reasoning and factuality tasks by making several model instances critique and update each other's answers before taking a final consensus.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>7</strong><span>Claims</span></div>
+          <div class="metric"><strong>9</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2023 · arXiv 2023; ICML 2024, PMLR 235:11733-11763</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>5</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/multiagent-debate-du-2023/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2305.14325">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>It is an important calibration paper for multi-agent systems because it gives a concrete inference-time coordination protocol, direct baselines against single-agent reflection and majority vote, and clear cost/context-length caveats.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Most prompting improvements focused on a single model instance: chain-of-thought, reflection, verification, or self-consistency.</li><li>Single-agent generations can hallucinate facts or make reasoning jumps while still reporting high confidence.</li><li>Majority voting can exploit sample diversity, but does not let samples critique each other's reasoning.</li><li>Multi-agent agent systems needed empirical evidence for when communication adds value beyond simply sampling more answers.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks whether black-box LLM instances can improve factuality and reasoning by communicating before the final answer, rather than only being sampled independently.</p>
+
+      <h2>Method</h2>
+      <p>Run several black-box LLM instances in parallel, give each one the task, feed each agent the other agents' answers with a debate prompt, repeat for a fixed number of rounds, then use consensus or majority over the final answers.</p>
+      <ul><li>Select a task and a base language model.</li><li>Instantiate multiple agents, typically copies of the same model.</li><li>Ask each agent to produce an independent initial answer.</li><li>For every round, concatenate or summarize the other agents' responses and give them to each agent with a consensus prompt.</li><li>Ask each agent to update its answer after inspecting the other responses.</li><li>Stop after the configured number of rounds or when consensus is reached.</li><li>Evaluate final answers against task-specific labels, factual bullets, Stockfish scores, or chess validity constraints.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>The debate protocol is model-agnostic and only needs black-box access to generated text.</p>
+  <p><strong>Scope:</strong> Abstract, Introduction, and Section 2.1.</p>
+  <ul><li><strong>E-black-box-method</strong>: The paper describes multiple model instances generating candidate answers, reading and critiquing other agents' responses, and updating their own answers over multiple rounds, while requiring only black-box generation access.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>Consensus is empirical rather than guaranteed; when agents do not converge, the paper takes a majority answer.</p>
+  <p><strong>Scope:</strong> Section 2.2.</p>
+  <ul><li><strong>E-consensus</strong>: The authors state that convergence is not guaranteed in general, but empirically agents often converge; in remaining disagreement cases they take the majority answer.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>With three agents and two rounds, debate outperforms single-agent, reflection, and majority baselines on the paper's arithmetic, GSM8K, and chess-move optimality reasoning tasks.</p>
+  <p><strong>Scope:</strong> Section 3.1, Table 1.</p>
+  <ul><li><strong>E-reasoning-table</strong>: With three agents and two rounds, debate reports 81.8% arithmetic, 85.0% GSM8K, and 122.9 pawn-score chess optimality, versus single-agent 67.0%, 77.0%, and 91.4, reflection 72.1%, 75.0%, and 102.1, and majority 75.0%, 81.0%, and 105.2.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>Debate also improves the paper's factuality evaluations for biographies, MMLU, and chess move validity.</p>
+  <p><strong>Scope:</strong> Section 3.2, Table 2.</p>
+  <ul><li><strong>E-factuality-table</strong>: Debate reports 73.8 biography factuality, 71.1 MMLU, and 45.2 chess move validity, versus single-agent 66.0, 63.9, and 29.3; reflection 68.3, 57.7, and 38.8; and majority 67.0 MMLU and 36.0 chess validity.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>The paper's ablations suggest more agents and more rounds can improve arithmetic performance, and different personas can improve MMLU.</p>
+  <p><strong>Scope:</strong> Section 3.3.</p>
+  <ul><li><strong>E-agent-round-analysis</strong>: On arithmetic, performance increases monotonically in the reported analysis as the number of debating agents increases and as the number of debate rounds increases.</li><li><strong>E-persona-analysis</strong>: Using different persona prompts on MMLU improves debate performance from 71.1 to 74.2 in the reported experiment.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>Context growth is a real systems constraint for debate, so summarizing other agents' responses is proposed as an efficiency strategy.</p>
+  <p><strong>Scope:</strong> Section 3.3 and Limitations.</p>
+  <ul><li><strong>E-summarization</strong>: The paper notes that concatenating all other agents' responses is expensive as agent count grows, and reports that summarizing other responses before debate improves arithmetic performance.</li><li><strong>E-limitations</strong>: The limitations section states that the approach is more expensive than other prompting techniques because it requires multiple agents and debate, and that longer debates strain current models' ability to process context.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · paper-supported</h3>
+  <p>Multiagent Debate is a useful inference-time reliability technique, but it is expensive and can converge to an incorrect answer.</p>
+  <p><strong>Scope:</strong> Introduction, Section 2.2, Appendix qualitative examples, and Limitations.</p>
+  <ul><li><strong>E-limitations</strong>: The limitations section states that the approach is more expensive than other prompting techniques because it requires multiple agents and debate, and that longer debates strain current models' ability to process context.</li><li><strong>E-wrong-consensus</strong>: The appendix says debate generally improves final answers, though sometimes answers converge to an incorrect value; Figure 8 also notes that convergence on an uncertain fact is not necessarily correct.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Do not count agents; count independent evidence. Debate helps when agents expose different reasoning paths or uncertain facts.</li><li>Multi-agent communication is not a verifier. Without an external checker, agents can converge on the wrong answer together.</li><li>The protocol is inference-time reliability through redundancy, critique, and aggregation; the runtime cost scales with agents, rounds, and context size.</li><li>Debate transcripts are valuable state. They reveal disagreement, persuasion, convergence, and failure modes that a single final answer hides.</li><li>Summarization is a systems primitive for agent collectives: once every agent must read every other agent, context management becomes the bottleneck.</li><li>Specialized agents are plausible, but the paper's strongest evidence is still task-local; role design needs measurement, not vibes.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The README framing is right to be skeptical: some gains are debate-specific, but the method is also an expensive way to use more samples and more tokens.</li><li>The main reported results use chatGPT-3.5-era models and relatively small evaluated subsets for several tasks.</li><li>The biography factuality evaluation uses an LLM critic and may miss generated inaccuracies outside the ground-truth bullet list.</li><li>Consensus is not correctness; the paper explicitly notes that convergence can land on an incorrect value.</li><li>Long debates create context-length and attention problems, making this as much an inference-systems question as an agent-design question.</li><li>The method is easiest to evaluate on tasks with extractable final answers; open-ended agent trajectories need stronger instrumentation.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/multiagent-debate-du-2023.json.</span>
+  </footer>
+</body>
+</html>

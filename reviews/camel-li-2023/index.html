@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · CAMEL: Communicative Agents for Mind Exploration of Large Language Model Society</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/camel-li-2023/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Multi-Agent Systems</p>
+        <h1>CAMEL</h1>
+        <p class="hero-lede">CAMEL uses role-conditioned agent conversations to turn a vague idea into multi-turn instruction-following data and task progress.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>8</strong><span>Claims</span></div>
+          <div class="metric"><strong>8</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2023 · NeurIPS 2023</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>3</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/camel-li-2023/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2303.17760">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>CAMEL shows why multi-agent prompting is useful beyond solving a single task: dialogue between role-specialized agents becomes a data-production mechanism for studying, training, and stress-testing agent societies.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Chat LLMs solve complex tasks only when humans keep steering the conversation with good prompts.</li><li>Manual prompting requires domain knowledge and does not scale to large studies of cooperative agent behavior.</li><li>Naive agent-agent chats suffer role flipping, instruction repetition, vague replies, and infinite loops.</li><li>Instruction-following datasets are expensive to curate manually and often lack multi-turn task-oriented dialogue.</li></ul>
+      <p><strong>Key gap:</strong> The paper asks whether role-conditioned LLM agents can autonomously cooperate from a preliminary idea and generate useful conversational data with minimal human intervention.</p>
+
+      <h2>Method</h2>
+      <p>Start from roles and a rough idea, use a task-specifier prompt to sharpen the task, initialize an AI user and AI assistant with symmetric role-preserving prompts, then let them alternate instruction and solution messages until a completion token or other termination condition fires.</p>
+      <ul><li>Generate or accept assistant roles, user roles, and preliminary tasks.</li><li>Use the task-specifier prompt to produce a more concrete task.</li><li>Instantiate the AI user and AI assistant with inception prompts that prohibit role flipping and define response format.</li><li>Run the two-agent loop where the user instructs and the assistant solves.</li><li>Terminate when the user declares completion or a safety/cost condition triggers.</li><li>Collect the resulting conversations as AI Society, Code, Math, Science, and Misalignment datasets.</li><li>Evaluate role-playing outputs against single-shot gpt-3.5-turbo and use generated datasets to fine-tune LLaMA-7B.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>CAMEL's role-playing framework assigns an AI user to plan and instruct, and an AI assistant to execute instructions and provide solutions.</p>
+  <p><strong>Scope:</strong> Section 3.1.</p>
+  <ul><li><strong>E-role-playing</strong>: The framework starts from a preliminary idea and role assignment; a task-specifier makes the task concrete; the AI user instructs one step at a time and the AI assistant provides task-solving responses.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>Inception prompting front-loads task specification, role assignment, communication protocol, termination, and anti-failure constraints before autonomous conversation begins.</p>
+  <p><strong>Scope:</strong> Section 3.2.</p>
+  <ul><li><strong>E-inception</strong>: Inception prompts include a task-specifier prompt plus assistant and user system prompts with role declarations, role-flip prohibitions, instruction/solution formats, task reminders, refusal guidance, and the CAMEL_TASK_DONE completion token.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>For AI Society, CAMEL generates 50 assistant roles, 50 user roles, and 10 tasks for each role pair, yielding 25,000 conversations.</p>
+  <p><strong>Scope:</strong> Section 4.1.</p>
+  <ul><li><strong>E-dataset-scale</strong>: The AI Society generation process creates 50 assistant roles, 50 user roles, and 10 tasks for every role pair, for 25,000 conversations. The paper also generates Code, Math, Science, and Misalignment datasets.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>The paper identifies role flipping, repeated instructions, flake replies, and infinite loops as core failure modes for autonomous agent-agent dialogue.</p>
+  <p><strong>Scope:</strong> Section 4.1.</p>
+  <ul><li><strong>E-failures</strong>: The paper reports four major autonomous cooperation failures: role flipping, assistant repeating instructions, vague flake replies, and infinite loops of meaningless messages.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>CAMEL uses explicit termination conditions, including no user instruction for three rounds, assistant instruction/role reversal, completion token, token limits, and max-message limits.</p>
+  <p><strong>Scope:</strong> Section 4.1.</p>
+  <ul><li><strong>E-termination</strong>: Termination conditions include user no-instruction for three rounds, assistant instruction indicating role reversal, CAMEL_TASK_DONE, assistant/user token limits, and maximum number of messages.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>Human and GPT-4 evaluations prefer CAMEL role-playing outputs over single-shot gpt-3.5-turbo outputs in AI Society and Code settings.</p>
+  <p><strong>Scope:</strong> Section 5.1, Table 1.</p>
+  <ul><li><strong>E-agent-eval</strong>: AI Society human evaluation: 13.3% draw, 10.4% gpt-3.5-turbo wins, 76.3% CAMEL wins. AI Society GPT-4 evaluation: 4.0% draw, 23.0% gpt-3.5-turbo wins, 73.0% CAMEL wins. Code GPT-4 evaluation: 0.0% draw, 24.0% gpt-3.5-turbo wins, 76.0% CAMEL wins.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · paper-supported</h3>
+  <p>Fine-tuning LLaMA-7B on progressively added CAMEL-generated datasets improves domain-specific response quality and code-generation benchmarks versus LLaMA-7B and Vicuna-7B.</p>
+  <p><strong>Scope:</strong> Sections 5.2 and 5.3.</p>
+  <ul><li><strong>E-finetune</strong>: Progressive fine-tuning is evaluated on AI Society, code, math, and science questions. On HumanEval, CAMEL-7B reports pass@1 14.0 and pass@100 57.9 versus LLaMA-7B 10.5 / 36.5 and Vicuna-7B 11.0 / 42.9. On HumanEval+, CAMEL-7B reports 12.2 / 50.0 versus Vicuna-7B 9.9 / 34.7.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C8 · paper-supported</h3>
+  <p>The paper explicitly creates a Misalignment dataset and discusses malicious applications, showing that role-playing can generate both useful and risky agent behavior data.</p>
+  <p><strong>Scope:</strong> Introduction and dataset discussion.</p>
+  <ul><li><strong>E-misalignment</strong>: The paper says it generates a Misalignment dataset simulating possible malicious applications, alongside AI Society, Code, Math, and Science, to study opportunities and risks in AI society.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>Role prompts are protocol definitions. CAMEL's guardrails are essentially a communication contract between agents.</li><li>A multi-agent dialogue loop needs termination policy before it needs more agents. Role flipping and infinite loops are runtime bugs.</li><li>Synthetic agent conversations are a data engine. CAMEL's biggest infrastructure lesson is that agent-agent traces can become training and evaluation corpora.</li><li>Separate planner and executor roles. The AI user decides what to ask next; the AI assistant executes the instruction.</li><li>Preference wins are not proof of correctness. Generated code or plans still need external tests, validators, or execution.</li><li>Misalignment is part of the dataset design space: scalable role-playing can amplify risky behavior as well as useful instruction data.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>The framework is prompt-engineered and does not formally guarantee role stability or task success.</li><li>The evaluations rely heavily on GPT-4 and human preference judgments.</li><li>CAMEL's generated datasets inherit biases, omissions, and safety issues from the models used to generate them.</li><li>The role-playing setup focuses on cooperative assistant-user settings, not adversarial or fully open multi-agent economies.</li><li>HumanEval gains are relative to small open models; CAMEL-7B remains far behind gpt-3.5-turbo.</li><li>The open-source CAMEL project has changed since the 2023 paper.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/camel-li-2023.json.</span>
+  </footer>
+</body>
+</html>

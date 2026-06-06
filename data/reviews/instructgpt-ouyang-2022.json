@@ -1,0 +1,313 @@
+{
+  "schema_version": 1,
+  "slug": "instructgpt-ouyang-2022",
+  "review_status": "paper-read",
+  "paper": {
+    "title": "Training Language Models to Follow Instructions with Human Feedback",
+    "authors": [
+      "Long Ouyang",
+      "Jeffrey Wu",
+      "Xu Jiang",
+      "Diogo Almeida",
+      "Carroll Wainwright",
+      "Pamela Mishkin",
+      "Chong Zhang",
+      "Sandhini Agarwal",
+      "Katarina Slama",
+      "Alex Ray",
+      "John Schulman",
+      "Jacob Hilton",
+      "Fraser Kelton",
+      "Luke Miller",
+      "Maddie Simens",
+      "Amanda Askell",
+      "Peter Welinder",
+      "Paul F. Christiano",
+      "Jan Leike",
+      "Ryan Lowe"
+    ],
+    "year": 2022,
+    "venue": "NeurIPS 2022",
+    "url": "https://arxiv.org/abs/2203.02155",
+    "project_url": "https://openai.com/index/instruction-following/",
+    "arxiv_id": "2203.02155",
+    "read_sources": [
+      {
+        "kind": "paper_abs",
+        "url": "https://arxiv.org/abs/2203.02155",
+        "note": "Used for arXiv metadata, author list, abstract, and submission date."
+      },
+      {
+        "kind": "proceedings",
+        "url": "https://proceedings.neurips.cc/paper_files/paper/2022/hash/b1efde53be364a73914f58805a001731-Abstract.html",
+        "note": "Used to confirm NeurIPS 2022 publication metadata and abstract."
+      },
+      {
+        "kind": "paper_pdf",
+        "url": "https://proceedings.neurips.cc/paper_files/paper/2022/file/b1efde53be364a73914f58805a001731-Paper-Conference.pdf",
+        "note": "Read for RLHF methodology, dataset sizes, human preference results, truthfulness/toxicity results, pretraining-mix mitigation, and limitations."
+      },
+      {
+        "kind": "project_page",
+        "url": "https://openai.com/index/instruction-following/",
+        "note": "Used for public project framing, methods summary, deployment context, and limitations."
+      }
+    ]
+  },
+  "summary": {
+    "one_sentence": "InstructGPT made broad instruction following work by training GPT-3 with demonstrations, human preference rankings, a reward model, and PPO.",
+    "thesis": "The core result is that a smaller model aligned to a deployment prompt distribution can beat a much larger pretrained model at satisfying users, because the training objective is moved closer to user intent.",
+    "why_it_matters": "This is the baseline recipe for post-training agent models: collect task-facing behavior data, model preferences, optimize against that model, and measure the resulting assistant on user-distribution prompts instead of only academic NLP tasks."
+  },
+  "problem": {
+    "prior_state": [
+      "GPT-3-style pretraining optimized next-token prediction, not following user instructions helpfully and safely.",
+      "Prompt engineering could elicit capabilities but did not reliably reduce unhelpful, untruthful, or toxic behavior.",
+      "Public NLP instruction datasets such as FLAN and T0 did not match deployed API prompt distributions.",
+      "Safety and helpfulness judgments are subjective enough that simple automatic metrics were insufficient."
+    ],
+    "key_gap": "The paper asks how to adapt a general pretrained language model to follow broad real user instructions while improving helpfulness, truthfulness, and harmlessness.",
+    "assumptions": [
+      "Human labeler preferences are a useful proxy for the desired model behavior.",
+      "A reward model can generalize from ranked samples to unseen prompts.",
+      "PPO optimization against the reward model will improve user-facing behavior without unacceptable capability regressions.",
+      "The API prompt distribution is a better target than purely academic task mixtures for deployed assistants."
+    ]
+  },
+  "concepts": [
+    {
+      "id": "sft",
+      "name": "Supervised fine-tuning",
+      "definition": "Fine-tuning GPT-3 on labeler demonstrations of desired responses to user or labeler-written prompts."
+    },
+    {
+      "id": "reward-model",
+      "name": "Reward model",
+      "definition": "A model trained to predict which candidate response a human labeler would prefer for a given prompt."
+    },
+    {
+      "id": "ppo",
+      "name": "PPO policy optimization",
+      "definition": "Reinforcement learning that optimizes the supervised policy against the learned reward model."
+    },
+    {
+      "id": "ppo-ptx",
+      "name": "PPO-ptx",
+      "definition": "The paper's preferred InstructGPT variant that mixes pretraining-gradient updates into PPO to reduce public NLP regressions."
+    },
+    {
+      "id": "alignment-tax",
+      "name": "Alignment tax",
+      "definition": "Capability loss caused by alignment training, especially regressions on tasks outside the target user distribution."
+    }
+  ],
+  "method": {
+    "core_idea": "Start with GPT-3, train an SFT policy on human demonstrations, train a reward model from human-ranked model outputs, then fine-tune the policy with PPO against the reward model while using pretraining-mix updates to reduce regressions.",
+    "action_grammar": [
+      "prompt: user or labeler-written instruction.",
+      "demonstration: labeler-written desired output for SFT.",
+      "candidate outputs: multiple model responses to the same prompt.",
+      "ranking: labeler preference ordering over candidate outputs.",
+      "reward: scalar prediction of labeler preference from the reward model.",
+      "policy update: PPO step with reward-model score and KL penalty.",
+      "pretraining mix: language-modeling update mixed into PPO gradients."
+    ],
+    "steps": [
+      "Collect prompts from the API distribution plus labeler-written prompts.",
+      "Have labelers write demonstrations of desired behavior and train SFT models.",
+      "Sample multiple outputs per prompt and have labelers rank the outputs.",
+      "Train a 6B reward model to predict the preferred output from ranking data.",
+      "Optimize the SFT policy with PPO using the reward model as the reward function.",
+      "Add KL regularization and PPO-ptx pretraining mix to reduce reward over-optimization and downstream regressions.",
+      "Evaluate with labeler preference ratings, API-distribution metadata, TruthfulQA, RealToxicityPrompts, bias datasets, and public NLP tasks."
+    ],
+    "pseudocode": "sft_data = collect_demonstrations(api_prompts, labelers)\npolicy = finetune_gpt3(sft_data)\n\ncomparison_data = []\nfor prompt in api_prompts:\n    outputs = sample_outputs(policy, prompt, k=4..9)\n    ranking = labelers.rank(outputs)\n    comparison_data.append((prompt, outputs, ranking))\n\nrm = train_reward_model(comparison_data)\npolicy = ppo(policy, reward=rm, kl_to_sft=true, pretraining_mix=true)\nreturn policy"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "method",
+      "status": "paper-supported",
+      "statement": "InstructGPT uses a three-stage RLHF pipeline: SFT on demonstrations, reward modeling from rankings, and PPO against the learned reward model.",
+      "scope": "Section 3.1 and Figure 2.",
+      "evidence_refs": ["E-method"],
+      "caveats": ["The reward model reflects the paper's selected labelers, researchers, customers, and API policies, not a universal human preference."]
+    },
+    {
+      "id": "C2",
+      "type": "data",
+      "status": "paper-supported",
+      "statement": "The training data is deployment-shaped: about 13k SFT prompts, 33k RM prompts, and 31k PPO prompts, mostly from a commercial API prompt distribution.",
+      "scope": "Section 3.2.",
+      "evidence_refs": ["E-data"],
+      "caveats": ["The dataset is over 96% English and filtered/deduplicated by the authors' heuristics."]
+    },
+    {
+      "id": "C3",
+      "type": "human-feedback",
+      "status": "paper-supported",
+      "statement": "The paper relies on a small, trained contractor pool for demonstrations, rankings, and evaluation, with measured agreement between training and held-out labelers.",
+      "scope": "Section 3.3.",
+      "evidence_refs": ["E-labelers"],
+      "caveats": ["The contractor group is explicitly not representative of everyone affected by the models."]
+    },
+    {
+      "id": "C4",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "Human evaluators prefer InstructGPT outputs over GPT-3 outputs on the API prompt distribution, including a 1.3B InstructGPT model over 175B GPT-3.",
+      "scope": "Abstract, Figure 1, and main findings.",
+      "evidence_refs": ["E-preference"],
+      "caveats": ["The primary metric is labeler preference on held-out API-distribution prompts, not a formal proof of correctness."]
+    },
+    {
+      "id": "C5",
+      "type": "result",
+      "status": "paper-supported",
+      "statement": "InstructGPT improves truthfulness and reduces some toxicity relative to GPT-3, while not significantly improving bias benchmarks.",
+      "scope": "Main findings and Section 3.5.",
+      "evidence_refs": ["E-truth-toxicity"],
+      "caveats": ["The paper still reports hallucinations, bias, toxic outputs, and unsafe instruction-following failure modes."]
+    },
+    {
+      "id": "C6",
+      "type": "training",
+      "status": "paper-supported",
+      "statement": "Mixing pretraining updates into PPO reduces public NLP regressions without sacrificing the labeler-preference gains.",
+      "scope": "Main findings and Section 3.4.",
+      "evidence_refs": ["E-ppo-ptx"],
+      "caveats": ["This mitigates a measured alignment tax; it does not eliminate all capability or safety tradeoffs."]
+    },
+    {
+      "id": "C7",
+      "type": "limitation",
+      "status": "paper-supported",
+      "statement": "The paper is clear that InstructGPT is not fully aligned or fully safe and can become easier to misuse because it follows instructions better.",
+      "scope": "Section 5.2, Section 5.3, and OpenAI project page limitations.",
+      "evidence_refs": ["E-limitations"],
+      "caveats": ["Post-training is one safety layer; deployment policy, monitoring, refusal behavior, and external controls still matter."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-method",
+      "kind": "method",
+      "source": "paper",
+      "locator": "Section 3.1, Figure 2",
+      "result": "The paper applies three steps: collect demonstrations and train SFT; collect comparison rankings and train a reward model; optimize the SFT policy with PPO using the reward model as a scalar reward.",
+      "metric": "training pipeline",
+      "claim_refs": ["C1"]
+    },
+    {
+      "id": "E-data",
+      "kind": "dataset",
+      "source": "paper",
+      "locator": "Section 3.2",
+      "result": "The paper reports about 13k SFT training prompts, 33k RM training prompts, and 31k PPO training prompts, drawn primarily from API prompts plus labeler-written prompts; the prompt dataset is over 96% English.",
+      "metric": "prompt counts",
+      "claim_refs": ["C2"]
+    },
+    {
+      "id": "E-labelers",
+      "kind": "human_data",
+      "source": "paper",
+      "locator": "Section 3.3",
+      "result": "About 40 contractors produced demonstrations, comparisons, and evaluations. Training labelers agreed with each other 72.6 +/- 1.5% of the time, and held-out labelers agreed 77.3 +/- 1.3%.",
+      "metric": "labeler count and agreement",
+      "claim_refs": ["C3"]
+    },
+    {
+      "id": "E-preference",
+      "kind": "human_eval",
+      "source": "paper",
+      "locator": "Abstract, Figure 1, main findings",
+      "result": "The paper reports that 1.3B InstructGPT outputs are preferred to 175B GPT-3 outputs, and that 175B InstructGPT is preferred to 175B GPT-3 85 +/- 3% of the time and to few-shot prompted 175B GPT-3 71 +/- 4% of the time.",
+      "metric": "human preference win rate",
+      "claim_refs": ["C4"]
+    },
+    {
+      "id": "E-truth-toxicity",
+      "kind": "safety_eval",
+      "source": "paper",
+      "locator": "Main findings and Section 3.5",
+      "result": "The paper reports better TruthfulQA behavior, hallucination rates of 21% for InstructGPT versus 41% for GPT-3 on closed-domain API tasks, about 25% fewer toxic outputs when prompted to be respectful, and no significant improvement on Winogender or CrowSPairs.",
+      "metric": "truthfulness, hallucination, toxicity, bias",
+      "claim_refs": ["C5"]
+    },
+    {
+      "id": "E-ppo-ptx",
+      "kind": "training_result",
+      "source": "paper",
+      "locator": "Main findings, Section 3.4, Section 5.1",
+      "result": "The authors observe public NLP regressions under RLHF and report that PPO-ptx, which mixes pretraining gradients into PPO, greatly reduces those regressions without compromising labeler preference scores.",
+      "metric": "alignment tax mitigation",
+      "claim_refs": ["C6"]
+    },
+    {
+      "id": "E-limitations",
+      "kind": "limitation",
+      "source": "paper",
+      "locator": "Section 5.2, Section 5.3",
+      "result": "The limitations state that labeler preferences are not representative of all affected people, data is mostly English, the models still make up facts and generate toxic or biased outputs, and stronger instruction-following can make misuse easier.",
+      "metric": "safety and representativeness limits",
+      "claim_refs": ["C7"]
+    }
+  ],
+  "agent_infra_takeaways": [
+    "Post-training is infrastructure. Instruction following depends on data pipelines, labeling operations, reward-model training, and eval loops, not just a better prompt.",
+    "Train on the distribution where the agent will run. InstructGPT's advantage comes from API-shaped prompts and human preferences rather than only public NLP task mixtures.",
+    "Preference models are policy surfaces. They encode who labeled, who wrote guidelines, which prompts were collected, and which deployment policies shaped the data.",
+    "Alignment tax is a runtime economics issue: if safety fine-tuning breaks useful capabilities, builders will route around it unless the tax is measured and mitigated.",
+    "Better instruction following increases both usefulness and misuse potential, so agent runtimes still need tool policy, refusal behavior, sandboxing, and monitoring.",
+    "For agents, RLHF is the ancestor of today's trajectory preference and verifiable-reward systems: define the behavior target, collect supervision, optimize, and evaluate on held-out tasks."
+  ],
+  "caveats": [
+    "The paper does not make models fully aligned or fully safe; it explicitly says simple mistakes, hallucinations, bias, and unsafe content remain.",
+    "Human feedback reflects the selected contractor pool, researcher guidance, customer prompts, and API policies, not all user communities.",
+    "The data is mostly English, so cultural and language generalization are bounded.",
+    "The strongest reported results are preference judgments on the authors' API prompt distribution, which is exactly the point but also limits external generality.",
+    "Reward models can be over-optimized; the paper uses KL penalties and PPO-ptx to control this, not to solve it permanently.",
+    "Instruction following by itself is not an agent safety boundary because it can make harmful instructions easier to carry out."
+  ],
+  "related_work": [
+    {
+      "title": "WebGPT",
+      "relation": "connects",
+      "note": "WebGPT is the earlier browser-assisted QA agent trained with human feedback; InstructGPT generalizes RLHF to broad instruction following.",
+      "url": "https://arxiv.org/abs/2112.09332"
+    },
+    {
+      "title": "Direct Preference Optimization",
+      "relation": "precedes",
+      "note": "DPO later simplifies preference optimization by removing the explicit reward-model/PPO loop.",
+      "url": "https://arxiv.org/abs/2305.18290"
+    },
+    {
+      "title": "Tulu 3",
+      "relation": "precedes",
+      "note": "Tulu 3 extends post-training with public data recipes, preference optimization, and verifiable rewards.",
+      "url": "https://arxiv.org/abs/2411.15124"
+    }
+  ],
+  "poc": {
+    "status": "missing",
+    "note": "No PoC yet - contributions welcome. A small local PoC could train a toy reward model over ranked completions and compare SFT-only versus reward-optimized outputs on synthetic instruction tasks."
+  },
+  "slide_plan": {
+    "title": "InstructGPT",
+    "subtitle": "RLHF turned user intent into the training target",
+    "sections": [
+      "summary",
+      "problem",
+      "rlhf_pipeline",
+      "data_and_labelers",
+      "preference_results",
+      "truthfulness_and_safety",
+      "alignment_tax",
+      "agent_training_lessons",
+      "caveats",
+      "run_it",
+      "references"
+    ]
+  }
+}

@@ -1,0 +1,217 @@
+<!-- .slide: class="title-slide apple-title" -->
+
+<div class="slide-frame slide-frame--center">
+  <p class="deck-kicker">agent-readings / Training Agents</p>
+  <h1>InstructGPT</h1>
+  <p class="deck-subtitle">RLHF turned user intent into the training target</p>
+
+  <div class="deck-meta-strip">
+    <div class="deck-meta-pill"><strong>2022</strong><span>NeurIPS 2022</span></div>
+    <div class="deck-meta-pill"><strong>7</strong><span>claims</span></div>
+    <div class="deck-meta-pill"><strong>7</strong><span>evidence refs</span></div>
+    <div class="deck-meta-pill"><strong>paper-read</strong><span>status</span></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="statement-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">The one sentence</p>
+  <h2>InstructGPT made broad instruction following work by training GPT-3 with demonstrations, human preference rankings, a reward model, and PPO.</h2>
+  <p class="deck-note">This is the baseline recipe for post-training agent models: collect task-facing behavior data, model preferences, optimize against that model, and measure the resulting assistant on user-distribution prompts instead of only academic NLP tasks.</p>
+</div>
+
+---
+
+<!-- .slide: class="problem-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Before this paper</p>
+  <h2>The friction was structural.</h2>
+  <div class="apple-card-grid apple-card-grid--three">
+    <div class="apple-card"><p>GPT-3-style pretraining optimized next-token prediction, not following user instructions helpfully and safely.</p></div>
+<div class="apple-card"><p>Prompt engineering could elicit capabilities but did not reliably reduce unhelpful, untruthful, or toxic behavior.</p></div>
+<div class="apple-card"><p>Public NLP instruction datasets such as FLAN and T0 did not match deployed API prompt distributions.</p></div>
+  </div>
+  <div class="deck-callout">
+    <span>Key gap</span>
+    <p>The paper asks how to adapt a general pretrained language model to follow broad real user instructions while improving helpfulness, truthfulness, and harmlessness.</p>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="idea-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Core idea</p>
+  <h2>Start with GPT-3, train an SFT policy on human demonstrations, train a reward model from human-ranked model outputs, then fine-tune the policy with PPO against...</h2>
+  <p class="deck-note">Start with GPT-3, train an SFT policy on human demonstrations, train a reward model from human-ranked model outputs, then fine-tune the policy with PPO against the reward model while using pretraining-mix updates to reduce regressions.</p>
+  <div class="idea-loop" aria-label="Agent loop">
+    <div><strong>Model</strong><span>reason</span></div>
+    <div><strong>Runtime</strong><span>act</span></div>
+    <div><strong>World</strong><span>observe</span></div>
+  </div>
+  <div class="step-strip">
+    <div class="step-item">
+  <span>01</span>
+  <p>Collect prompts from the API distribution plus labeler-written prompts.</p>
+</div>
+<div class="step-item">
+  <span>02</span>
+  <p>Have labelers write demonstrations of desired behavior and train SFT models.</p>
+</div>
+<div class="step-item">
+  <span>03</span>
+  <p>Sample multiple outputs per prompt and have labelers rank the outputs.</p>
+</div>
+<div class="step-item">
+  <span>04</span>
+  <p>Train a 6B reward model to predict the preferred output from ranking data.</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="grammar-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Action grammar</p>
+  <h2>The agent is an interface contract.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>prompt: user or labeler-written instruction.</p></div>
+<div class="apple-card"><p>demonstration: labeler-written desired output for SFT.</p></div>
+<div class="apple-card"><p>candidate outputs: multiple model responses to the same prompt.</p></div>
+<div class="apple-card"><p>ranking: labeler preference ordering over candidate outputs.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="code-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Executable shape</p>
+  <h2>The mechanism should fit on one screen.</h2>
+
+```python
+sft_data = collect_demonstrations(api_prompts, labelers)
+policy = finetune_gpt3(sft_data)
+
+comparison_data = []
+for prompt in api_prompts:
+    outputs = sample_outputs(policy, prompt, k=4..9)
+    ranking = labelers.rank(outputs)
+    comparison_data.append((prompt, outputs, ranking))
+
+rm = train_reward_model(comparison_data)
+policy = ppo(policy, reward=rm, kl_to_sft=true, pretraining_mix=true)
+return policy
+```
+</div>
+
+---
+
+<!-- .slide: class="proof-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Evidence</p>
+  <h2>The proof objects.</h2>
+  <div class="proof-grid">
+    <div class="proof-card">
+  <span>E-method</span>
+  <p>The paper applies three steps: collect demonstrations and train SFT; collect comparison rankings and train a reward model; optimize the SFT policy with PPO using the reward model...</p>
+</div>
+<div class="proof-card">
+  <span>E-data</span>
+  <p>The paper reports about 13k SFT training prompts, 33k RM training prompts, and 31k PPO training prompts, drawn primarily from API prompts plus labeler-written prompts; the prompt...</p>
+</div>
+<div class="proof-card">
+  <span>E-labelers</span>
+  <p>About 40 contractors produced demonstrations, comparisons, and evaluations. Training labelers agreed with each other 72.6 +/- 1.5% of the time, and held-out labelers agreed 77.3...</p>
+</div>
+<div class="proof-card">
+  <span>E-preference</span>
+  <p>The paper reports that 1.3B InstructGPT outputs are preferred to 175B GPT-3 outputs, and that 175B InstructGPT is preferred to 175B GPT-3 85 +/- 3% of the time and to few-shot...</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="claim-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Claim map</p>
+  <h2>What the review actually supports.</h2>
+  <div class="claim-grid">
+    <div class="claim-card">
+  <span>C1 · paper-supported</span>
+  <p>InstructGPT uses a three-stage RLHF pipeline: SFT on demonstrations, reward modeling from rankings, and PPO against the learned reward model.</p>
+  <small>E-method</small>
+</div>
+<div class="claim-card">
+  <span>C2 · paper-supported</span>
+  <p>The training data is deployment-shaped: about 13k SFT prompts, 33k RM prompts, and 31k PPO prompts, mostly from a commercial API prompt distribution.</p>
+  <small>E-data</small>
+</div>
+<div class="claim-card">
+  <span>C3 · paper-supported</span>
+  <p>The paper relies on a small, trained contractor pool for demonstrations, rankings, and evaluation, with measured agreement between training and held-out...</p>
+  <small>E-labelers</small>
+</div>
+<div class="claim-card">
+  <span>C4 · paper-supported</span>
+  <p>Human evaluators prefer InstructGPT outputs over GPT-3 outputs on the API prompt distribution, including a 1.3B InstructGPT model over 175B GPT-3.</p>
+  <small>E-preference</small>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="takeaway-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Agent infrastructure</p>
+  <h2>What changes if you build systems.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>Post-training is infrastructure. Instruction following depends on data pipelines, labeling operations, reward-model training, and eval loops, not just...</p></div>
+<div class="apple-card"><p>Train on the distribution where the agent will run. InstructGPT's advantage comes from API-shaped prompts and human preferences rather than only...</p></div>
+<div class="apple-card"><p>Preference models are policy surfaces. They encode who labeled, who wrote guidelines, which prompts were collected, and which deployment policies...</p></div>
+<div class="apple-card"><p>Alignment tax is a runtime economics issue: if safety fine-tuning breaks useful capabilities, builders will route around it unless the tax is measured...</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="caveat-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Caveats</p>
+  <h2>What this does not prove.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>The paper does not make models fully aligned or fully safe; it explicitly says simple mistakes, hallucinations, bias, and unsafe content remain.</p></div>
+<div class="apple-card"><p>Human feedback reflects the selected contractor pool, researcher guidance, customer prompts, and API policies, not all user communities.</p></div>
+<div class="apple-card"><p>The data is mostly English, so cultural and language generalization are bounded.</p></div>
+<div class="apple-card"><p>The strongest reported results are preference judgments on the authors' API prompt distribution, which is exactly the point but also limits external...</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="closing-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Run it</p>
+  <h2>No PoC yet.</h2>
+  <p class="deck-note">No PoC yet - contributions welcome. A small local PoC could train a toy reward model over ranked completions and compare SFT-only versus reward-optimized outputs on synthetic instruction tasks.</p>
+  <div class="reference-list">
+    <ul><li>Paper: <a href="https://arxiv.org/abs/2203.02155">Training Language Models to Follow Instructions with Human Feedback</a></li><li>Project/code: <a href="https://openai.com/index/instruction-following/">https://openai.com/index/instruction-following/</a></li><li>connects: <a href="https://arxiv.org/abs/2112.09332">WebGPT</a></li><li>precedes: <a href="https://arxiv.org/abs/2305.18290">Direct Preference Optimization</a></li><li>precedes: <a href="https://arxiv.org/abs/2411.15124">Tulu 3</a></li></ul>
+  </div>
+</div>
+
+Note: This deck is synthesized from `data/reviews/instructgpt-ouyang-2022.json`. Update the review record, then run `bun run build`.
