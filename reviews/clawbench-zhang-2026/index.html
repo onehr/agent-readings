@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-readings · ClawBench: Can AI Agents Complete Everyday Online Tasks?</title>
+  <link rel="stylesheet" href="../../assets/theme.css" />
+</head>
+<body class="site-page">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-brand" href="../../">agent-readings</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../../slides/clawbench-zhang-2026/">Deck</a>
+        <a href="../">Reviews</a>
+        <a href="../../slides/">Slides</a>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main">
+    <section class="hero" aria-label="Review summary">
+      <div>
+        <p class="eyebrow">Evaluation and Benchmarks</p>
+        <h1>ClawBench</h1>
+        <p class="hero-lede">ClawBench evaluates browser agents on 153 write-heavy everyday tasks across 144 live production websites while intercepting the terminal request and retaining five synchronized evidence layers for scoring.</p>
+      </div>
+      <div class="hero-card hero-card--compact" aria-label="Review stats">
+        <div class="metric-grid metric-grid--two">
+          <div class="metric"><strong>7</strong><span>Claims</span></div>
+          <div class="metric"><strong>7</strong><span>Evidence</span></div>
+        </div>
+      </div>
+    </section>
+    <div class="review-layout">
+      <aside class="review-meta" aria-label="Review metadata">
+        <div>
+          <span>Paper</span>
+          <strong>2026 · arXiv 2026</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>paper-read</strong>
+        </div>
+        <div>
+          <span>Sources read</span>
+          <strong>4</strong>
+        </div>
+        <a class="button button--primary" href="../../slides/clawbench-zhang-2026/">Open deck</a>
+        <a class="button" href="https://arxiv.org/abs/2604.08523">Source</a>
+      </aside>
+      <article class="readme review-body">
+      <h2>Why It Matters</h2>
+      <p>It treats browser-agent evaluation as an infrastructure problem spanning isolation, effect control, recording, reference collection, and outcome verification rather than as action prediction over static pages.</p>
+
+      <h2>Problem</h2>
+      <ul><li>Static-trace web benchmarks evaluate action prediction over recorded pages rather than end-to-end task execution.</li><li>Self-hosted web environments improve reproducibility but omit production-site drift, authentication flows, anti-automation systems, and platform-specific validation.</li><li>Earlier live-web benchmarks primarily emphasize read-only information retrieval instead of purchases, reservations, applications, and detailed form submissions.</li><li>Executing write-heavy tasks on production services risks creating orders, messages, reservations, or other irreversible side effects.</li><li>URL, final-page, screenshot, or reference-action matching can miss alternative valid paths and does not expose enough evidence for auditing consequential workflows.</li></ul>
+      <p><strong>Key gap:</strong> The missing capability is a safe, auditable way to measure whether an agent can complete heterogeneous, state-changing daily web workflows on production websites.</p>
+
+      <h2>Method</h2>
+      <p>Collect broad everyday write-heavy tasks, have a human complete each task to identify the terminal committing request, run every model-task pair in a fresh instrumented browser container, block the matching terminal request at runtime, and score the retained agent trace against the human reference with a fixed Agent-as-Judge protocol.</p>
+      <ul><li>Gather realistic write-heavy tasks from everyday website use and filter out read-only, unavailable, geographically restricted, paid, hard-verification, or unbounded-side-effect workflows.</li><li>Formalize each retained task as a task card with required personal data, expected final state, and a terminal submission target.</li><li>Record a human reference run and annotate the terminal request's URL pattern, method, and required payload fields.</li><li>Launch each model-task pair in a fresh isolated container with a clean Chromium profile, fixed resources, shared task data, and common browser actions.</li><li>Let the agent interact with the live production website while the extension and CDP sidecar record browser and network activity.</li><li>Capture and block the annotated terminal request before it reaches the server; leave ordinary page, image, analytics, and other non-terminal traffic intact.</li><li>Assemble the five-layer trace and compare it with the human reference and terminal payload through the fixed Agent-as-Judge prompt.</li><li>Aggregate binary verdicts into overall and category-level success rates, then use the recorded traces for failure diagnosis.</li></ul>
+
+      <h2>Claims</h2>
+      <section class="review-claim">
+  <h3>C1 · paper-supported</h3>
+  <p>The paper's benchmark contains 153 everyday tasks spanning 144 live production websites and 15 fine-grained life and work categories.</p>
+  <p><strong>Scope:</strong> Figure 1, Table 1, and Section 2.1.</p>
+  <ul><li><strong>E-scale</strong>: The paper reports 153 tasks across 144 live production websites, organized into 8 high-level groups and 15 fine-grained categories.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C2 · paper-supported</h3>
+  <p>ClawBench evaluates write-heavy, state-changing workflows on live production websites rather than action prediction on static traces or interaction only in self-hosted replicas.</p>
+  <p><strong>Scope:</strong> Introduction, Table 1, and Sections 2 and 2.1.</p>
+  <ul><li><strong>E-live-write-heavy</strong>: Tasks involve purchases, reservations, applications, account updates, and detailed form submissions on production websites, carrying user-specific data through platform validation toward a state-changing action.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C3 · paper-supported</h3>
+  <p>The final-request interceptor captured and blocked every annotated terminal request reached in the 153 human reference runs, with zero false-positive blocks on recorded navigation traffic.</p>
+  <p><strong>Scope:</strong> Section 2.2 and Appendix B.1.</p>
+  <ul><li><strong>E-interception-audit</strong>: The interceptor blocked every annotated terminal request reached in the 153 human reference runs and produced zero false-positive blocks on recorded navigation traffic.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C4 · paper-supported</h3>
+  <p>Every run is recorded as five synchronized evidence layers and judged against a human reference trajectory with an outcome-oriented binary protocol.</p>
+  <p><strong>Scope:</strong> Section 2.3 and Figure 4.</p>
+  <ul><li><strong>E-trace-judge</strong>: The five-layer trace is session video, action screenshots, HTTP traffic, agent messages, and browser actions; Agent-as-Judge compares it with the human reference and intercepted payload to return a binary verdict and justification.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C5 · paper-supported</h3>
+  <p>On the reported human-adjudicated comparisons, Agent-as-Judge agreement is 93.46% for Claude Sonnet 4.6 trajectories and 84.97% for GPT-5.4 trajectories.</p>
+  <p><strong>Scope:</strong> Table 2 and the Limitations section.</p>
+  <ul><li><strong>E-judge-agreement</strong>: Raw agreement with human verdicts is 93.46% for Claude Sonnet 4.6 and 84.97% for GPT-5.4 over the reported 153-task comparisons.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C6 · paper-supported</h3>
+  <p>Across the shared eight-model evaluation, the highest overall success rate is 33.3%, and 68 of 153 tasks are solved by none of the evaluated models.</p>
+  <p><strong>Scope:</strong> Table 3 and Section 3.2.</p>
+  <ul><li><strong>E-main-results</strong>: Claude Sonnet 4.6 scores 33.3%, Qwen 3.5 scores 26.1%, and GLM-5 scores 24.2%; 68 of 153 tasks are solved by no model and no task is solved by all eight.</li></ul>
+</section>
+<section class="review-claim">
+  <h3>C7 · paper-supported</h3>
+  <p>Each model-task pair runs in a fresh isolated container with a clean Chromium profile, fixed resource limits, a 30-minute wall-clock cap, and a five-minute idle watchdog.</p>
+  <p><strong>Scope:</strong> Section 3.1 and Appendix E.</p>
+  <ul><li><strong>E-run-isolation</strong>: Each run uses an isolated container and fresh Chromium profile with 16 GB RAM, 8 vCPU, 32 GB disk, a 1,800-second wall-clock limit, and a five-minute idle timeout.</li></ul>
+</section>
+
+      <h2>Agent Infrastructure Takeaways</h2>
+      <ul><li>A browser-agent benchmark measures a model-plus-harness system; the harness, prompt, browser configuration, and action interface must be held constant for comparative claims.</li><li>Effect control is strongest at a narrow, machine-checkable boundary: the terminal network request is easier to audit and block than an agent's stated intention.</li><li>The safety envelope is task-scoped. Workflows with multiple irreversible intermediate effects should be excluded rather than treated as covered.</li><li>Auditability requires synchronized evidence from the UI, network, agent transcript, low-level actions, and full-session replay.</li><li>Human references remain useful when they specify the target state and field bindings without forcing the agent to copy one exact action sequence.</li><li>Fresh browser profiles and isolated containers reduce cross-run leakage, but production-site and provider drift still need to be recorded and reported.</li><li>Binary success should be paired with trace-level diagnostics so last-mile hesitation, anti-bot blocking, early exit, and malformed submissions remain visible.</li></ul>
+
+      <h2>Caveats</h2>
+      <ul><li>Live production websites trade rerun determinism for ecological validity; layouts, A/B tests, region, account state, and anti-automation systems can change.</li><li>Final-request interception is not a general browser sandbox and only covers the audited terminal endpoint for each task.</li><li>Live sessions, model calls, network instrumentation, and trace-based judging make repeated trials and ablations more expensive than static benchmarks.</li><li>Reported model scores are conditioned on the shared OpenClaw harness and should not be read as model-only capability measurements.</li><li>Agent-as-Judge uses a binary pass/fail metric that compresses intermediate progress and retains non-zero disagreement with human reviewers.</li><li>Claude Sonnet 4.6 shares a model family with the judge, creating a potential evaluator-family effect despite the reported human audit.</li><li>The breadth-first suite underrepresents mobile-only, non-English, and accessibility-dependent workflows.</li><li>The paper's model results are a dated snapshot; later models, harnesses, site states, or benchmark versions can change the ranking.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Generated from data/reviews/clawbench-zhang-2026.json.</span>
+  </footer>
+</body>
+</html>
