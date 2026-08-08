@@ -421,6 +421,15 @@
   slides: true
   poc: false
 
+- slug: clawbench-zhang-2026
+  title: "ClawBench: Can AI Agents Complete Everyday Online Tasks?"
+  authors: "Zhang et al."
+  year: 2026
+  section: "Evaluation and Benchmarks"
+  url: "https://arxiv.org/abs/2604.08523"
+  slides: true
+  poc: false
+
 - slug: trusting-trust-thompson-1984
   title: "Reflections on Trusting Trust"
   authors: "Thompson"

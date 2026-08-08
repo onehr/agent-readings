@@ -33,11 +33,11 @@
       <aside class="hero-card" aria-label="Repository summary">
         <div class="hero-card__top">
           <span>Corpus</span>
-          <strong>54</strong>
+          <strong>55</strong>
         </div>
         <div class="metric-grid" aria-label="Repository stats">
-          <div class="metric"><strong>54</strong><span>Reviews</span></div>
-          <div class="metric"><strong>54</strong><span>Decks</span></div>
+          <div class="metric"><strong>55</strong><span>Reviews</span></div>
+          <div class="metric"><strong>55</strong><span>Decks</span></div>
           <div class="metric"><strong>0</strong><span>PoCs</span></div>
         </div>
         <div class="featured-review">
@@ -199,6 +199,7 @@
 <li><strong>OSWorld: Benchmarking Multimodal Agents for Open-Ended Tasks in Real Computer Environments</strong> (<a href="https://arxiv.org/abs/2404.07972">Xie et al., 2024</a>): Full computer control in real VMs across OSes -- the most infrastructure-heavy benchmark here (it needs KVM), and the most faithful to what &quot;computer-use agent&quot; actually means.</li>
 <li><strong>AgentBench: Evaluating LLMs as Agents</strong> (<a href="https://arxiv.org/abs/2308.03688">Liu et al., 2023</a>): Eight distinct environments in one harness. Useful for the cross-domain finding: a model that tops a coding benchmark can collapse on database or web tasks.</li>
 <li><strong>Establishing Best Practices for Building Rigorous Agentic Benchmarks</strong> (<a href="https://arxiv.org/abs/2507.02825">Zhuge / Kang Lab et al., 2025</a>): The skeptic's entry, and the bridge to <a href="#security">security</a>. Demonstrates that most popular agent benchmarks can be driven to near-perfect scores <em>without solving any task</em> -- by exploiting the grader (overwriting test files, reading gold answers off disk, reaching the network). The lesson is brutal and important: <strong>a benchmark with a weak sandbox is measuring sandbox escapes, not capability.</strong> Evaluation integrity is an isolation problem.</li>
+<li><strong>ClawBench: Can AI Agents Complete Everyday Online Tasks?</strong> (<a href="https://arxiv.org/abs/2604.08523">Zhang et al., 2026</a>): Moves browser-agent evaluation to 144 live production websites and write-heavy workflows while blocking each task's terminal request. The important systems idea is the combination of task-scoped effect interception, fresh isolated runs, and five synchronized evidence layers; the important trade-off is ecological validity versus exact rerun determinism. Read its scores as model-plus-harness results, not model-only capability.</li>
 </ul>
 <span id="security" class="anchor-target"></span>
 <h2>Security, Safety, and Trust</h2>

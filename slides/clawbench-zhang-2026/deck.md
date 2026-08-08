@@ -1,0 +1,221 @@
+<!-- .slide: class="title-slide apple-title" -->
+
+<div class="slide-frame slide-frame--center">
+  <p class="deck-kicker">agent-readings / Evaluation and Benchmarks</p>
+  <h1>ClawBench</h1>
+  <p class="deck-subtitle">Live-site agent evaluation with intercepted effects and trace-grounded verdicts</p>
+
+  <div class="deck-meta-strip">
+    <div class="deck-meta-pill"><strong>2026</strong><span>arXiv 2026</span></div>
+    <div class="deck-meta-pill"><strong>7</strong><span>claims</span></div>
+    <div class="deck-meta-pill"><strong>7</strong><span>evidence refs</span></div>
+    <div class="deck-meta-pill"><strong>paper-read</strong><span>status</span></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="statement-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">The one sentence</p>
+  <h2>ClawBench evaluates browser agents on 153 write-heavy everyday tasks across 144 live production websites while intercepting the terminal request and retaining five synchronized evidence layers for scoring.</h2>
+  <p class="deck-note">It treats browser-agent evaluation as an infrastructure problem spanning isolation, effect control, recording, reference collection, and outcome verification rather than as action prediction over static pages.</p>
+</div>
+
+---
+
+<!-- .slide: class="problem-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Before this paper</p>
+  <h2>The friction was structural.</h2>
+  <div class="apple-card-grid apple-card-grid--three">
+    <div class="apple-card"><p>Static-trace web benchmarks evaluate action prediction over recorded pages rather than end-to-end task execution.</p></div>
+<div class="apple-card"><p>Self-hosted web environments improve reproducibility but omit production-site drift, authentication flows, anti-automation systems, and platform-specific validation.</p></div>
+<div class="apple-card"><p>Earlier live-web benchmarks primarily emphasize read-only information retrieval instead of purchases, reservations, applications, and detailed form submissions.</p></div>
+  </div>
+  <div class="deck-callout">
+    <span>Key gap</span>
+    <p>The missing capability is a safe, auditable way to measure whether an agent can complete heterogeneous, state-changing daily web workflows on production websites.</p>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="idea-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Core idea</p>
+  <h2>Collect broad everyday write-heavy tasks, have a human complete each task to identify the terminal committing request, run every model-task pair in a fresh...</h2>
+  <p class="deck-note">Collect broad everyday write-heavy tasks, have a human complete each task to identify the terminal committing request, run every model-task pair in a fresh instrumented browser container, block the matching terminal request at runtime, and score the retained...</p>
+  <div class="idea-loop" aria-label="Agent loop">
+    <div><strong>Model</strong><span>reason</span></div>
+    <div><strong>Runtime</strong><span>act</span></div>
+    <div><strong>World</strong><span>observe</span></div>
+  </div>
+  <div class="step-strip">
+    <div class="step-item">
+  <span>01</span>
+  <p>Gather realistic write-heavy tasks from everyday website use and filter out read-only, unavailable, geographically restricted, paid,...</p>
+</div>
+<div class="step-item">
+  <span>02</span>
+  <p>Formalize each retained task as a task card with required personal data, expected final state, and a terminal submission target.</p>
+</div>
+<div class="step-item">
+  <span>03</span>
+  <p>Record a human reference run and annotate the terminal request's URL pattern, method, and required payload fields.</p>
+</div>
+<div class="step-item">
+  <span>04</span>
+  <p>Launch each model-task pair in a fresh isolated container with a clean Chromium profile, fixed resources, shared task data, and common browser...</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="grammar-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Action grammar</p>
+  <h2>The agent is an interface contract.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>task card: instruction, starting URL, user data, expected final state, and terminal request schema.</p></div>
+<div class="apple-card"><p>observation: accessibility tree, DOM snapshot, or screenshot exposed through the browser harness.</p></div>
+<div class="apple-card"><p>action: navigate, click, type, scroll, observe, take_screenshot, or wait.</p></div>
+<div class="apple-card"><p>terminal request: URL pattern, HTTP method, and required payload fields that would commit the task.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="code-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Executable shape</p>
+  <h2>The mechanism should fit on one screen.</h2>
+
+```python
+task = load_task_card(task_id)
+reference = load_human_reference(task_id)
+run = start_fresh_container(model, task)
+
+while run.active and within_limits:
+    observation = run.browser.observe()
+    action = agent.act(task.instruction, observation, run.history)
+    request = run.browser.execute(action)
+    run.trace.record(observation, action, request)
+    if matches_terminal_schema(request, task.eval_schema):
+        payload = capture(request)
+        block(request)
+        break
+
+verdict = judge(task, reference, run.trace, payload)
+success_rate = mean(verdict == PASS for each task)
+```
+</div>
+
+---
+
+<!-- .slide: class="proof-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Evidence</p>
+  <h2>The proof objects.</h2>
+  <div class="proof-grid">
+    <div class="proof-card">
+  <span>E-scale</span>
+  <p>The paper reports 153 tasks across 144 live production websites, organized into 8 high-level groups and 15 fine-grained categories.</p>
+</div>
+<div class="proof-card">
+  <span>E-live-write-heavy</span>
+  <p>Tasks involve purchases, reservations, applications, account updates, and detailed form submissions on production websites, carrying user-specific data through platform...</p>
+</div>
+<div class="proof-card">
+  <span>E-interception-audit</span>
+  <p>The interceptor blocked every annotated terminal request reached in the 153 human reference runs and produced zero false-positive blocks on recorded navigation traffic.</p>
+</div>
+<div class="proof-card">
+  <span>E-trace-judge</span>
+  <p>The five-layer trace is session video, action screenshots, HTTP traffic, agent messages, and browser actions; Agent-as-Judge compares it with the human reference and intercepted...</p>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="claim-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Claim map</p>
+  <h2>What the review actually supports.</h2>
+  <div class="claim-grid">
+    <div class="claim-card">
+  <span>C1 · paper-supported</span>
+  <p>The paper's benchmark contains 153 everyday tasks spanning 144 live production websites and 15 fine-grained life and work categories.</p>
+  <small>E-scale</small>
+</div>
+<div class="claim-card">
+  <span>C2 · paper-supported</span>
+  <p>ClawBench evaluates write-heavy, state-changing workflows on live production websites rather than action prediction on static traces or interaction only in...</p>
+  <small>E-live-write-heavy</small>
+</div>
+<div class="claim-card">
+  <span>C3 · paper-supported</span>
+  <p>The final-request interceptor captured and blocked every annotated terminal request reached in the 153 human reference runs, with zero false-positive blocks...</p>
+  <small>E-interception-audit</small>
+</div>
+<div class="claim-card">
+  <span>C4 · paper-supported</span>
+  <p>Every run is recorded as five synchronized evidence layers and judged against a human reference trajectory with an outcome-oriented binary protocol.</p>
+  <small>E-trace-judge</small>
+</div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="takeaway-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Agent infrastructure</p>
+  <h2>What changes if you build systems.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>A browser-agent benchmark measures a model-plus-harness system; the harness, prompt, browser configuration, and action interface must be held constant...</p></div>
+<div class="apple-card"><p>Effect control is strongest at a narrow, machine-checkable boundary: the terminal network request is easier to audit and block than an agent's stated...</p></div>
+<div class="apple-card"><p>The safety envelope is task-scoped. Workflows with multiple irreversible intermediate effects should be excluded rather than treated as covered.</p></div>
+<div class="apple-card"><p>Auditability requires synchronized evidence from the UI, network, agent transcript, low-level actions, and full-session replay.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="caveat-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Caveats</p>
+  <h2>What this does not prove.</h2>
+  <div class="apple-card-grid apple-card-grid--two">
+    <div class="apple-card"><p>Live production websites trade rerun determinism for ecological validity; layouts, A/B tests, region, account state, and anti-automation systems can...</p></div>
+<div class="apple-card"><p>Final-request interception is not a general browser sandbox and only covers the audited terminal endpoint for each task.</p></div>
+<div class="apple-card"><p>Live sessions, model calls, network instrumentation, and trace-based judging make repeated trials and ablations more expensive than static benchmarks.</p></div>
+<div class="apple-card"><p>Reported model scores are conditioned on the shared OpenClaw harness and should not be read as model-only capability measurements.</p></div>
+  </div>
+</div>
+
+---
+
+<!-- .slide: class="closing-slide" -->
+
+<div class="slide-frame">
+  <p class="deck-kicker">Run it</p>
+  <h2>No PoC yet.</h2>
+  <p class="deck-note">No separate PoC is added here. The public ClawBench repository contains the runnable benchmark infrastructure, task definitions, harnesses, and evaluation tooling.</p>
+  <div class="reference-list">
+    <ul><li>Paper: <a href="https://arxiv.org/abs/2604.08523">ClawBench: Can AI Agents Complete Everyday Online Tasks?</a></li><li>Project/code: <a href="https://claw-bench.com/">https://claw-bench.com/</a></li><li>reproducible_self_hosted_web: <a href="https://arxiv.org/abs/2307.13854">WebArena</a></li><li>static_trace_predecessor: <a href="https://arxiv.org/abs/2306.06070">Mind2Web</a></li><li>broader_computer_interaction: <a href="https://arxiv.org/abs/2404.07972">OSWorld</a></li></ul>
+  </div>
+</div>
+
+Note: This deck is synthesized from `data/reviews/clawbench-zhang-2026.json`. Update the review record, then run `bun run build`.
